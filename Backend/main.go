@@ -12,16 +12,20 @@ import (
 )
 
 func init() {
+	// We initialize the db
 	utils.CreateDb()
 }
 
 func main() {
 	fmt.Println("\033[96mServer started at: http://localhost:8080\033[0m")
 
+	// We launch the db
 	mux := http.NewServeMux()
 
+	// We set all the endpoints
 	routes.Routes(mux)
 
+	// We set the time out limit
 	srv := &http.Server{
 		Handler: mux,
 		Addr:    "localhost:8080",
@@ -32,6 +36,7 @@ func main() {
 		IdleTimeout:       30 * time.Second,
 	}
 
+	// We start the listening of the port
 	if err := srv.ListenAndServe(); err != nil {
 		fmt.Println(err)
 	}

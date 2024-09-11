@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+
 type RegisterContextKey string
 
 const (
@@ -36,6 +37,14 @@ type ResponseWriter struct {
 	http.ResponseWriter
 }
 
+/*
+This function takes 1 argument:
+  - a string who contain a description of the error
+
+The purpose of this function is to Return an error of the application who have make a request to the server.
+
+The function return a string to the user but have no return for the server
+*/
 func (w *ResponseWriter) Error(err string) {
 	time.Sleep(2 * time.Second)
 
