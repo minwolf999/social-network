@@ -13,12 +13,6 @@ const (
 )
 
 type Auth struct {
-<<<<<<< HEAD
-	Id       string `json:"Id"`
-	Email string `json:"Email"`
-	Password string `json:"Password"`
-}
-=======
 	Id              string `json:"Id"`
 	Email           string `json:"Email"`
 	Password        string `json:"Password"`
@@ -49,4 +43,3 @@ func (w *ResponseWriter) Error(err string) {
 	w.WriteHeader(http.StatusUnauthorized)
 	json.NewEncoder(w).Encode(err)
 }
->>>>>>> origin/Register
