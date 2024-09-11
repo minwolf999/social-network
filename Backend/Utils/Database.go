@@ -7,18 +7,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func OpenDb() (*sql.DB, error) {
-	return sql.Open("sqlite3", "./Database/Database.sqlite")
+func OpenDb(driverName, dataSourceName string) (*sql.DB, error) {
+	return sql.Open(driverName, dataSourceName)
 }
 
-func CreateDb() {
-	db, err := OpenDb()
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-
-	defer db.Close()
-
+func CreateDb(db *sql.DB) {
+	var err error
 	r := `
 	CREATE TABLE IF NOT EXISTS Auth (
 		Id VARCHAR(36) NOT NULL PRIMARY KEY,
@@ -44,7 +38,7 @@ func CreateDb() {
 }
 
 func InsertIntoDb(tabelName string, Args ...any) error {
-	db, err := OpenDb()
+	db, err := OpenDb("sqlite3", "./Database/Database.sqlite")
 	if err != nil {
 		return err
 	}
@@ -96,7 +90,7 @@ func SelectFromDb(tabelName string, Args map[string]any) ([][]interface{}, error
 }
 
 func prepareStmt(tabelName string, Args map[string]any) ([]string, *sql.Rows, error) {
-	db, err := OpenDb()
+	db, err := OpenDb("sqlite3", "./Database/Database.sqlite")
 	if err != nil {
 		return nil, nil, err
 	}
