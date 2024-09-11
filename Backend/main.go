@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	_ "github.com/mattn/go-sqlite3"
+
 	routes "social-network/Routes"
 	utils "social-network/Utils"
 )
