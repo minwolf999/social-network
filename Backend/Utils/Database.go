@@ -3,6 +3,7 @@ package utils
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -60,8 +61,8 @@ func InsertIntoDb(tabelName string, db *sql.DB, Args ...any) error {
 	return nil
 }
 
-func SelectFromDb(tabelName string, Args map[string]any) ([][]interface{}, error) {
-	column, rows, err := PrepareStmt(tabelName, Args)
+func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([][]interface{}, error) {
+	column, rows, err := PrepareStmt(tabelName, db, Args)
 	if err != nil {
 		return nil, err
 	}
@@ -83,32 +84,45 @@ func SelectFromDb(tabelName string, Args map[string]any) ([][]interface{}, error
 	return result, nil
 }
 
-func PrepareStmt(tabelName string, Args map[string]any) ([]string, *sql.Rows, error) {
-	db, err := OpenDb("sqlite3", "./Database/Database.sqlite")
+func PrepareStmt(tabelName string, db *sql.DB, Args map[string]any) ([]string, *sql.Rows, error) {
+	var whereClauses []string
+	var params []any
+
+	// Construction de la clause WHERE avec des paramètres
+	for column, value := range Args {
+		// Utilise "?" pour les paramètres
+		whereClauses = append(whereClauses, fmt.Sprintf("%s = ?", column))
+		// Ajoute les valeurs correspondantes
+		params = append(params, value)
+	}
+
+	// Joint les clauses WHERE avec "AND" pour former la condition
+	whereString := ""
+	if len(whereClauses) > 0 {
+		whereString = "WHERE " + strings.Join(whereClauses, " AND ")
+	}
+
+	// Construit la requête SQL avec les clauses WHERE
+	query := fmt.Sprintf("SELECT * FROM %s %s", tabelName, whereString)
+
+	// Prépare la requête SQL
+	stmt, err := db.Prepare(query)
 	if err != nil {
 		return nil, nil, err
 	}
-	defer db.Close()
+	defer stmt.Close()
 
-	var stringMAP string
-	for i, j := range Args {
-		stringMAP += fmt.Sprintf("%s=%s ", i, j)
-	}
-
-	stmt, err := db.Prepare(fmt.Sprintf("SELECT * from %s where %s ", tabelName, stringMAP))
+	// Exécute la requête en passant les paramètres
+	rows, err := stmt.Query(params...)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	rows, err := stmt.Query(stmt)
+	// Récupère les colonnes du résultat
+	columns, err := rows.Columns()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	column, err := rows.Columns()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return column, rows, nil
+	return columns, rows, nil
 }

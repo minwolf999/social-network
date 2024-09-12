@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"database/sql"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -101,4 +102,72 @@ func TestInsertIntoDb(t *testing.T) {
 	if password != "JAimeCoder1234" {
 		t.Errorf("Password attendu JAimeCoder1234, obtenu: %s", password)
 	}
+}
+
+func TestPrepareStmt(t *testing.T) {
+	db, err := sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		t.Fatalf("Erreur lors de l'ouverture de la base de données : %v", err)
+	}
+	defer db.Close()
+
+	// Crée une table de test
+	_, err = db.Exec(`
+		CREATE TABLE TestTable (
+			Id TEXT,
+			Email VARCHAR(50),
+			Password TEXT
+		)
+	`)
+	if err != nil {
+		t.Fatalf("Erreur lors de la création de la table : %v", err)
+	}
+
+	// Insère des données de test
+	_, err = db.Exec(`INSERT INTO TestTable (Id, Email, Password) VALUES ("019169b0-1302-71ec-a8d5-2615142a12b9","superemail@gmail.com", "JAimeCoder1235"), ("019169b0-1302-71ec-a8d5-2615142a12b9","superemail@gmail.com", "JAimeCoder1234")`)
+	if err != nil {
+		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
+	}
+
+	// Appel de la fonction PrepareStmt avec des arguments de test
+	args := map[string]any{
+		"Id":       "019169b0-1302-71ec-a8d5-2615142a12b9",
+		"Email":    "superemail@gmail.com",
+		"Password": "JAimeCoder1234",
+	}
+
+	columns, rows, err := PrepareStmt("TestTable", db, args)
+	if err != nil {
+		t.Fatalf("Erreur lors de l'exécution de PrepareStmt : %v", err)
+	}
+	defer rows.Close()
+
+	// Vérifie que les colonnes sont correctes
+	expectedColumns := []string{"Id", "Email", "Password"}
+	for i, col := range expectedColumns {
+		if columns[i] != col {
+			t.Errorf("Colonne attendue %s, obtenu %s", col, columns[i])
+		}
+	}
+
+	// Vérifie que les résultats sont corrects
+	var id string
+	var email string
+	var password string
+	if rows.Next() {
+		err = rows.Scan(&id, &email, &password)
+		if err != nil {
+			t.Fatalf("Erreur lors de la lecture des résultats : %v", err)
+		}
+
+		if email != "superemail@gmail.com" {
+			t.Errorf("Email attendu 'superemail@gmail.com', obtenu: %s", email)
+		}
+		if password != "JAimeCoder1234" {
+			t.Errorf("Password attendu JAimeCoder1234, obtenu: %s", password)
+		}
+	} else {
+		t.Fatalf("Aucun résultat trouvé pour la requête")
+	}
+
 }

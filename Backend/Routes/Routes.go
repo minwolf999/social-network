@@ -14,6 +14,7 @@ func Routes(mux *http.ServeMux) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	defer db.Close()
 
 	mux.HandleFunc("/", handler.Redirect)
 
