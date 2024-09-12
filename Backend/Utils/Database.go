@@ -24,14 +24,6 @@ func OpenDb(driverName, dataSourceName string) (*sql.DB, error) {
 }
 
 func CreateDb(db *sql.DB) {
-	// We open the db and close at the end of this fonction
-	db, err := OpenDb("sqlite3", "./Database/Database.sqlite")
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-
-	defer db.Close()
-
 	// We initialize the SQL query by writing it into a string
 	r := `
 	CREATE TABLE IF NOT EXISTS Auth (
@@ -52,7 +44,7 @@ func CreateDb(db *sql.DB) {
 	`
 
 	// We execute the SQL request
-	_, err = db.Exec(r)
+	_, err := db.Exec(r)
 	if err != nil {
 		fmt.Println("Create Error", err)
 	}
@@ -70,12 +62,6 @@ The function gonna return:
   - an error
 */
 func InsertIntoDb(tabelName string, db *sql.DB, Args ...any) error {
-	db, err := OpenDb("sqlite3", "./Database/Database.sqlite")
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
 	// We format the values to write them into a string
 	var stringMAP string
 	for i, j := range Args {
