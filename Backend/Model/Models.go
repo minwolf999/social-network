@@ -6,11 +6,12 @@ import (
 	"time"
 )
 
-
 type RegisterContextKey string
+type LoginContextKey string
 
 const (
 	RegisterCtx RegisterContextKey = "register"
+	LoginCtx    LoginContextKey    = "login"
 )
 
 type Auth struct {
