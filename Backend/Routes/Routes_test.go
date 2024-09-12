@@ -7,15 +7,15 @@ import (
 )
 
 func TestRoutes(t *testing.T) {
-	// Crée un ServeMux et configure les routes sans la base de données
+	// Create a ServeMux and configure routes without the database
 	mux := http.NewServeMux()
 	RoutesForTest(mux)
 
-	// Tableau de test avec des cas de routes à tester
+	// Test board with route cases to test
 	tests := []struct {
 		method string
 		route  string
-		status int // Statut HTTP attendu
+		status int
 	}{
 		{"GET", "/", http.StatusOK},
 		{"POST", "/login", http.StatusOK},
@@ -24,17 +24,17 @@ func TestRoutes(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		// Crée une nouvelle requête pour chaque route à tester
+		// Create a new query for each route to be tested
 		req, err := http.NewRequest(tt.method, tt.route, nil)
 		if err != nil {
 			t.Fatalf("Erreur lors de la création de la requête : %v", err)
 		}
 
-		// Simule une requête avec httptest
+		// Simulate a request with httptest
 		rr := httptest.NewRecorder()
 		mux.ServeHTTP(rr, req)
 
-		// Vérifie que le code de statut est correct
+		// Check that the status code is correct
 		if rr.Code != tt.status {
 			t.Errorf("Pour la route %s %s, code de statut attendu: %v, obtenu: %v", tt.method, tt.route, tt.status, rr.Code)
 		}

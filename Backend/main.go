@@ -24,7 +24,7 @@ func init() {
 func main() {
 	fmt.Println("\033[96mServer started at: http://localhost:8080\033[0m")
 
-	// We launch the db
+	// We launch the server
 	mux := http.NewServeMux()
 
 	// We set all the endpoints

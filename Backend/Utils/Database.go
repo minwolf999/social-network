@@ -142,42 +142,42 @@ func PrepareStmt(tabelName string, db *sql.DB, Args map[string]any) ([]string, *
 	var whereClauses []string
 	var params []any
 
-	// Construction de la clause WHERE avec des paramètres
+	// Building the WHERE clause with parameters
 	for column, value := range Args {
-		// Utilise "?" pour les paramètres
+		// Use "?" for parameters
 		whereClauses = append(whereClauses, fmt.Sprintf("%s = ?", column))
-		// Ajoute les valeurs correspondantes
+		// Add the corresponding values
 		params = append(params, value)
 	}
 
-	// Joint les clauses WHERE avec "AND" pour former la condition
+	// Joins the WHERE clauses with "AND" to form the condition
 	whereString := ""
 	if len(whereClauses) > 0 {
 		whereString = "WHERE " + strings.Join(whereClauses, " AND ")
 	}
 
-	// Construit la requête SQL avec les clauses WHERE
+	// Build the SQL query with WHERE clauses
 	query := fmt.Sprintf("SELECT * FROM %s %s", tabelName, whereString)
 
-	// Prépare la requête SQL
+	// Prepare the SQL query
 	stmt, err := db.Prepare(query)
 	if err != nil {
 		return nil, nil, err
 	}
 	defer stmt.Close()
 
-	// Exécute la requête en passant les paramètres
+	// Executes the query passing the parameters
 	rows, err := stmt.Query(params...)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// Récupère les colonnes du résultat
+	// Retrieves the columns of the result
 	column, err := rows.Columns()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// We return the row quantity and the result of the SQL request
+	// We return the column and the result of the SQL request
 	return column, rows, nil
 }

@@ -8,19 +8,19 @@ import (
 )
 
 func TestOpenDb(t *testing.T) {
-	// Ouvre une base de données SQLite en mémoire
+	// Opens an in-memory SQLite database
 	db, err := OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de l'ouverture de la base de données : %v", err)
 	}
 	defer db.Close()
 
-	// Vérifie que la connexion n'est pas nulle
+	// Check that the connection is not null
 	if db == nil {
 		t.Fatalf("La connexion à la base de données est nulle")
 	}
 
-	// Vérifie qu'on peut exécuter une simple requête (sanity check)
+	// Checks that a simple query can be executed (sanity check)
 	err = db.Ping()
 	if err != nil {
 		t.Fatalf("Impossible de ping la base de données : %v", err)
@@ -28,17 +28,17 @@ func TestOpenDb(t *testing.T) {
 }
 
 func TestCreateDb(t *testing.T) {
-	// Ouvre une base de données SQLite en mémoire
+	// Opens an in-memory SQLite database
 	db, err := OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de l'ouverture de la base de données : %v", err)
 	}
 	defer db.Close()
 
-	// Exécute la création des tables
+	// Executes the creation of tables
 	CreateDb(db)
 
-	// Test si la table "Auth" a été créée avec succès
+	// Test if the "Auth" table was created successfully
 	var tableName string
 	err = db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name='Auth'").Scan(&tableName)
 	if err != nil {
@@ -49,7 +49,7 @@ func TestCreateDb(t *testing.T) {
 		t.Errorf("Table 'Auth' non trouvée, trouvée: %s", tableName)
 	}
 
-	// Test si la table "UserInfo" a été créée avec succès
+	// Test if the table "UserInfo" was created successfully
 	err = db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name='UserInfo'").Scan(&tableName)
 	if err != nil {
 		t.Fatalf("La table UserInfo n'a pas été créée : %v", err)
@@ -61,14 +61,14 @@ func TestCreateDb(t *testing.T) {
 }
 
 func TestInsertIntoDb(t *testing.T) {
-	// Ouvre une base de données SQLite en mémoire
+	// Opens an in-memory SQLite database
 	db, err := OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de l'ouverture de la base de données : %v", err)
 	}
 	defer db.Close()
 
-	// Crée une table pour les tests
+	// Create a table for testing
 	_, err = db.Exec(`
 		CREATE TABLE TestTable (
 			Id TEXT,
@@ -80,13 +80,13 @@ func TestInsertIntoDb(t *testing.T) {
 		t.Fatalf("Erreur lors de la création de la table : %v", err)
 	}
 
-	// Appel de la fonction InsertIntoDb pour insérer des données
+	// Calling the InsertIntoDb function to insert data
 	err = InsertIntoDb("TestTable", db, "29323HDY73", "John Doe", "JAimeCoder1234")
 	if err != nil {
 		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
 	}
 
-	// Vérification que les données ont bien été insérées
+	// Checking that the data has been inserted correctly
 	var id string
 	var email string
 	var password string
@@ -95,7 +95,7 @@ func TestInsertIntoDb(t *testing.T) {
 		t.Fatalf("Erreur lors de la récupération des données : %v", err)
 	}
 
-	// Vérifications
+	// Checks
 	if email != "John Doe" {
 		t.Errorf("Nom attendu 'John Doe', obtenu: %s", email)
 	}
@@ -111,7 +111,7 @@ func TestPrepareStmt(t *testing.T) {
 	}
 	defer db.Close()
 
-	// Crée une table de test
+	// Create a test table
 	_, err = db.Exec(`
 		CREATE TABLE TestTable (
 			Id TEXT,
@@ -123,13 +123,13 @@ func TestPrepareStmt(t *testing.T) {
 		t.Fatalf("Erreur lors de la création de la table : %v", err)
 	}
 
-	// Insère des données de test
+	// Insert test data
 	_, err = db.Exec(`INSERT INTO TestTable (Id, Email, Password) VALUES ("019169b0-1302-71ec-a8d5-2615142a12b9","superemail@gmail.com", "JAimeCoder1235"), ("019169b0-1302-71ec-a8d5-2615142a12b9","superemail@gmail.com", "JAimeCoder1234")`)
 	if err != nil {
 		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
 	}
 
-	// Appel de la fonction PrepareStmt avec des arguments de test
+	// Calling the PrepareStmt function with test arguments
 	args := map[string]any{
 		"Id":       "019169b0-1302-71ec-a8d5-2615142a12b9",
 		"Email":    "superemail@gmail.com",
@@ -142,7 +142,7 @@ func TestPrepareStmt(t *testing.T) {
 	}
 	defer rows.Close()
 
-	// Vérifie que les colonnes sont correctes
+	// Check that the columns are correct
 	expectedColumns := []string{"Id", "Email", "Password"}
 	for i, col := range expectedColumns {
 		if columns[i] != col {
@@ -150,7 +150,7 @@ func TestPrepareStmt(t *testing.T) {
 		}
 	}
 
-	// Vérifie que les résultats sont corrects
+	// Check that the results are correct
 	var id string
 	var email string
 	var password string
@@ -173,14 +173,14 @@ func TestPrepareStmt(t *testing.T) {
 }
 
 func TestSelectFromDb(t *testing.T) {
-	// Ouvre une base de données en mémoire
+	// Opens a database in memory
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de l'ouverture de la base de données : %v", err)
 	}
 	defer db.Close()
 
-	// Crée une table de test
+	// Create a test table
 	_, err = db.Exec(`
 		CREATE TABLE TestTable (
 			Id TEXT,
@@ -192,7 +192,7 @@ func TestSelectFromDb(t *testing.T) {
 		t.Fatalf("Erreur lors de la création de la table : %v", err)
 	}
 
-	// Insère des données de test
+	// Insert test data
 	_, err = db.Exec(`INSERT INTO TestTable (Id, Email, Password) VALUES 
 		("1", "superemail@gmail.com", "JAimeCoder1235"), 
 		("2", "superemail@gmail.com", "JAimeCoder1234")`)
@@ -200,30 +200,30 @@ func TestSelectFromDb(t *testing.T) {
 		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
 	}
 
-	// Arguments pour la sélection (exemple avec Email et Password)
+	// Arguments for selection (example with Email and Password)
 	args := map[string]any{
 		"Email":    "superemail@gmail.com",
 		"Password": "JAimeCoder1234",
 	}
 
-	// Appel de la fonction SelectFromDb
+	// Calling the SelectFromDb function
 	result, err := SelectFromDb("TestTable", db, args)
 	if err != nil {
 		t.Fatalf("Erreur lors de l'exécution de SelectFromDb : %v", err)
 	}
 
-	// Vérifie qu'on a obtenu une seule ligne
+	// Check that we got only one line
 	if len(result) != 1 {
 		t.Fatalf("Nombre de lignes attendu : 1, obtenu : %d", len(result))
 	}
 
-	// Vérifie les valeurs des colonnes
+	// Checks column values
 	row := result[0]
-	id := *(row[0].(*string)) // Convertir les valeurs récupérées en *string
+	id := *(row[0].(*string))
 	email := *(row[1].(*string))
 	password := *(row[2].(*string))
 
-	// Vérifie que les données sont correctes
+	// Check that the data is correct
 	if id != "2" {
 		t.Errorf("Id attendu : '2', obtenu : '%s'", id)
 	}

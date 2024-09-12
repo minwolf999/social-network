@@ -33,23 +33,23 @@ func Routes(mux *http.ServeMux) {
 	mux.HandleFunc("/home", handler.Home)
 }
 
-// Mock du handler Login pour les tests
+// Mock Login handler for testing
 func mockLoginHandler(w http.ResponseWriter, r *http.Request) {
-	// Simuler une réponse OK
+	// Simulate an OK response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Login successful"))
 }
 
-// Mock du handler Register pour les tests
+// Mock Register handler for testing
 func mockRegisterHandler(w http.ResponseWriter, r *http.Request) {
-	// Simuler une réponse OK
+	// Simulate an OK response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Register successful"))
 }
 
-// Fonction Routes pour les tests avec des mocks
+// Routes function for testing with mocks
 func RoutesForTest(mux *http.ServeMux) {
-	// On remplace les handlers réels par des mocks
+	// We replace real handlers with mocks
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Redirected"))
