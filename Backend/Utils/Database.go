@@ -126,3 +126,4 @@ func PrepareStmt(tabelName string, db *sql.DB, Args map[string]any) ([]string, *
 
 	return columns, rows, nil
 }
+

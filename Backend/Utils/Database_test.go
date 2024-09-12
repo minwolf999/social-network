@@ -171,3 +171,66 @@ func TestPrepareStmt(t *testing.T) {
 	}
 
 }
+
+func TestSelectFromDb(t *testing.T) {
+	// Ouvre une base de données en mémoire
+	db, err := sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		t.Fatalf("Erreur lors de l'ouverture de la base de données : %v", err)
+	}
+	defer db.Close()
+
+	// Crée une table de test
+	_, err = db.Exec(`
+		CREATE TABLE TestTable (
+			Id TEXT,
+			Email TEXT,
+			Password TEXT
+		)
+	`)
+	if err != nil {
+		t.Fatalf("Erreur lors de la création de la table : %v", err)
+	}
+
+	// Insère des données de test
+	_, err = db.Exec(`INSERT INTO TestTable (Id, Email, Password) VALUES 
+		("1", "superemail@gmail.com", "JAimeCoder1235"), 
+		("2", "superemail@gmail.com", "JAimeCoder1234")`)
+	if err != nil {
+		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
+	}
+
+	// Arguments pour la sélection (exemple avec Email et Password)
+	args := map[string]any{
+		"Email":    "superemail@gmail.com",
+		"Password": "JAimeCoder1234",
+	}
+
+	// Appel de la fonction SelectFromDb
+	result, err := SelectFromDb("TestTable", db, args)
+	if err != nil {
+		t.Fatalf("Erreur lors de l'exécution de SelectFromDb : %v", err)
+	}
+
+	// Vérifie qu'on a obtenu une seule ligne
+	if len(result) != 1 {
+		t.Fatalf("Nombre de lignes attendu : 1, obtenu : %d", len(result))
+	}
+
+	// Vérifie les valeurs des colonnes
+	row := result[0]
+	id := *(row[0].(*string)) // Convertir les valeurs récupérées en *string
+	email := *(row[1].(*string))
+	password := *(row[2].(*string))
+
+	// Vérifie que les données sont correctes
+	if id != "2" {
+		t.Errorf("Id attendu : '2', obtenu : '%s'", id)
+	}
+	if email != "superemail@gmail.com" {
+		t.Errorf("Email attendu : 'superemail@gmail.com', obtenu : '%s'", email)
+	}
+	if password != "JAimeCoder1234" {
+		t.Errorf("Mot de passe attendu : 'JAimeCoder1234', obtenu : '%s'", password)
+	}
+}
