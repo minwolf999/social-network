@@ -2,13 +2,11 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	model "social-network/Model"
 	utils "social-network/Utils"
 )
-
 
 /*
 This function takes 2 arguments:
@@ -42,10 +40,12 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	// We insert in the table UserInfo of the db the rest of the values
 	if err := utils.InsertIntoDb("UserInfo", register.Auth.Id, register.Auth.Email, register.FirstName, register.LastName, register.BirthDate, register.ProfilePicture, register.Username, register.AboutMe); err != nil {
-		fmt.Println(err)
 		nw.Error("Internal Error: There is a probleme during the push in the DB")
 		return
 	}
+
+	// Set a cookie with the id of the people but converted to base64
+	utils.SetCookie(w, register)
 
 	// We send a success response to the request
 	w.Header().Set("Content-Type", "application/json")
