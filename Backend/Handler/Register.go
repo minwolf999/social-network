@@ -2,6 +2,7 @@ package handler
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 
@@ -45,7 +46,7 @@ func Register(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 
 	// Set a cookie with the id of the people but converted to base64
-	utils.SetCookie(w, register)
+	utils.SetCookie(w, base64.StdEncoding.EncodeToString([]byte(register.Auth.Id)))
 
 	// We send a success response to the request
 	w.Header().Set("Content-Type", "application/json")

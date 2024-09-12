@@ -1,10 +1,7 @@
 package utils
 
 import (
-	"encoding/base64"
 	"net/http"
-
-	model "social-network/Model"
 )
 
 /*
@@ -16,10 +13,10 @@ The purpose of this function is to create a session cookie.
 
 The function return no value
 */
-func SetCookie(w http.ResponseWriter, register model.Register) {
+func SetCookie(w http.ResponseWriter, value string) {
 	cookieEmail := http.Cookie{
 		Name:     "sessionId",
-		Value:    base64.StdEncoding.EncodeToString([]byte(register.Auth.Id)),
+		Value:    value,
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
 	}
