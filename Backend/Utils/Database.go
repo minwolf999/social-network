@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -22,7 +23,7 @@ func OpenDb(driverName, dataSourceName string) (*sql.DB, error) {
 	return sql.Open(driverName, dataSourceName)
 }
 
-func CreateDb() {
+func CreateDb(db *sql.DB) {
 	// We open the db and close at the end of this fonction
 	db, err := OpenDb("sqlite3", "./Database/Database.sqlite")
 	if err != nil {
@@ -99,6 +100,7 @@ func InsertIntoDb(tabelName string, db *sql.DB, Args ...any) error {
 
 	return nil
 }
+
 /*
 This function takes 2 arguments:
   - a string who is the name of the table
@@ -121,8 +123,8 @@ func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([][]interf
 	var result [][]interface{}
 	for rows.Next() {
 		// We initialize the variable who gonna contain the current result row
-		row := make([]interface{}, column)
-		for i := 0; i < column; i++ {
+		row := make([]interface{}, len(column))
+		for i := 0; i < len(column); i++ {
 			row[i] = new(string)
 		}
 
@@ -149,8 +151,7 @@ The function gonna return:
   - an int who corresponds to the row quantity of the table
   - a *sql.Rows who contain the result of the SQL request
 */
-func PrepareStmt(tabelName string, db *sql.DB, Args map[string]any) (int, *sql.Rows, error) {
-
+func PrepareStmt(tabelName string, db *sql.DB, Args map[string]any) ([]string, *sql.Rows, error) {
 
 	var whereClauses []string
 	var params []any
@@ -175,23 +176,22 @@ func PrepareStmt(tabelName string, db *sql.DB, Args map[string]any) (int, *sql.R
 	// Prépare la requête SQL
 	stmt, err := db.Prepare(query)
 	if err != nil {
-		return 0, nil, err
+		return nil, nil, err
 	}
 	defer stmt.Close()
 
 	// Exécute la requête en passant les paramètres
 	rows, err := stmt.Query(params...)
 	if err != nil {
-		return 0, nil, err
+		return nil, nil, err
 	}
 
 	// Récupère les colonnes du résultat
-	columns, err := rows.Columns()
+	column, err := rows.Columns()
 	if err != nil {
-		return 0, nil, err
+		return nil, nil, err
 	}
 
 	// We return the row quantity and the result of the SQL request
-	return len(column), rows, nil
+	return column, rows, nil
 }
-
