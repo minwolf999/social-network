@@ -13,7 +13,7 @@ RUN apt-get update && \
     ln -s /go/bin/linux_amd64/migrate /usr/local/bin/migrate
 
 # Copier les fichiers Go et autres fichiers nécessaires
-COPY . .
+COPY ./Backend .
 
 # Exposer le port
 EXPOSE 8080
