@@ -3,6 +3,8 @@ package registermiddlewaresubfunction
 import (
 	model "social-network/Model"
 	"testing"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func TestRegisterVerification(t *testing.T) {
@@ -86,5 +88,34 @@ func TestIsValidPassword(t *testing.T) {
 				t.Fatalf("Test '%s' échoué : attendu erreur: %v, obtenu: %v", tt.name, tt.shouldFail, !valid)
 			}
 		})
+	}
+}
+
+func TestCreateUuidAndCrypt(t *testing.T) {
+	// Créer un modèle Register de test
+	register := &model.Register{
+		Auth: model.Auth{
+			Email:    "unemail@gmail.com",
+			Password: "MonMotDePasse123!",
+		},
+		FirstName: "Jean",
+		LastName:  "Dujardin",
+		BirthDate: "1990-01-01",
+	}
+
+	// Appeler la fonction CreateUuidAndCrypt
+	err := CreateUuidAndCrypt(register)
+	if err != nil {
+		t.Fatalf("Erreur lors de l'exécution de CreateUuidAndCrypt: %v", err)
+	}
+
+	// Vérifier que le mot de passe a bien été crypté
+	if err := bcrypt.CompareHashAndPassword([]byte(register.Auth.Password), []byte("MonMotDePasse123!")); err != nil {
+		t.Errorf("Le mot de passe crypté ne correspond pas au mot de passe original")
+	}
+
+	// Vérifier que l'UUID a bien été généré
+	if register.Auth.Id == "" {
+		t.Errorf("L'UUID n'a pas été généré correctement")
 	}
 }
