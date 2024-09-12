@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -17,7 +18,7 @@ The purpose of this function is to Verificate the content of the request make to
 
 The function return an http.HandlerFunc (it's a function)
 */
-func RegisterMiddleware(next http.HandlerFunc) http.HandlerFunc {
+func RegisterMiddleware(next func(w http.ResponseWriter, r *http.Request, db *sql.DB), db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nw := model.ResponseWriter{
 			ResponseWriter: w,
@@ -48,7 +49,6 @@ func RegisterMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		ctx := context.WithValue(r.Context(), model.RegisterCtx, json)
 		r = r.WithContext(ctx)
 
-		// We call the next handleFunc function
-		next(w, r)
+		next(w, r, db)
 	}
 }

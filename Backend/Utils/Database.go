@@ -2,8 +2,7 @@ package utils
 
 import (
 	"fmt"
-
-	"database/sql"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -23,19 +22,13 @@ func OpenDb(driverName, dataSourceName string) (*sql.DB, error) {
 	return sql.Open(driverName, dataSourceName)
 }
 
-/*
-This function takes no argument
-
-The objective of this function is to create the table in the db.
-
-The function returns no value
-*/
 func CreateDb() {
 	// We open the db and close at the end of this fonction
 	db, err := OpenDb("sqlite3", "./Database/Database.sqlite")
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
+
 	defer db.Close()
 
 	// We initialize the SQL query by writing it into a string
@@ -75,8 +68,7 @@ The objective of this function is to insert values in a table of the db.
 The function gonna return:
   - an error
 */
-func InsertIntoDb(tabelName string, Args ...any) error {
-	// We open the db and close at the end of this fonction
+func InsertIntoDb(tabelName string, db *sql.DB, Args ...any) error {
 	db, err := OpenDb("sqlite3", "./Database/Database.sqlite")
 	if err != nil {
 		return err
@@ -107,7 +99,6 @@ func InsertIntoDb(tabelName string, Args ...any) error {
 
 	return nil
 }
-
 /*
 This function takes 2 arguments:
   - a string who is the name of the table
@@ -119,9 +110,9 @@ The function gonna return:
   - an [][]interface where each []interface corresponds to a row in the db
   - an error
 */
-func SelectFromDb(tabelName string, Args map[string]any) ([][]interface{}, error) {
+func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([][]interface{}, error) {
 	// We prepare and execute the select request
-	column, rows, err := prepareStmt(tabelName, Args)
+	column, rows, err := PrepareStmt(tabelName, db, Args)
 	if err != nil {
 		return nil, err
 	}
@@ -158,34 +149,44 @@ The function gonna return:
   - an int who corresponds to the row quantity of the table
   - a *sql.Rows who contain the result of the SQL request
 */
-func prepareStmt(tabelName string, Args map[string]any) (int, *sql.Rows, error) {
-	// We open the db and close at the end of this fonction
-	db, err := OpenDb("sqlite3", "./Database/Database.sqlite")
+func PrepareStmt(tabelName string, db *sql.DB, Args map[string]any) (int, *sql.Rows, error) {
+
+
+	var whereClauses []string
+	var params []any
+
+	// Construction de la clause WHERE avec des paramètres
+	for column, value := range Args {
+		// Utilise "?" pour les paramètres
+		whereClauses = append(whereClauses, fmt.Sprintf("%s = ?", column))
+		// Ajoute les valeurs correspondantes
+		params = append(params, value)
+	}
+
+	// Joint les clauses WHERE avec "AND" pour former la condition
+	whereString := ""
+	if len(whereClauses) > 0 {
+		whereString = "WHERE " + strings.Join(whereClauses, " AND ")
+	}
+
+	// Construit la requête SQL avec les clauses WHERE
+	query := fmt.Sprintf("SELECT * FROM %s %s", tabelName, whereString)
+
+	// Prépare la requête SQL
+	stmt, err := db.Prepare(query)
 	if err != nil {
 		return 0, nil, err
 	}
-	defer db.Close()
+	defer stmt.Close()
 
-	// We format the values to write them into a string
-	var stringMAP string
-	for i, j := range Args {
-		stringMAP += fmt.Sprintf("%s=%s ", i, j)
-	}
-
-	// We prepare the SQL query to avoid SQL injections
-	stmt, err := db.Prepare(fmt.Sprintf("SELECT * from %s where %s ", tabelName, stringMAP))
+	// Exécute la requête en passant les paramètres
+	rows, err := stmt.Query(params...)
 	if err != nil {
 		return 0, nil, err
 	}
 
-	// We execute the SQL request and stock the result of the request inside a *sql.Rows
-	rows, err := stmt.Query(stmt)
-	if err != nil {
-		return 0, nil, err
-	}
-
-	// We stock the []string who contains the name of all the rows
-	column, err := rows.Columns()
+	// Récupère les colonnes du résultat
+	columns, err := rows.Columns()
 	if err != nil {
 		return 0, nil, err
 	}
@@ -193,3 +194,4 @@ func prepareStmt(tabelName string, Args map[string]any) (int, *sql.Rows, error) 
 	// We return the row quantity and the result of the SQL request
 	return len(column), rows, nil
 }
+

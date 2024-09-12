@@ -1,0 +1,26 @@
+# Ignorer les fichiers de compilation ou binaires
+*.o
+*.a
+*.out
+*.so
+
+# Ignorer les fichiers temporaires
+*.log
+*.tmp
+*.swp
+
+# Ignorer les fichiers d'environnements d'éditeurs
+.idea/
+.vscode/
+
+# Ignorer les fichiers de système d'exploitation
+.DS_Store
+Thumbs.db
+
+# Ignorer les répertoires de dépendances
+node_modules/
+vendor/
+
+# Ignorer les fichiers de configuration personnels
+.env
+config.yaml

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 
@@ -17,8 +18,7 @@ The purpose of this function is to handle the register endpoint.
 
 The function return no value
 */
-func Register(w http.ResponseWriter, r *http.Request) {
-	// We create a variable of http.responseWriter personnalised
+func Register(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	nw := model.ResponseWriter{
 		ResponseWriter: w,
 	}
@@ -33,13 +33,13 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// We insert in the table Auth of the db the id, email and password of the people trying to register
-	if err := utils.InsertIntoDb("Auth", register.Auth.Id, register.Auth.Email, register.Auth.Password); err != nil {
+	if err := utils.InsertIntoDb("Auth", db, register.Auth.Id, register.Auth.Email, register.Auth.Password); err != nil {
 		nw.Error("Internal Error: There is a probleme during the push in the DB")
 		return
 	}
 
 	// We insert in the table UserInfo of the db the rest of the values
-	if err := utils.InsertIntoDb("UserInfo", register.Auth.Id, register.Auth.Email, register.FirstName, register.LastName, register.BirthDate, register.ProfilePicture, register.Username, register.AboutMe); err != nil {
+	if err := utils.InsertIntoDb("UserInfo", db, register.Auth.Id, register.Auth.Email, register.FirstName, register.LastName, register.BirthDate, register.ProfilePicture, register.Username, register.AboutMe); err != nil {
 		nw.Error("Internal Error: There is a probleme during the push in the DB")
 		return
 	}
