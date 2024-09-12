@@ -1,5 +1,5 @@
 # Utiliser l'image officielle de Go
-FROM golang:1.23.1
+FROM golang:1.23.1 AS backend-build
 
 # Définir le répertoire de travail
 WORKDIR /social-network
@@ -19,4 +19,19 @@ COPY ./Backend .
 EXPOSE 8080
 
 # Laisser le container ouvert une fois lancer
+CMD ["tail", "-f", "/dev/null"]
+
+
+
+
+FROM node:latest AS frontend-build
+
+WORKDIR /social-network
+
+COPY ./Frontend .
+
+RUN npm install
+
+EXPOSE 3000
+
 CMD ["tail", "-f", "/dev/null"]
