@@ -52,5 +52,39 @@ func TestRegisterVerification(t *testing.T) {
 }
 
 func TestIsValidPassword(t *testing.T) {
+	tests := []struct {
+		name       string
+		data       string
+		shouldFail bool
+	}{
+		{
+			name:       "Short Password",
+			data:       "Ey$21",
+			shouldFail: true,
+		},
 
+		{
+			name:       "Contains Uppercase, No Special Char",
+			data:       "IFBSOSNHFBJ",
+			shouldFail: true,
+		},
+		{
+			name:       "Contains Number, No Special Char ",
+			data:       "IDBF2847492",
+			shouldFail: true,
+		},
+		{
+			name:       "Password Valide",
+			data:       "zXYVhVxp9@P8qa",
+			shouldFail: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			valid := IsValidPassword(tt.data)
+			if valid == tt.shouldFail {
+				t.Fatalf("Test '%s' échoué : attendu erreur: %v, obtenu: %v", tt.name, tt.shouldFail, !valid)
+			}
+		})
+	}
 }
