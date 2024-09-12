@@ -37,13 +37,7 @@ func CreateDb(db *sql.DB) {
 
 }
 
-func InsertIntoDb(tabelName string, Args ...any) error {
-	db, err := OpenDb("sqlite3", "./Database/Database.sqlite")
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
+func InsertIntoDb(tabelName string, db *sql.DB, Args ...any) error {
 	var stringMAP string
 	for i, j := range Args {
 		if i < len(Args)-1 {
@@ -67,7 +61,7 @@ func InsertIntoDb(tabelName string, Args ...any) error {
 }
 
 func SelectFromDb(tabelName string, Args map[string]any) ([][]interface{}, error) {
-	column, rows, err := prepareStmt(tabelName, Args)
+	column, rows, err := PrepareStmt(tabelName, Args)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +83,7 @@ func SelectFromDb(tabelName string, Args map[string]any) ([][]interface{}, error
 	return result, nil
 }
 
-func prepareStmt(tabelName string, Args map[string]any) ([]string, *sql.Rows, error) {
+func PrepareStmt(tabelName string, Args map[string]any) ([]string, *sql.Rows, error) {
 	db, err := OpenDb("sqlite3", "./Database/Database.sqlite")
 	if err != nil {
 		return nil, nil, err

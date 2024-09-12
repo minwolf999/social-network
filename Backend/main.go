@@ -12,7 +12,13 @@ import (
 )
 
 func init() {
-	utils.CreateDb()
+	db, err := utils.OpenDb("sqlite3", "./Database/Database.sqlite")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer db.Close()
+	utils.CreateDb(db)
 }
 
 func main() {

@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -9,7 +10,7 @@ import (
 	model "social-network/Model"
 )
 
-func RegisterMiddleware(next http.HandlerFunc) http.HandlerFunc {
+func RegisterMiddleware(next func(w http.ResponseWriter, r *http.Request, db *sql.DB), db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		defer r.Body.Close()
@@ -30,6 +31,6 @@ func RegisterMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		ctx := context.WithValue(r.Context(), model.RegisterCtx, json)
 		r = r.WithContext(ctx)
 
-		next(w, r)
+		next(w, r, db)
 	}
 }

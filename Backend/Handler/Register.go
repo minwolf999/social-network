@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,7 +10,7 @@ import (
 	utils "social-network/Utils"
 )
 
-func Register(w http.ResponseWriter, r *http.Request) {
+func Register(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	nw := model.ResponseWriter{
 		ResponseWriter: w,
 	}
@@ -23,13 +24,13 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := utils.InsertIntoDb("Auth", register.Auth.Id, register.Auth.Email, register.Auth.Password); err != nil {
+	if err := utils.InsertIntoDb("Auth", db, register.Auth.Id, register.Auth.Email, register.Auth.Password); err != nil {
 		fmt.Println(err)
 		nw.Error("Internal Error: There is a probleme during the push in the DB")
 		return
 	}
 
-	if err := utils.InsertIntoDb("UserInfo", register.Auth.Id, register.Auth.Email, register.FirstName, register.LastName, register.BirthDate, register.ProfilePicture, register.Username, register.AboutMe); err != nil {
+	if err := utils.InsertIntoDb("UserInfo", db, register.Auth.Id, register.Auth.Email, register.FirstName, register.LastName, register.BirthDate, register.ProfilePicture, register.Username, register.AboutMe); err != nil {
 		fmt.Println(err)
 		nw.Error("Internal Error: There is a probleme during the push in the DB")
 		return
