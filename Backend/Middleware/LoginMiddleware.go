@@ -27,11 +27,8 @@ func LoginMiddleware(next func(w http.ResponseWriter, r *http.Request, db *sql.D
 		fmt.Println("new request")
 
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		w.Header().Set("Accept-Encoding", "gzip, deflate, br")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Accept", "/*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
 		// We read the request body and unmarshal it into a structure
 		body, _ := io.ReadAll(r.Body)
