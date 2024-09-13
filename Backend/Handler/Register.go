@@ -40,7 +40,7 @@ func Register(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 
 	// We insert in the table UserInfo of the db the rest of the values
-	if err := utils.InsertIntoDb("UserInfo", db, register.Auth.Id, register.Auth.Email, register.FirstName, register.LastName, register.BirthDate, register.ProfilePicture, register.Username, register.AboutMe); err != nil {
+	if err := utils.InsertIntoDb("UserInfo", db, register.Auth.Id, register.Auth.Email, register.FirstName, register.LastNam e, register.BirthDate, register.ProfilePicture, register.Username, register.AboutMe); err != nil {
 		nw.Error("Internal Error: There is a probleme during the push in the DB")
 		return
 	}
