@@ -27,39 +27,6 @@ func TestOpenDb(t *testing.T) {
 	}
 }
 
-func TestCreateDb(t *testing.T) {
-	// Opens an in-memory SQLite database
-	db, err := OpenDb("sqlite3", ":memory:")
-	if err != nil {
-		t.Fatalf("Erreur lors de l'ouverture de la base de données : %v", err)
-	}
-	defer db.Close()
-
-	// Executes the creation of tables
-	CreateDb(db)
-
-	// Test if the "Auth" table was created successfully
-	var tableName string
-	err = db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name='Auth'").Scan(&tableName)
-	if err != nil {
-		t.Fatalf("La table Auth n'a pas été créée : %v", err)
-	}
-
-	if tableName != "Auth" {
-		t.Errorf("Table 'Auth' non trouvée, trouvée: %s", tableName)
-	}
-
-	// Test if the table "UserInfo" was created successfully
-	err = db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name='UserInfo'").Scan(&tableName)
-	if err != nil {
-		t.Fatalf("La table UserInfo n'a pas été créée : %v", err)
-	}
-
-	if tableName != "UserInfo" {
-		t.Errorf("Table 'UserInfo' non trouvée, trouvée: %s", tableName)
-	}
-}
-
 func TestInsertIntoDb(t *testing.T) {
 	// Opens an in-memory SQLite database
 	db, err := OpenDb("sqlite3", ":memory:")

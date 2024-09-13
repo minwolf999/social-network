@@ -23,35 +23,6 @@ func OpenDb(driverName, dataSourceName string) (*sql.DB, error) {
 	return sql.Open(driverName, dataSourceName)
 }
 
-func CreateDb(db *sql.DB) {
-	// We initialize the SQL query by writing it into a string
-	r := `
-	CREATE TABLE IF NOT EXISTS Auth (
-		Id VARCHAR(36) NOT NULL UNIQUE PRIMARY KEY,
-		Email VARCHAR(100) NOT NULL UNIQUE,
-		Password VARCHAR(50) NOT NULL
-	);
-
-	CREATE TABLE IF NOT EXISTS UserInfo (
-		Id VARCHAR(36) NOT NULL UNIQUE REFERENCES "Auth"("Id"),
-		Email VARCHAR(100) NOT NULL UNIQUE REFERENCES "Auth"("Email"),
-		FirstName VARCHAR(50) NOT NULL, 
-		LastName VARCHAR(50) NOT NULL,
-		BirthDate VARCHAR(20) NOT NULL,
-		ProfilePicture VARCHAR(100),
-		Username VARCHAR(50),
-		AboutMe VARCHAR(280)  
-	);
-	`
-
-	// We execute the SQL request
-	_, err := db.Exec(r)
-	if err != nil {
-		fmt.Println("Create Error", err)
-	}
-
-}
-
 /*
 This function takes a minimum of 2 arguments:
   - a string who is the name of the table

@@ -8,18 +8,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	routes "social-network/Routes"
-	utils "social-network/Utils"
 )
-
-func init() {
-	db, err := utils.OpenDb("sqlite3", "./Database/Database.sqlite")
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	defer db.Close()
-	utils.CreateDb(db)
-}
 
 func main() {
 	fmt.Println("\033[96mServer started at: http://localhost:8080\033[0m")
