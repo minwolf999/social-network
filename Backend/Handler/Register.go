@@ -53,5 +53,8 @@ func Register(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 	// We send a success response to the request
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode("Register successfully")
+	json.NewEncoder(w).Encode(map[string]any{
+		"Success": true,
+		"Message": "Register successfully",
+	})
 }

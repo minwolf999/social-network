@@ -64,7 +64,10 @@ func Login(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	utils.SetCookie(w, base64.StdEncoding.EncodeToString([]byte(userData.Id)))
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode("Registered successfully")
+	json.NewEncoder(w).Encode(map[string]any{
+		"Success": true,
+		"Message": "Login successfully",
+	})
 }
 
 
