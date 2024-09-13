@@ -96,7 +96,7 @@ This function takes 2 arguments:
 The objective of this function is to get values in a table of the db.
 
 The function gonna return:
-  - an [][]interface where each []interface corresponds to a row in the db
+  - an map where each key corresponds to a column in the db
   - an error
 */
 func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([]map[string]any, error) {
@@ -106,7 +106,7 @@ func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([]map[stri
 		return nil, err
 	}
 
-	// We loop on the result to stock them into the [][]interface
+	// We loop on the result to stock them into the []map[string]any
 	var result []map[string]any
 	for rows.Next() {
 		// We initialize the variable who gonna contain the current result row
@@ -122,11 +122,12 @@ func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([]map[stri
 			return nil, err
 		}
 
+		// We add the values row by row in the current map
 		for i, v := range column {
 			row[v] = values[i]
 		}
 
-		// We add the values of the current row into the [][]structure
+		// We add the values of the current row into the []map[string]any
 		result = append(result, row)
 	}
 

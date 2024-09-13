@@ -13,7 +13,7 @@ import (
 This function takes 1 argument:
   - an http.HandlerFunc who is handleFunction who gonna be called after this function
 
-The purpose of this function is to Verificate the content of the request make to the Register function.
+The purpose of this function is to Verificate the content of the request make to the Login function.
 
 The function return an http.HandlerFunc (it's a function)
 */
