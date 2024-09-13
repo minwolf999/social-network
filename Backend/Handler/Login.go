@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strings"
 
 	model "social-network/Model"
 	utils "social-network/Utils"
@@ -36,7 +35,7 @@ func Login(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		return
 	}
 
-	userData, err := parseUserData(authData)
+	userData, err := parseUserData(authData[0])
 	if err != nil {
 		responseWriter.Error(err.Error())
 		return
@@ -62,24 +61,13 @@ func getLoginDataFromContext(req *http.Request) (model.Auth, error) {
 	return loginData, nil
 }
 
-func parseUserData(userData [][]interface{}) (model.Auth, error) {
-	serializedData, err := json.Marshal(userData[0])
-	if err != nil {
-		return model.Auth{}, errors.New("internal error: conversion problem")
-	}
-
-	userMap := map[string]interface{}{
-		"id":       strings.Split(strings.ReplaceAll(string(serializedData)[1:len(serializedData)-1], "\"", ""), ",")[0],
-		"email":    strings.Split(strings.ReplaceAll(string(serializedData)[1:len(serializedData)-1], "\"", ""), ",")[1],
-		"password": strings.Split(strings.ReplaceAll(string(serializedData)[1:len(serializedData)-1], "\"", ""), ",")[2],
-	}
-
-	serializedUserMap, err := json.Marshal(userMap)
+func parseUserData(userData map[string]any) (model.Auth, error) {
+	serializedData, err := json.Marshal(userData)
 	if err != nil {
 		return model.Auth{}, errors.New("internal error: conversion problem")
 	}
 
 	var authResult model.Auth
-	err = json.Unmarshal(serializedUserMap, &authResult)
+	err = json.Unmarshal(serializedData, &authResult)
 	return authResult, err
 }

@@ -31,13 +31,14 @@ func CreateDb(db *sql.DB) {
 		Email VARCHAR(100) NOT NULL UNIQUE,
 		Password VARCHAR(50) NOT NULL
 	);
+
 	CREATE TABLE IF NOT EXISTS UserInfo (
 		Id VARCHAR(36) NOT NULL UNIQUE REFERENCES "Auth"("Id"),
 		Email VARCHAR(100) NOT NULL UNIQUE REFERENCES "Auth"("Email"),
 		FirstName VARCHAR(50) NOT NULL, 
 		LastName VARCHAR(50) NOT NULL,
-		Birth VARCHAR(20) NOT NULL,
-		Avatar VARCHAR(100),
+		BirthDate VARCHAR(20) NOT NULL,
+		ProfilePicture VARCHAR(100),
 		Username VARCHAR(50),
 		AboutMe VARCHAR(280)  
 	);
@@ -98,7 +99,7 @@ The function gonna return:
   - an [][]interface where each []interface corresponds to a row in the db
   - an error
 */
-func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([][]interface{}, error) {
+func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([]map[string]any, error) {
 	// We prepare and execute the select request
 	column, rows, err := PrepareStmt(tabelName, db, Args)
 	if err != nil {
@@ -106,17 +107,23 @@ func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([][]interf
 	}
 
 	// We loop on the result to stock them into the [][]interface
-	var result [][]interface{}
+	var result []map[string]any
 	for rows.Next() {
 		// We initialize the variable who gonna contain the current result row
-		row := make([]interface{}, len(column))
+		row := make(map[string]any)
+
+		values := make([]interface{}, len(column))
 		for i := 0; i < len(column); i++ {
-			row[i] = new(string)
+			values[i] = new(string)
 		}
 
 		// We fill the variable with the values of the row
-		if err := rows.Scan(row...); err != nil {
+		if err := rows.Scan(values...); err != nil {
 			return nil, err
+		}
+
+		for i, v := range column {
+			row[v] = values[i]
 		}
 
 		// We add the values of the current row into the [][]structure

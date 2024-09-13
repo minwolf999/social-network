@@ -219,9 +219,9 @@ func TestSelectFromDb(t *testing.T) {
 
 	// Checks column values
 	row := result[0]
-	id := *(row[0].(*string))
-	email := *(row[1].(*string))
-	password := *(row[2].(*string))
+	id := *(row["Id"].(*string))
+	email := *(row["Email"].(*string))
+	password := *(row["Password"].(*string))
 
 	// Check that the data is correct
 	if id != "2" {
