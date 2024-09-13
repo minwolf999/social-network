@@ -27,17 +27,18 @@ func CreateDb(db *sql.DB) {
 	// We initialize the SQL query by writing it into a string
 	r := `
 	CREATE TABLE IF NOT EXISTS Auth (
-		Id VARCHAR(36) NOT NULL PRIMARY KEY,
-		Email VARCHAR(100) NOT NULL,
+		Id VARCHAR(36) NOT NULL UNIQUE PRIMARY KEY,
+		Email VARCHAR(100) NOT NULL UNIQUE,
 		Password VARCHAR(50) NOT NULL
 	);
+
 	CREATE TABLE IF NOT EXISTS UserInfo (
-		Id VARCHAR(36) NOT NULL REFERENCES "Auth"("Id"),
-		Email VARCHAR(100) NOT NULL REFERENCES "Auth"("Email"),
+		Id VARCHAR(36) NOT NULL UNIQUE REFERENCES "Auth"("Id"),
+		Email VARCHAR(100) NOT NULL UNIQUE REFERENCES "Auth"("Email"),
 		FirstName VARCHAR(50) NOT NULL, 
 		LastName VARCHAR(50) NOT NULL,
-		Birth VARCHAR(20) NOT NULL,
-		Avatar VARCHAR(100),
+		BirthDate VARCHAR(20) NOT NULL,
+		ProfilePicture VARCHAR(100),
 		Username VARCHAR(50),
 		AboutMe VARCHAR(280)  
 	);
@@ -95,31 +96,38 @@ This function takes 2 arguments:
 The objective of this function is to get values in a table of the db.
 
 The function gonna return:
-  - an [][]interface where each []interface corresponds to a row in the db
+  - an map where each key corresponds to a column in the db
   - an error
 */
-func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([][]interface{}, error) {
+func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([]map[string]any, error) {
 	// We prepare and execute the select request
 	column, rows, err := PrepareStmt(tabelName, db, Args)
 	if err != nil {
 		return nil, err
 	}
 
-	// We loop on the result to stock them into the [][]interface
-	var result [][]interface{}
+	// We loop on the result to stock them into the []map[string]any
+	var result []map[string]any
 	for rows.Next() {
 		// We initialize the variable who gonna contain the current result row
-		row := make([]interface{}, len(column))
+		row := make(map[string]any)
+
+		values := make([]interface{}, len(column))
 		for i := 0; i < len(column); i++ {
-			row[i] = new(string)
+			values[i] = new(string)
 		}
 
 		// We fill the variable with the values of the row
-		if err := rows.Scan(row...); err != nil {
+		if err := rows.Scan(values...); err != nil {
 			return nil, err
 		}
 
-		// We add the values of the current row into the [][]structure
+		// We add the values row by row in the current map
+		for i, v := range column {
+			row[v] = values[i]
+		}
+
+		// We add the values of the current row into the []map[string]any
 		result = append(result, row)
 	}
 
