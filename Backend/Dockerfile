@@ -2,7 +2,7 @@
 FROM golang:1.23.1
 
 # Définir le répertoire de travail
-WORKDIR /social-network/Backend
+WORKDIR /social-network
 
 # Installer SQLite3
 RUN apt-get update && \
@@ -13,7 +13,7 @@ RUN apt-get update && \
     ln -s /go/bin/linux_amd64/migrate /usr/local/bin/migrate
 
 # Copier les fichiers Go et autres fichiers nécessaires
-COPY . ./Backend
+COPY . .
 
 # Exposer le port
 EXPOSE 8080

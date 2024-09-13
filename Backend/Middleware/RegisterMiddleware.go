@@ -24,6 +24,8 @@ func RegisterMiddleware(next func(w http.ResponseWriter, r *http.Request, db *sq
 			ResponseWriter: w,
 		}
 
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		
 		// We read the request body and unmarshal it into a structure
 		body, _ := io.ReadAll(r.Body)
 		defer r.Body.Close()
