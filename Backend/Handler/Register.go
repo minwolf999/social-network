@@ -33,7 +33,7 @@ func Register(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		nw.Error("Internal Error: There is an Unmarshal error")
 		return
 	}
-	
+
 	// We get the row in the db where the email is equal to the email send
 	authData, err := utils.SelectFromDb("Auth", db, map[string]any{"Email": register.Auth.Email})
 	if err != nil {
@@ -68,5 +68,6 @@ func Register(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	json.NewEncoder(w).Encode(map[string]any{
 		"Success": true,
 		"Message": "Register successfully",
+		"sessionId": base64.StdEncoding.EncodeToString([]byte(register.Auth.Id)),
 	})
 }

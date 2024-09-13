@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -25,8 +24,6 @@ func RegisterMiddleware(next func(w http.ResponseWriter, r *http.Request, db *sq
 		nw := model.ResponseWriter{
 			ResponseWriter: w,
 		}
-
-		fmt.Println("new request")
 
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")

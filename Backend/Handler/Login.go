@@ -67,6 +67,7 @@ func Login(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	json.NewEncoder(w).Encode(map[string]any{
 		"Success": true,
 		"Message": "Login successfully",
+		"sessionId": base64.StdEncoding.EncodeToString([]byte(userData.Id)),
 	})
 }
 

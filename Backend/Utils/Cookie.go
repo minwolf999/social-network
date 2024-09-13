@@ -2,6 +2,7 @@ package utils
 
 import (
 	"net/http"
+	"time"
 )
 
 /*
@@ -19,6 +20,10 @@ func SetCookie(w http.ResponseWriter, value string) {
 		Value:    value,
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
+		
+		Expires:  time.Now().Add(24 * time.Hour),
+		HttpOnly: true,
+		Secure:   false,
 	}
 
 	http.SetCookie(w, &cookieEmail)
