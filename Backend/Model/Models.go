@@ -50,7 +50,6 @@ func (w *ResponseWriter) Error(err string) {
 	time.Sleep(2 * time.Second)
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusUnauthorized)
 	json.NewEncoder(w).Encode(map[string]any{
 		"Error": http.StatusText(http.StatusUnauthorized),
 		"Message": err,
