@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -33,14 +32,14 @@ func TestLookMethodMiddleware(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	// Crée une fonction next factice pour passer au prochain handler après le middleware
-	next := func(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	next := func(w http.ResponseWriter, r *http.Request) {
 		// Si le middleware est exécuté correctement, cela signifie qu'on arrive à cette fonction
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Middleware passed and next handler called"))
 	}
 
 	// Appel du middleware
-	handler := LookMethod(next, db)
+	handler := LookMethod(http.HandlerFunc(next))
 	handler.ServeHTTP(rr, req)
 
 	// Vérifie le code de statut de la réponse
@@ -84,7 +83,7 @@ func TestSetHeaderAccessControllMiddleware(t *testing.T) {
 	}
 
 	// Appel du middleware
-	handler := SetHeaderAccessControll(next)
+	handler := SetHeaderAccessControll(http.HandlerFunc(next))
 	handler.ServeHTTP(rr, req)
 
 	// Vérifie le code de statut de la réponse

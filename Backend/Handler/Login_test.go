@@ -2,7 +2,6 @@ package handler
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -32,7 +31,7 @@ func TestLogin(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la table : %v", err)
 	}
-	
+
 	// Crée une structure Register de test
 	login := model.Auth{
 		Email:    "unemail@gmail.com",
@@ -60,16 +59,9 @@ func TestLogin(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	next := func(next func(http.ResponseWriter, *http.Request, *sql.DB), db *sql.DB) http.HandlerFunc {
-		// Si le middleware est exécuté correctement, cela signifie qu'on arrive à cette fonction
-		return func(w http.ResponseWriter, r *http.Request) {
-			next(w, r, db)
-		}
-	}
-
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(next(Login, db))
+	handler := http.HandlerFunc(Login(db))
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 	// directly and pass in our Request and ResponseRecorder.

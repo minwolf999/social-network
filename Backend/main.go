@@ -7,6 +7,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
+	middleware "social-network/Middleware"
 	routes "social-network/Routes"
 )
 
@@ -16,12 +17,17 @@ func main() {
 	// We launch the server
 	mux := http.NewServeMux()
 
+	// Enchaîner les middlewares
+	handler := middleware.SetHeaderAccessControll(
+		middleware.LookMethod(mux),
+	)
+
 	// We set all the endpoints
 	routes.Routes(mux)
 
 	// We set the time out limit
 	srv := &http.Server{
-		Handler: mux,
+		Handler: handler,
 		Addr:    "localhost:8080",
 
 		ReadHeaderTimeout: 15 * time.Second,

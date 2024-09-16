@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	handler "social-network/Handler"
-	middleware "social-network/Middleware"
 	utils "social-network/Utils"
 )
 
@@ -23,12 +22,13 @@ func Routes(mux *http.ServeMux) {
 		fmt.Println(err)
 	}
 
-	mux.HandleFunc("/", handler.Redirect)
+	mux.Handle("/", handler.Redirect())
 
-	mux.HandleFunc("/login", middleware.SetHeaderAccessControll(middleware.LookMethod(handler.Login, db)))
-	mux.HandleFunc("/register", middleware.SetHeaderAccessControll(middleware.LookMethod(handler.Register, db)))
+	// mux.HandleFunc("/login", middleware.SetHeaderAccessControll(middleware.LookMethod(handler.Login, db)))
+	mux.Handle("/login", handler.Login(db))
+	mux.Handle("/register", handler.Register(db))
 
-	mux.HandleFunc("/home", handler.Home)
+	mux.Handle("/home", handler.Home())
 }
 
 // Mock Login handler for testing

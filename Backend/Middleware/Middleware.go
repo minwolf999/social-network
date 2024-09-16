@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"database/sql"
 	"net/http"
 
 	model "social-network/Model"
@@ -15,14 +14,25 @@ The purpose of this function is to set the good Cors method.
 
 The function return an http.HandlerFunc (it's a function)
 */
-func SetHeaderAccessControll(next func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+// func SetHeaderAccessControll(next func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		w.Header().Set("Access-Control-Allow-Origin", "*")
+// 		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+// 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+// 		next(w, r)
+// 	}
+// }
+
+// SetHeaderAccessControl middleware to add CORS headers
+func SetHeaderAccessControll(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-		next(w, r)
-	}
+		next.ServeHTTP(w, r)
+	})
 }
 
 /*
@@ -33,8 +43,8 @@ The purpose of this function is to check if the request method is a good request
 
 The function return an http.HandlerFunc (it's a function)
 */
-func LookMethod(next func(http.ResponseWriter, *http.Request, *sql.DB), db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func LookMethod(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		nw := model.ResponseWriter{
 			ResponseWriter: w,
 		}
@@ -44,6 +54,6 @@ func LookMethod(next func(http.ResponseWriter, *http.Request, *sql.DB), db *sql.
 			return
 		}
 
-		next(w, r, db)
-	}
+		next.ServeHTTP(w, r)
+	})
 }
