@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	model "social-network/Model"
@@ -25,12 +26,23 @@ func Register(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		ResponseWriter: w,
 	}
 
-	// We get the datas set in the context and Unmarshal them
-	contextValue := r.Context().Value(model.RegisterCtx).([]byte)
+	// We read the request body and unmarshal it into a structure
+	body, _ := io.ReadAll(r.Body)
+	defer r.Body.Close()
 
 	var register model.Register
-	if err := json.Unmarshal(contextValue, &register); err != nil {
-		nw.Error("Internal Error: There is an Unmarshal error")
+	json.Unmarshal(body, &register)
+	json.Unmarshal(body, &register.Auth)
+
+	// We look if all is good in the datas send in the body of the request
+	if err := utils.RegisterVerification(register); err != nil {
+		nw.Error(err.Error())
+		return
+	}
+
+	// We generate an UUID and crypt the password
+	if err := utils.CreateUuidAndCrypt(&register); err != nil {
+		nw.Error(err.Error())
 		return
 	}
 
@@ -66,8 +78,8 @@ func Register(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	// We send a success response to the request
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
-		"Success": true,
-		"Message": "Register successfully",
+		"Success":   true,
+		"Message":   "Register successfully",
 		"sessionId": base64.StdEncoding.EncodeToString([]byte(register.Auth.Id)),
 	})
 }

@@ -1,11 +1,12 @@
-package registermiddlewaresubfunction
+package utils
 
 import (
 	"errors"
-	model "social-network/Model"
-
+	
 	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
+	
+	model "social-network/Model"
 )
 
 /*
