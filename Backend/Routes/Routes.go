@@ -26,7 +26,7 @@ func Routes(mux *http.ServeMux) {
 	mux.HandleFunc("/", handler.Redirect)
 
 	mux.HandleFunc("/login", middleware.SetHeaderAccessControll(middleware.LookMethod(handler.Login, db)))
-	mux.HandleFunc("/register", middleware.SetHeaderAccessControll(middleware.LookMethod(handler.Login, db)))
+	mux.HandleFunc("/register", middleware.SetHeaderAccessControll(middleware.LookMethod(handler.Register, db)))
 
 	mux.HandleFunc("/home", handler.Home)
 }

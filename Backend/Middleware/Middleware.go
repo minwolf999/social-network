@@ -3,10 +3,9 @@ package middleware
 import (
 	"database/sql"
 	"net/http"
-	
+
 	model "social-network/Model"
 )
-
 
 /*
 This function takes 1 argument:
@@ -25,7 +24,6 @@ func SetHeaderAccessControll(next func(http.ResponseWriter, *http.Request)) http
 		next(w, r)
 	}
 }
-
 
 /*
 This function takes 1 argument:

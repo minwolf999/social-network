@@ -2,10 +2,10 @@ package utils
 
 import (
 	"errors"
-	
+
 	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
-	
+
 	model "social-network/Model"
 )
 
