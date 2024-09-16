@@ -14,15 +14,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-/*
-This function takes 2 arguments:
-  - an http.ResponseWriter
-  - an *http.Request
-
-The purpose of this function is to handle the login endpoint.
-
-The function return no value
-*/
 func Login(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r * http.Request) {
 		nw := model.ResponseWriter{
@@ -45,7 +36,7 @@ func Login(db *sql.DB) http.HandlerFunc {
 		// We get the row in the db where the email is equal to the email send
 		authData, err := utils.SelectFromDb("Auth", db, map[string]any{"Email": loginData.Email})
 		if err != nil {
-			nw.Error("Internal error: Problem during database query")
+			nw.Error("Internal error: Problem during database query: " + err.Error())
 			return
 		}
 	
@@ -67,10 +58,7 @@ func Login(db *sql.DB) http.HandlerFunc {
 			nw.Error("Invalid password")
 			return
 		}
-	
-		// We set a cookie
-		utils.SetCookie(w, base64.StdEncoding.EncodeToString([]byte(userData.Id)))
-	
+		
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]any{
 			"Success":   true,

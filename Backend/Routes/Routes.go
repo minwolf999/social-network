@@ -24,9 +24,10 @@ func Routes(mux *http.ServeMux) {
 
 	mux.Handle("/", handler.Redirect())
 
-	// mux.HandleFunc("/login", middleware.SetHeaderAccessControll(middleware.LookMethod(handler.Login, db)))
 	mux.Handle("/login", handler.Login(db))
 	mux.Handle("/register", handler.Register(db))
+
+	mux.Handle("/VerificationCookie", handler.VerificationCookie(db))
 
 	mux.Handle("/home", handler.Home())
 }

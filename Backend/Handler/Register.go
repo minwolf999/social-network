@@ -12,15 +12,6 @@ import (
 	utils "social-network/Utils"
 )
 
-/*
-This function takes 2 arguments:
-  - an http.ResponseWriter
-  - an *http.Request
-
-The purpose of this function is to handle the register endpoint.
-
-The function return no value
-*/
 func Register(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nw := model.ResponseWriter{
@@ -72,9 +63,6 @@ func Register(db *sql.DB) http.HandlerFunc {
 			nw.Error("Internal Error: There is a probleme during the push in the DB: " + err.Error())
 			return
 		}
-
-		// Set a cookie with the id of the people but converted to base64
-		utils.SetCookie(w, base64.StdEncoding.EncodeToString([]byte(register.Auth.Id)))
 
 		// We send a success response to the request
 		w.Header().Set("Content-Type", "application/json")
