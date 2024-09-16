@@ -11,7 +11,7 @@ import (
 	utils "social-network/Utils"
 )
 
-func VerificationCookie(db *sql.DB) http.HandlerFunc {
+func VerificationSessionId(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nw := model.ResponseWriter{
 			ResponseWriter: w,

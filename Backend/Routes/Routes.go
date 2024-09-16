@@ -27,7 +27,7 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/login", handler.Login(db))
 	mux.Handle("/register", handler.Register(db))
 
-	mux.Handle("/VerificationCookie", handler.VerificationCookie(db))
+	mux.Handle("/VerificationSessionId", handler.VerificationSessionId(db))
 
 	mux.Handle("/home", handler.Home())
 }
