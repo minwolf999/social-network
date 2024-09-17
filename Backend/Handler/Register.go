@@ -2,7 +2,6 @@ package handler
 
 import (
 	"database/sql"
-	"encoding/base64"
 	"encoding/json"
 	"io"
 	"log"
@@ -72,8 +71,8 @@ func Register(db *sql.DB) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success":   true,
-			"Message":   "Register successfully",
-			"sessionId": base64.StdEncoding.EncodeToString([]byte(register.Auth.Id)),
+			"Message":   "Login successfully",
+			"sessionId": GenerateJWT(register.Auth.Id),
 		})
 		if err != nil {
 			log.Printf("[%s] [Register] %s", r.RemoteAddr, err.Error())

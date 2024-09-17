@@ -5,9 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"strings"
 
 	model "social-network/Model"
 	utils "social-network/Utils"
@@ -69,12 +71,34 @@ func Login(db *sql.DB) http.HandlerFunc {
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success":   true,
 			"Message":   "Login successfully",
-			"sessionId": base64.StdEncoding.EncodeToString([]byte(userData.Id)),
+			"sessionId": GenerateJWT(userData.Id),
 		})
 		if err != nil {
 			log.Printf("[%s] [Login] %s", r.RemoteAddr, err.Error())
 		}
 	}
+}
+
+func GenerateJWT(str string) string {
+	header := base64.StdEncoding.EncodeToString([]byte(`{
+		"alg": "HS256",
+		"typ": "JWT"
+	}`))
+
+	content := base64.StdEncoding.EncodeToString([]byte(str))
+
+retry:
+	key, err := bcrypt.GenerateFromPassword([]byte(model.SecretKey), 12)
+	if err != nil {
+		fmt.Println(err)
+	}
+	if strings.Contains(string(key), ".") {
+		goto retry
+	}
+
+	result := header + "." + content + "." + string(key)
+
+	return result
 }
 
 /*

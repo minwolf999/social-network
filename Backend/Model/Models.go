@@ -6,12 +6,8 @@ import (
 	"time"
 )
 
-type RegisterContextKey string
-type LoginContextKey string
-
 const (
-	RegisterCtx RegisterContextKey = "register"
-	LoginCtx    LoginContextKey    = "login"
+	SecretKey = "tYrEQins27rw0ehqkKfJE0Ofxyd6r8QISFtpomcIILFUfRacmDuBa3nS9NXTpZfV99E1AEaU"
 )
 
 type Auth struct {

@@ -10,6 +10,9 @@ import (
 	"net/http"
 	model "social-network/Model"
 	utils "social-network/Utils"
+	"strings"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func VerificationSessionId(db *sql.DB) http.HandlerFunc {
@@ -25,8 +28,21 @@ func VerificationSessionId(db *sql.DB) http.HandlerFunc {
 		var sessionId string
 		json.Unmarshal(body, &sessionId)
 
+		splitSessionId := strings.Split(sessionId, ".")
+		if len(splitSessionId) != 3 {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [VerificationSessionId] %s", r.RemoteAddr, "Invalid JWT")
+			return
+		}
+
+		if err := bcrypt.CompareHashAndPassword([]byte(splitSessionId[2]), []byte(model.SecretKey)); err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [VerificationSessionId] %s", r.RemoteAddr, "Invalid JWT")
+			return
+		}
+
 		// We decode the sessionId
-		decryptId, err := base64.StdEncoding.DecodeString(sessionId)
+		decryptId, err := base64.StdEncoding.DecodeString(splitSessionId[1])
 		if err != nil {
 			nw.Error("Internal Error: There is a probleme during the decrypt of the sessionId : " + err.Error())
 			log.Printf("[%s] [VerificationSessionId] %s", r.RemoteAddr, err.Error())
