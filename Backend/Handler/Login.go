@@ -79,15 +79,27 @@ func Login(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+
+/*
+This function takes 1 argument:
+  - a string who contain the value to set in the JWT
+
+The purpose of this function is to create a JWT with a value crypted inside him.
+
+The function return 1 value:
+  - a string who is the JWT
+*/
 func GenerateJWT(str string) string {
+	// We convert the header object in base 64 for the first part
 	header := base64.StdEncoding.EncodeToString([]byte(`{
-		"alg": "HS256",
 		"typ": "JWT"
 	}`))
 
+	// We convert the value in base 64 for the second part
 	content := base64.StdEncoding.EncodeToString([]byte(str))
 
 retry:
+	// We hash the key for the last part od the JWT
 	key, err := bcrypt.GenerateFromPassword([]byte(model.SecretKey), 12)
 	if err != nil {
 		fmt.Println(err)
@@ -96,10 +108,10 @@ retry:
 		goto retry
 	}
 
-	result := header + "." + content + "." + string(key)
-
-	return result
+	// We assemble the 3 part with a . between each part
+	return header + "." + content + "." + string(key)
 }
+
 
 /*
 This function takes 1 argument:
