@@ -22,10 +22,9 @@ func main() {
 	logFile, _ := os.Create("./Log/" + time.Now().Format("2006-01-02__15-04-05") + ".log")
 	defer logFile.Close()
 
-	saveStdout := os.Stdout
-	os.Stdout = logFile
+	log.SetOutput(logFile)
 
-	fmt.Println("Server started at: http://localhost:8080")
+	log.Println("Server started at: http://localhost:8080")
 
 	// We launch the server
 	mux := http.NewServeMux()
@@ -50,7 +49,7 @@ func main() {
 	go func() {
 		// We start the listening of the port
 		if err := srv.ListenAndServe(); err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 	}()
 
@@ -71,6 +70,6 @@ func main() {
 
 	// We reset the stdout to is normal status
 	fmt.Println("Server exiting")
-	os.Stdout = saveStdout
-	fmt.Println("Server exiting")
+	log.Println("Server exiting")
+	
 }
