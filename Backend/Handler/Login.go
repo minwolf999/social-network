@@ -53,7 +53,7 @@ func Login(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We parse the result into a good structure
-		userData, err := parseUserData(authData[0])
+		userData, err := ParseUserData(authData[0])
 		if err != nil {
 			nw.Error(err.Error())
 			log.Printf("[%s] [Login] %s", r.RemoteAddr, err.Error())
@@ -123,7 +123,7 @@ The function return 2 values:
   - an variable of type Auth
   - an error
 */
-func parseUserData(userData map[string]any) (model.Auth, error) {
+func ParseUserData(userData map[string]any) (model.Auth, error) {
 	// We marshal the map to get it in []byte
 	serializedData, err := json.Marshal(userData)
 	if err != nil {
