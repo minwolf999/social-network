@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	model "social-network/Model"
 	utils "social-network/Utils"
@@ -28,6 +29,8 @@ func VerificationSessionId(db *sql.DB) http.HandlerFunc {
 		decryptId, err := base64.StdEncoding.DecodeString(sessionId)
 		if err != nil {
 			nw.Error("Internal Error: There is a probleme during the decrypt of the sessionId : " + err.Error())
+			log.Printf("[%s] [VerificationSessionId] %s", r.RemoteAddr, err.Error())
+			return
 		}
 
 		// We get the People who have this id in the db
@@ -36,20 +39,25 @@ func VerificationSessionId(db *sql.DB) http.HandlerFunc {
 		})
 		if err != nil {
 			nw.Error("Internal error: Problem during database query: " + err.Error())
+			log.Printf("[%s] [VerificationSessionId] %s", r.RemoteAddr, err.Error())
 			return
 		}
 
 		if err := CheckDatasForCookie(authData); err != nil {
 			nw.Error(err.Error())
+			log.Printf("[%s] [VerificationSessionId] %s", r.RemoteAddr, err.Error())
 			return
 		}
 
 		// We send a success response to the request
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{
+		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
 			"Message": "Valid cookie",
 		})
+		if err != nil {
+			log.Printf("[%s] [VerificationSessionId] %s", r.RemoteAddr, err.Error())
+		}
 	}
 }
 

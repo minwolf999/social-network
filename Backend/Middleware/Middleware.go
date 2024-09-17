@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"net/http"
 
 	model "social-network/Model"
@@ -51,6 +52,7 @@ func LookMethod(next http.Handler) http.Handler {
 
 		if r.Method != http.MethodPost {
 			nw.Error("Invalid method !")
+			log.Printf("[%s] [LookMethod] Invalid method !", r.RemoteAddr)
 			return
 		}
 
