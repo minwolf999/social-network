@@ -2,7 +2,6 @@ package handler
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -50,7 +49,7 @@ func TestVerificationSessionId(t *testing.T) {
 		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
 	}
 
-	sessionId := base64.StdEncoding.EncodeToString([]byte(login.Id))
+	sessionId := GenerateJWT(login.Id)
 
 	body, err := json.Marshal(sessionId)
 	if err != nil {
@@ -90,7 +89,6 @@ func TestVerificationSessionId(t *testing.T) {
 			rr.Body.String(), expected)
 	}
 }
-
 
 func TestCheckDatasForCookie(t *testing.T) {
 	login := []map[string]any{

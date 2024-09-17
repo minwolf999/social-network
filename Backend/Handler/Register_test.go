@@ -87,7 +87,7 @@ func TestRegister(t *testing.T) {
 		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
 	}
 
-	if bodyValue["Message"] != expected {
+	if bodyValue["Success"] != true {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)
 	}
