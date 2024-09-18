@@ -49,7 +49,7 @@ func TestVerificationSessionId(t *testing.T) {
 		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
 	}
 
-	sessionId := GenerateJWT(login.Id)
+	sessionId := utils.GenerateJWT(login.Id)
 
 	body, err := json.Marshal(sessionId)
 	if err != nil {

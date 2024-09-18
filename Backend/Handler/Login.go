@@ -2,14 +2,11 @@ package handler
 
 import (
 	"database/sql"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"strings"
 
 	model "social-network/Model"
 	utils "social-network/Utils"
@@ -71,47 +68,13 @@ func Login(db *sql.DB) http.HandlerFunc {
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success":   true,
 			"Message":   "Login successfully",
-			"sessionId": GenerateJWT(userData.Id),
+			"sessionId": utils.GenerateJWT(userData.Id),
 		})
 		if err != nil {
 			log.Printf("[%s] [Login] %s", r.RemoteAddr, err.Error())
 		}
 	}
 }
-
-
-/*
-This function takes 1 argument:
-  - a string who contain the value to set in the JWT
-
-The purpose of this function is to create a JWT with a value crypted inside him.
-
-The function return 1 value:
-  - a string who is the JWT
-*/
-func GenerateJWT(str string) string {
-	// We convert the header object in base 64 for the first part
-	header := base64.StdEncoding.EncodeToString([]byte(`{
-		"typ": "JWT"
-	}`))
-
-	// We convert the value in base 64 for the second part
-	content := base64.StdEncoding.EncodeToString([]byte(str))
-
-retry:
-	// We hash the key for the last part od the JWT
-	key, err := bcrypt.GenerateFromPassword([]byte(model.SecretKey), 12)
-	if err != nil {
-		fmt.Println(err)
-	}
-	if strings.Contains(string(key), ".") {
-		goto retry
-	}
-
-	// We assemble the 3 part with a . between each part
-	return header + "." + content + "." + string(key)
-}
-
 
 /*
 This function takes 1 argument:

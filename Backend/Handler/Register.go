@@ -72,7 +72,7 @@ func Register(db *sql.DB) http.HandlerFunc {
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success":   true,
 			"Message":   "Login successfully",
-			"sessionId": GenerateJWT(register.Auth.Id),
+			"sessionId": utils.GenerateJWT(register.Auth.Id),
 		})
 		if err != nil {
 			log.Printf("[%s] [Register] %s", r.RemoteAddr, err.Error())

@@ -2,13 +2,11 @@ package handler
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	model "social-network/Model"
 	utils "social-network/Utils"
-	"strings"
 	"testing"
 
 	"golang.org/x/crypto/bcrypt"
@@ -85,32 +83,6 @@ func TestLogin(t *testing.T) {
 	if bodyValue["Success"] != true {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)
-	}
-}
-
-func TestGenerateJWT(t *testing.T) {
-	value := "Test"
-	JWT := GenerateJWT(value)
-
-	splitJWT := strings.Split(JWT, ".")
-	if len(splitJWT) != 3 {
-		t.Errorf("The 3 part of the JWT are not here")
-		return
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(splitJWT[2]), []byte(model.SecretKey)); err != nil {
-		t.Errorf("Invalid secret key: %v", err)
-		return
-	}
-
-	decrypt, err := base64.StdEncoding.DecodeString(splitJWT[1])
-	if err != nil {
-		t.Errorf("Invalid original base format")
-		return
-	}
-
-	if value != string(decrypt) {
-		t.Errorf("Invalid value in JWT")
 	}
 }
 
