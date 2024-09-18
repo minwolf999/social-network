@@ -7,13 +7,34 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
 	middleware "social-network/Middleware"
 	routes "social-network/Routes"
+	utils "social-network/Utils"
 )
+
+func init() {
+	args := os.Args
+	if len(args) != 2 {
+		return
+	}
+
+	if strings.ToLower(args[1]) == "--loaddata" || strings.ToLower(args[1]) == "-l" {
+		db, err := utils.OpenDb("sqlite3", "./Database/Database.sqlite")
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer db.Close()
+		
+		if err = utils.LoadData(db); err != nil {
+			fmt.Println(err)
+		}
+	}
+}
 
 func main() {
 	fmt.Println("\033[96mServer started at: http://localhost:8080\033[0m")
@@ -71,5 +92,5 @@ func main() {
 	// We reset the stdout to is normal status
 	fmt.Println("Server exiting")
 	log.Println("Server exiting")
-	
+
 }
