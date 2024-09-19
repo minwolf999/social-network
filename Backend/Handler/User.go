@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -35,8 +34,6 @@ func Settings(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [Infos] %s", r.RemoteAddr, err.Error())
 			return
 		}
-
-		fmt.Println("userInfos", userInfos)
 
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
