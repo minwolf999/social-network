@@ -6,12 +6,8 @@ import (
 	"time"
 )
 
-type RegisterContextKey string
-type LoginContextKey string
-
 const (
-	RegisterCtx RegisterContextKey = "register"
-	LoginCtx    LoginContextKey    = "login"
+	SecretKey = "tYrEQins27rw0ehqkKfJE0Ofxyd6r8QISFtpomcIILFUfRacmDuBa3nS9NXTpZfV99E1AEaU"
 )
 
 type Auth struct {
@@ -50,6 +46,8 @@ func (w *ResponseWriter) Error(err string) {
 	time.Sleep(2 * time.Second)
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusUnauthorized)
-	json.NewEncoder(w).Encode(err)
+	json.NewEncoder(w).Encode(map[string]any{
+		"Error": http.StatusText(http.StatusUnauthorized),
+		"Message": err,
+	})
 }

@@ -1,11 +1,12 @@
-package registermiddlewaresubfunction
+package utils
 
 import (
 	"errors"
-	model "social-network/Model"
 
 	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
+
+	model "social-network/Model"
 )
 
 /*
@@ -95,6 +96,10 @@ func CreateUuidAndCrypt(register *model.Register) error {
 		return errors.New("there is a probleme with the generation of the uuid")
 	}
 	register.Auth.Id = uuid.String()
+
+	if register.ProfilePicture == nil {
+		register.ProfilePicture = ""
+	}
 
 	return nil
 }

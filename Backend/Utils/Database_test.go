@@ -2,6 +2,7 @@ package utils
 
 import (
 	"database/sql"
+	model "social-network/Model"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -27,7 +28,7 @@ func TestOpenDb(t *testing.T) {
 	}
 }
 
-func TestCreateDb(t *testing.T) {
+func TestLoadData(t *testing.T) {
 	// Opens an in-memory SQLite database
 	db, err := OpenDb("sqlite3", ":memory:")
 	if err != nil {
@@ -35,28 +36,84 @@ func TestCreateDb(t *testing.T) {
 	}
 	defer db.Close()
 
-	// Executes the creation of tables
-	CreateDb(db)
+	// Create a table for testing
+	_, err = db.Exec(`
+			CREATE TABLE IF NOT EXISTS Auth (
+				Id VARCHAR(36) NOT NULL UNIQUE PRIMARY KEY,
+				Email VARCHAR(100) NOT NULL UNIQUE,
+				Password VARCHAR(50) NOT NULL
+			);
 
-	// Test if the "Auth" table was created successfully
-	var tableName string
-	err = db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name='Auth'").Scan(&tableName)
+			CREATE TABLE IF NOT EXISTS UserInfo (
+				Id VARCHAR(36) NOT NULL UNIQUE REFERENCES "Auth"("Id"),
+				Email VARCHAR(100) NOT NULL UNIQUE REFERENCES "Auth"("Email"),
+				FirstName VARCHAR(50) NOT NULL, 
+				LastName VARCHAR(50) NOT NULL,
+				BirthDate VARCHAR(20) NOT NULL,
+				ProfilePicture VARCHAR(100),
+				Username VARCHAR(50),
+				AboutMe VARCHAR(280)  
+			);
+		`)
 	if err != nil {
-		t.Fatalf("La table Auth n'a pas été créée : %v", err)
+		t.Fatalf("Erreur lors de la création de la table : %v", err)
 	}
 
-	if tableName != "Auth" {
-		t.Errorf("Table 'Auth' non trouvée, trouvée: %s", tableName)
-	}
-
-	// Test if the table "UserInfo" was created successfully
-	err = db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name='UserInfo'").Scan(&tableName)
+	err = LoadData(db)
 	if err != nil {
-		t.Fatalf("La table UserInfo n'a pas été créée : %v", err)
+		t.Fatalf("Erreur pendant la résolution de la fonction : %v", err)
 	}
 
-	if tableName != "UserInfo" {
-		t.Errorf("Table 'UserInfo' non trouvée, trouvée: %s", tableName)
+	datas, err := db.Query("SELECT * FROM Auth")
+	if err != nil {
+		t.Fatalf("Erreur lors de la récupération des données : %v", err)
+	}
+
+	var users []model.Register
+	for datas.Next() {
+		var user model.Register
+		if err := datas.Scan(&user.Auth.Id, &user.Auth.Email, &user.Auth.Password); err != nil {
+			t.Fatalf("Erreur lors de la récupération des données : %v", err)
+			return
+		}
+
+		if user.Auth.Id == "" || user.Auth.Email == "" || user.Auth.Password == "" {
+			t.Fatalf("There is an empty field in the value send in the db")
+			return
+		}
+
+		users = append(users, user)
+	}
+
+	if len(users) != 100 {
+		t.Fatalf("There isn't the 100 values")
+		return
+	}
+
+	datas2, err := db.Query("SELECT * FROM UserInfo")
+	if err != nil {
+		t.Fatalf("Erreur lors de la récupération des données : %v", err)
+	}
+
+	users = nil
+	for datas2.Next() {
+		var user model.Register
+		if err := datas2.Scan(&user.Auth.Id, &user.Auth.Email, &user.FirstName, &user.LastName, &user.BirthDate, &user.ProfilePicture, &user.Username, &user.AboutMe); err != nil {
+			t.Fatalf("Erreur lors de la récupération des données : %v", err)
+			return
+		}
+
+		if user.Auth.Id == "" || user.Auth.Email == "" || user.FirstName == "" || user.LastName == "" || user.BirthDate == "" {
+			t.Fatalf("There is an empty field in the value send in the db")
+			return
+		}
+
+		users = append(users, user)
+	}
+
+	if len(users) != 100 {
+		t.Fatalf("There isn't the 100 values")
+		return
 	}
 }
 

@@ -3,6 +3,8 @@ package utils
 import (
 	"database/sql"
 	"fmt"
+	"math/rand"
+	model "social-network/Model"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -23,33 +25,51 @@ func OpenDb(driverName, dataSourceName string) (*sql.DB, error) {
 	return sql.Open(driverName, dataSourceName)
 }
 
-func CreateDb(db *sql.DB) {
-	// We initialize the SQL query by writing it into a string
-	r := `
-	CREATE TABLE IF NOT EXISTS Auth (
-		Id VARCHAR(36) NOT NULL UNIQUE PRIMARY KEY,
-		Email VARCHAR(100) NOT NULL UNIQUE,
-		Password VARCHAR(50) NOT NULL
-	);
+/*
+This function takes 1 argument:
+	- a connection with th db
 
-	CREATE TABLE IF NOT EXISTS UserInfo (
-		Id VARCHAR(36) NOT NULL UNIQUE REFERENCES "Auth"("Id"),
-		Email VARCHAR(100) NOT NULL UNIQUE REFERENCES "Auth"("Email"),
-		FirstName VARCHAR(50) NOT NULL, 
-		LastName VARCHAR(50) NOT NULL,
-		BirthDate VARCHAR(20) NOT NULL,
-		ProfilePicture VARCHAR(100),
-		Username VARCHAR(50),
-		AboutMe VARCHAR(280)  
-	);
-	`
+The purpose of this function is to fill the db with 100 value in each table
 
-	// We execute the SQL request
-	_, err := db.Exec(r)
-	if err != nil {
-		fmt.Println("Create Error", err)
+The function return an error
+*/
+func LoadData(db *sql.DB) error {
+	// We set a list of first and last name 
+	firstNameList := []string{"Alice", "Bob", "Charlie", "David", "Eva", "Frank", "Grace", "Hannah", "Ivy", "Jack","Karen", "Leo", "Mia", "Noah", "Olivia", "Paul", "Quinn", "Ruby", "Sam", "Tina","Uma", "Victor", "Wendy", "Xander", "Yara", "Zane", "Adrian", "Bella", "Carl", "Diana","Ethan", "Fiona", "George", "Helen", "Isaac", "Julia", "Kevin", "Lara", "Michael", "Nina","Oscar", "Penny", "Quentin", "Rachel", "Steve", "Tara", "Uriel", "Violet", "Walter", "Xenia","Yves", "Zelda", "Arthur", "Bianca", "Colin", "Derek", "Emma", "Felix", "Gina", "Harry","Iris", "James", "Kara", "Louis", "Maria", "Nathan", "Owen", "Pam", "Ron", "Sophie","Tom", "Ursula", "Vincent", "Will", "Ximena", "Yvonne", "Zach", "Angela", "Bruno", "Claire","Damien", "Elise", "Freddy", "Gloria", "Henry", "Isabelle", "Julien", "Kurt", "Liam", "Nadine","Olga", "Peter", "Quincy", "Rosie", "Simon", "Tracy", "Ulrich", "Victoria", "Wayne", "Xia","Yasmine", "Zeke"}
+	lastNameList := []string{"Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez","Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin","Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson","Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores","Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell", "Carter", "Roberts","Gomez", "Phillips", "Evans", "Turner", "Diaz", "Parker", "Cruz", "Edwards", "Collins", "Reyes","Stewart", "Morris", "Morales", "Murphy", "Cook", "Rogers", "Gutierrez", "Ortiz", "Morgan", "Cooper","Peterson", "Bailey", "Reed", "Kelly", "Howard", "Ramos", "Kim", "Cox", "Ward", "Richardson","Watson", "Brooks", "Chavez", "Wood", "James", "Bennett", "Gray", "Mendoza", "Ruiz", "Hughes","Price", "Alvarez", "Castillo", "Sanders", "Patel", "Myers", "Long", "Ross", "Foster", "Jimenez","Powell", "Jenkins", "Perry", "Russell", "Sullivan", "Bell", "Coleman", "Butler", "Henderson", "Barnes"}
+
+	// We loop at least 100 times
+	for i := 0; i < 100; i++ {
+		// We create a variable of type Register and set the value inside (we get a random first and last name in the 2 lists)
+		var user model.Register
+		user.FirstName = firstNameList[rand.Intn(len(firstNameList))]
+		user.LastName = lastNameList[rand.Intn(len(lastNameList))]
+		user.Auth.Password = "Azerty&1234"
+		user.Auth.Email = fmt.Sprintf("%s.%s@gmail.com", user.FirstName, user.LastName)
+
+		// We generate 3 random number for the birthDate
+		day := rand.Intn(31-0) + 0
+		mounth := rand.Intn(12-0) + 0
+		year := rand.Intn(2024-1980) + 1980
+		user.BirthDate = fmt.Sprintf("%d-%d-%d", year, mounth, day)
+
+		// We create an UUID and hash the password
+		if err := CreateUuidAndCrypt(&user); err != nil {
+			return err
+		}
+
+		// We insert the values in the tables
+		if err := InsertIntoDb("Auth", db, user.Auth.Id, user.Auth.Email, user.Auth.Password); err != nil {
+			i--
+			continue
+		}
+		if err := InsertIntoDb("UserInfo", db, user.Auth.Id, user.Auth.Email, user.FirstName, user.LastName, user.BirthDate, user.ProfilePicture, user.Username, user.AboutMe); err != nil {			
+			i--
+			continue
+		}
 	}
 
+	return nil
 }
 
 /*
