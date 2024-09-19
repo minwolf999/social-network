@@ -28,7 +28,7 @@ func VerificationSessionId(db *sql.DB) http.HandlerFunc {
 		decryptId, err := utils.DecryptJWT(sessionId)
 		if err != nil {
 			nw.Error("Invalid JWT")
-			log.Printf("Error during the decrypt of the JWT : %v", err)
+			log.Printf("[%s] [VerificationSessionId] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
 			return
 		}
 
