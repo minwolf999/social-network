@@ -2,6 +2,8 @@ package handler
 
 import "net/http"
 
-func Home(w http.ResponseWriter, r *http.Request) {
-	
+func Home() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		
+	}
 }

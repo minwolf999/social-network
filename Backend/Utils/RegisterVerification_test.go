@@ -1,4 +1,4 @@
-package registermiddlewaresubfunction
+package utils
 
 import (
 	model "social-network/Model"
