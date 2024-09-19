@@ -142,9 +142,21 @@ func TestGetPost(t *testing.T) {
 			rr.Body.String(), expected)
 	}
 
+	post := model.Post{
+		Id: "Test",
+		AuthorId: JWT,
+		Text:     "Test",
+		IsGroup:  0,
+	}
+
+	body, err := json.Marshal(post)
+	if err != nil {
+		t.Fatalf("Erreur lors de la sérialisation du corps de la requête : %v", err)
+	}
+
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
-	req, err := http.NewRequest("POST", "/getPost", bytes.NewBuffer([]byte(JWT)))
+	req, err := http.NewRequest("POST", "/getPost", bytes.NewBuffer(body))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -172,5 +184,36 @@ func TestGetPost(t *testing.T) {
 	if bodyValue["Success"] != true {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)
+	}
+}
+
+func TestParsePostData(t *testing.T) {
+	testMap := []map[string]any{
+		{
+			"AuthorId": "id",
+			"Text":    "Hello wold!",
+			"IsGroup": 0,
+		},
+	}
+
+	userData, err := ParsePostData(testMap)
+	if err != nil {
+		t.Errorf("Error during the parse: %v", err)
+		return
+	}
+
+	if userData[0].Text != testMap[0]["Text"] {
+		t.Errorf("Text before and after the parse are not the same")
+		return
+	}
+
+	if userData[0].IsGroup != testMap[0]["IsGroup"] {
+		t.Errorf("IsGroup before and after the parse are not the same")
+		return
+	}
+
+	if userData[0].AuthorId != testMap[0]["AuthorId"] {
+		t.Errorf("AuthorId before and after the parse are not the same")
+		return
 	}
 }
