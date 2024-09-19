@@ -24,14 +24,16 @@ func Routes(mux *http.ServeMux) {
 
 	mux.Handle("/", handler.Redirect())
 
+	// Log routes
 	mux.Handle("/login", handler.Login(db))
 	mux.Handle("/register", handler.Register(db))
 
+	// Cookie route
 	mux.Handle("/verificationSessionId", handler.VerificationSessionId(db))
-
-	mux.Handle("/home", handler.Home())
-
 	mux.Handle("/user", handler.Settings(db))
+	// Posts routes
+	mux.Handle("/createPost", handler.CreatePost(db))
+	mux.Handle("/getPost", handler.GetPost(db))
 }
 
 // Mock Login handler for testing
