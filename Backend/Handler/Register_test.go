@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -19,25 +20,41 @@ func TestRegister(t *testing.T) {
 	}
 	defer db.Close()
 
-	// Create a table for testing
-	_, err = db.Exec(`
-			CREATE TABLE IF NOT EXISTS Auth (
-			Id VARCHAR(36) NOT NULL UNIQUE PRIMARY KEY,
-			Email VARCHAR(100) NOT NULL UNIQUE,
-			Password VARCHAR(50) NOT NULL
-		);
+	rr := TryRegister(t, db)
 
-		CREATE TABLE IF NOT EXISTS UserInfo (
-			Id VARCHAR(36) NOT NULL UNIQUE REFERENCES "Auth"("Id"),
-			Email VARCHAR(100) NOT NULL UNIQUE REFERENCES "Auth"("Email"),
-			FirstName VARCHAR(50) NOT NULL, 
-			LastName VARCHAR(50) NOT NULL,
-			BirthDate VARCHAR(20) NOT NULL,
-			ProfilePicture VARCHAR(100),
-			Username VARCHAR(50),
-			AboutMe VARCHAR(280)  
-		);
-	`)
+	expected := "Register successfully"
+	// Check the response body is what we expect.
+	bodyValue := make(map[string]any)
+
+	if err := json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
+		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
+	}
+	if bodyValue["Success"] != true {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			rr.Body.String(), expected)
+	}
+}
+
+func TryRegister(t *testing.T, db *sql.DB) *httptest.ResponseRecorder {
+	// Create a table for testing
+	_, err := db.Exec(`
+		CREATE TABLE IF NOT EXISTS Auth (
+		Id VARCHAR(36) NOT NULL UNIQUE PRIMARY KEY,
+		Email VARCHAR(100) NOT NULL UNIQUE,
+		Password VARCHAR(50) NOT NULL
+	);
+
+	CREATE TABLE IF NOT EXISTS UserInfo (
+		Id VARCHAR(36) NOT NULL UNIQUE REFERENCES "Auth"("Id"),
+		Email VARCHAR(100) NOT NULL UNIQUE REFERENCES "Auth"("Email"),
+		FirstName VARCHAR(50) NOT NULL, 
+		LastName VARCHAR(50) NOT NULL,
+		BirthDate VARCHAR(20) NOT NULL,
+		ProfilePicture VARCHAR(100),
+		Username VARCHAR(50),
+		AboutMe VARCHAR(280)  
+	);
+`)
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la table : %v", err)
 	}
@@ -79,16 +96,5 @@ func TestRegister(t *testing.T) {
 			status, http.StatusOK)
 	}
 
-	// Check the response body is what we expect.
-	expected := "Register successfully"
-	bodyValue := make(map[string]any)
-
-	if err = json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
-		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
-	}
-
-	if bodyValue["Success"] != true {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			rr.Body.String(), expected)
-	}
+	return rr
 }

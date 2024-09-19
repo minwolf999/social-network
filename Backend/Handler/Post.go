@@ -118,7 +118,7 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
-			"Message": "Login successfully",
+			"Message": "Get posts successfuly",
 			"Posts":   formatedPosts,
 		})
 		if err != nil {
@@ -147,6 +147,5 @@ func ParsePostData(userData []map[string]any) ([]model.Post, error) {
 	// We Unmarshal in the good structure
 	var postResult []model.Post
 	err = json.Unmarshal(serializedData, &postResult)
-
 	return postResult, err
 }
