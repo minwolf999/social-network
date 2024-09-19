@@ -30,6 +30,11 @@ type Register struct {
 	Gender         string `json:"Gender"`
 }
 
+type User struct {
+	Auth     Auth
+	Register Register
+}
+
 type ResponseWriter struct {
 	http.ResponseWriter
 }
@@ -47,7 +52,7 @@ func (w *ResponseWriter) Error(err string) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
-		"Error": http.StatusText(http.StatusUnauthorized),
+		"Error":   http.StatusText(http.StatusUnauthorized),
 		"Message": err,
 	})
 }

@@ -30,6 +30,8 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/verificationSessionId", handler.VerificationSessionId(db))
 
 	mux.Handle("/home", handler.Home())
+
+	mux.Handle("/user", handler.Settings(db))
 }
 
 // Mock Login handler for testing
