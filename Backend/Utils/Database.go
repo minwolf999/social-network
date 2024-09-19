@@ -27,16 +27,16 @@ func OpenDb(driverName, dataSourceName string) (*sql.DB, error) {
 
 /*
 This function takes 1 argument:
-	- a connection with th db
+  - a connection with th db
 
-The purpose of this function is to fill the db with 100 value in each table
+# The purpose of this function is to fill the db with 100 value in each table
 
 The function return an error
 */
 func LoadData(db *sql.DB) error {
-	// We set a list of first and last name 
-	firstNameList := []string{"Alice", "Bob", "Charlie", "David", "Eva", "Frank", "Grace", "Hannah", "Ivy", "Jack","Karen", "Leo", "Mia", "Noah", "Olivia", "Paul", "Quinn", "Ruby", "Sam", "Tina","Uma", "Victor", "Wendy", "Xander", "Yara", "Zane", "Adrian", "Bella", "Carl", "Diana","Ethan", "Fiona", "George", "Helen", "Isaac", "Julia", "Kevin", "Lara", "Michael", "Nina","Oscar", "Penny", "Quentin", "Rachel", "Steve", "Tara", "Uriel", "Violet", "Walter", "Xenia","Yves", "Zelda", "Arthur", "Bianca", "Colin", "Derek", "Emma", "Felix", "Gina", "Harry","Iris", "James", "Kara", "Louis", "Maria", "Nathan", "Owen", "Pam", "Ron", "Sophie","Tom", "Ursula", "Vincent", "Will", "Ximena", "Yvonne", "Zach", "Angela", "Bruno", "Claire","Damien", "Elise", "Freddy", "Gloria", "Henry", "Isabelle", "Julien", "Kurt", "Liam", "Nadine","Olga", "Peter", "Quincy", "Rosie", "Simon", "Tracy", "Ulrich", "Victoria", "Wayne", "Xia","Yasmine", "Zeke"}
-	lastNameList := []string{"Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez","Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin","Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson","Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores","Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell", "Carter", "Roberts","Gomez", "Phillips", "Evans", "Turner", "Diaz", "Parker", "Cruz", "Edwards", "Collins", "Reyes","Stewart", "Morris", "Morales", "Murphy", "Cook", "Rogers", "Gutierrez", "Ortiz", "Morgan", "Cooper","Peterson", "Bailey", "Reed", "Kelly", "Howard", "Ramos", "Kim", "Cox", "Ward", "Richardson","Watson", "Brooks", "Chavez", "Wood", "James", "Bennett", "Gray", "Mendoza", "Ruiz", "Hughes","Price", "Alvarez", "Castillo", "Sanders", "Patel", "Myers", "Long", "Ross", "Foster", "Jimenez","Powell", "Jenkins", "Perry", "Russell", "Sullivan", "Bell", "Coleman", "Butler", "Henderson", "Barnes"}
+	// We set a list of first and last name
+	firstNameList := []string{"Alice", "Bob", "Charlie", "David", "Eva", "Frank", "Grace", "Hannah", "Ivy", "Jack", "Karen", "Leo", "Mia", "Noah", "Olivia", "Paul", "Quinn", "Ruby", "Sam", "Tina", "Uma", "Victor", "Wendy", "Xander", "Yara", "Zane", "Adrian", "Bella", "Carl", "Diana", "Ethan", "Fiona", "George", "Helen", "Isaac", "Julia", "Kevin", "Lara", "Michael", "Nina", "Oscar", "Penny", "Quentin", "Rachel", "Steve", "Tara", "Uriel", "Violet", "Walter", "Xenia", "Yves", "Zelda", "Arthur", "Bianca", "Colin", "Derek", "Emma", "Felix", "Gina", "Harry", "Iris", "James", "Kara", "Louis", "Maria", "Nathan", "Owen", "Pam", "Ron", "Sophie", "Tom", "Ursula", "Vincent", "Will", "Ximena", "Yvonne", "Zach", "Angela", "Bruno", "Claire", "Damien", "Elise", "Freddy", "Gloria", "Henry", "Isabelle", "Julien", "Kurt", "Liam", "Nadine", "Olga", "Peter", "Quincy", "Rosie", "Simon", "Tracy", "Ulrich", "Victoria", "Wayne", "Xia", "Yasmine", "Zeke"}
+	lastNameList := []string{"Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores", "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell", "Carter", "Roberts", "Gomez", "Phillips", "Evans", "Turner", "Diaz", "Parker", "Cruz", "Edwards", "Collins", "Reyes", "Stewart", "Morris", "Morales", "Murphy", "Cook", "Rogers", "Gutierrez", "Ortiz", "Morgan", "Cooper", "Peterson", "Bailey", "Reed", "Kelly", "Howard", "Ramos", "Kim", "Cox", "Ward", "Richardson", "Watson", "Brooks", "Chavez", "Wood", "James", "Bennett", "Gray", "Mendoza", "Ruiz", "Hughes", "Price", "Alvarez", "Castillo", "Sanders", "Patel", "Myers", "Long", "Ross", "Foster", "Jimenez", "Powell", "Jenkins", "Perry", "Russell", "Sullivan", "Bell", "Coleman", "Butler", "Henderson", "Barnes"}
 
 	// We loop at least 100 times
 	for i := 0; i < 100; i++ {
@@ -63,7 +63,7 @@ func LoadData(db *sql.DB) error {
 			i--
 			continue
 		}
-		if err := InsertIntoDb("UserInfo", db, user.Auth.Id, user.Auth.Email, user.FirstName, user.LastName, user.BirthDate, user.ProfilePicture, user.Username, user.AboutMe); err != nil {			
+		if err := InsertIntoDb("UserInfo", db, user.Auth.Id, user.Auth.Email, user.FirstName, user.LastName, user.BirthDate, user.ProfilePicture, user.Username, user.AboutMe); err != nil {
 			i--
 			continue
 		}
@@ -87,9 +87,9 @@ func InsertIntoDb(tabelName string, db *sql.DB, Args ...any) error {
 	var stringMAP string
 	for i, j := range Args {
 		if i < len(Args)-1 {
-			stringMAP += fmt.Sprintf("\"%s\", ", j)
+			stringMAP += fmt.Sprintf("\"%v\", ", j)
 		} else {
-			stringMAP += fmt.Sprintf("\"%s\"", j)
+			stringMAP += fmt.Sprintf("\"%v\"", j)
 		}
 	}
 
@@ -126,16 +126,33 @@ func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([]map[stri
 		return nil, err
 	}
 
+	// Fetch the column types for correct handling of the result set
+	columnTypes, err := rows.ColumnTypes()
+	if err != nil {
+		return nil, err
+	}
+
 	// We loop on the result to stock them into the []map[string]any
 	var result []map[string]any
 	for rows.Next() {
 		// We initialize the variable who gonna contain the current result row
 		row := make(map[string]any)
 
-		values := make([]interface{}, len(column))
-		for i := 0; i < len(column); i++ {
-			values[i] = new(string)
-		}
+		values := make([]interface{}, len(columnTypes))
+		for i, ct := range columnTypes {
+            switch ct.DatabaseTypeName() {
+            case "VARCHAR", "TEXT", "CHAR": // handle string types
+                values[i] = new(string)
+            case "INT", "INTEGER", "BIGINT": // handle integer types
+                values[i] = new(int64)
+            case "FLOAT", "DOUBLE", "REAL": // handle float types
+                values[i] = new(float64)
+            case "BOOL", "BOOLEAN": // handle boolean types
+                values[i] = new(bool)
+            default:
+                values[i] = new(interface{}) // fallback for unknown types
+            }
+        }
 
 		// We fill the variable with the values of the row
 		if err := rows.Scan(values...); err != nil {

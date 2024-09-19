@@ -32,7 +32,8 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/verificationSessionId", handler.VerificationSessionId(db))
 
 	// Posts routes
-	mux.Handle("/createPost", handler.CreatePost())
+	mux.Handle("/createPost", handler.CreatePost(db))
+	mux.Handle("/getPost", handler.GetPost(db))
 }
 
 // Mock Login handler for testing
