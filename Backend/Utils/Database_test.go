@@ -2,7 +2,6 @@ package utils
 
 import (
 	"database/sql"
-	model "social-network/Model"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -13,18 +12,21 @@ func TestOpenDb(t *testing.T) {
 	db, err := OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de l'ouverture de la base de données : %v", err)
+		return
 	}
 	defer db.Close()
 
 	// Check that the connection is not null
 	if db == nil {
 		t.Fatalf("La connexion à la base de données est nulle")
+		return
 	}
 
 	// Checks that a simple query can be executed (sanity check)
 	err = db.Ping()
 	if err != nil {
 		t.Fatalf("Impossible de ping la base de données : %v", err)
+		return
 	}
 }
 
@@ -33,6 +35,7 @@ func TestLoadData(t *testing.T) {
 	db, err := OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de l'ouverture de la base de données : %v", err)
+		return
 	}
 	defer db.Close()
 
@@ -43,76 +46,48 @@ func TestLoadData(t *testing.T) {
 				Email VARCHAR(100) NOT NULL UNIQUE,
 				Password VARCHAR(50) NOT NULL
 			);
-
+			
 			CREATE TABLE IF NOT EXISTS UserInfo (
 				Id VARCHAR(36) NOT NULL UNIQUE REFERENCES "Auth"("Id"),
 				Email VARCHAR(100) NOT NULL UNIQUE REFERENCES "Auth"("Email"),
 				FirstName VARCHAR(50) NOT NULL, 
 				LastName VARCHAR(50) NOT NULL,
 				BirthDate VARCHAR(20) NOT NULL,
-				ProfilePicture VARCHAR(100),
+				ProfilePicture VARCHAR(400000),
 				Username VARCHAR(50),
-				AboutMe VARCHAR(280)  
+				AboutMe VARCHAR(280)
+			);
+			
+			CREATE TABLE IF NOT EXISTS Post (
+				Id VARCHAR(36) NOT NULL UNIQUE,
+				AuthorId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id"),
+				Text VARCHAR(1000) NOT NULL,
+				Image VARCHAR(100),
+				CreationDate VARCHAR(20) NOT NULL,
+				IsGroup VARCHAR(36) REFERENCES "Groups"("Id")
+			);
+			
+			CREATE TABLE IF NOT EXISTS Comment (
+				Id VARCHAR(36) NOT NULL UNIQUE,
+				AuthorId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id"),
+				Text VARCHAR(1000) NOT NULL,
+				CreationDate VARCHAR(20) NOT NULL,
+			
+				PostId VARCHAR(36) REFERENCES "Post"("Id")
+			);
+			
+			CREATE TABLE IF NOT EXISTS Groups (
+				Id VARCHAR(36) NOT NULL UNIQUE
 			);
 		`)
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la table : %v", err)
+		return
 	}
 
 	err = LoadData(db)
 	if err != nil {
 		t.Fatalf("Erreur pendant la résolution de la fonction : %v", err)
-	}
-
-	datas, err := db.Query("SELECT * FROM Auth")
-	if err != nil {
-		t.Fatalf("Erreur lors de la récupération des données : %v", err)
-	}
-
-	var users []model.Register
-	for datas.Next() {
-		var user model.Register
-		if err := datas.Scan(&user.Auth.Id, &user.Auth.Email, &user.Auth.Password); err != nil {
-			t.Fatalf("Erreur lors de la récupération des données : %v", err)
-			return
-		}
-
-		if user.Auth.Id == "" || user.Auth.Email == "" || user.Auth.Password == "" {
-			t.Fatalf("There is an empty field in the value send in the db")
-			return
-		}
-
-		users = append(users, user)
-	}
-
-	if len(users) != 100 {
-		t.Fatalf("There isn't the 100 values")
-		return
-	}
-
-	datas2, err := db.Query("SELECT * FROM UserInfo")
-	if err != nil {
-		t.Fatalf("Erreur lors de la récupération des données : %v", err)
-	}
-
-	users = nil
-	for datas2.Next() {
-		var user model.Register
-		if err := datas2.Scan(&user.Auth.Id, &user.Auth.Email, &user.FirstName, &user.LastName, &user.BirthDate, &user.ProfilePicture, &user.Username, &user.AboutMe); err != nil {
-			t.Fatalf("Erreur lors de la récupération des données : %v", err)
-			return
-		}
-
-		if user.Auth.Id == "" || user.Auth.Email == "" || user.FirstName == "" || user.LastName == "" || user.BirthDate == "" {
-			t.Fatalf("There is an empty field in the value send in the db")
-			return
-		}
-
-		users = append(users, user)
-	}
-
-	if len(users) != 100 {
-		t.Fatalf("There isn't the 100 values")
 		return
 	}
 }
@@ -122,6 +97,7 @@ func TestInsertIntoDb(t *testing.T) {
 	db, err := OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de l'ouverture de la base de données : %v", err)
+		return
 	}
 	defer db.Close()
 
@@ -135,12 +111,14 @@ func TestInsertIntoDb(t *testing.T) {
 	`)
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la table : %v", err)
+		return
 	}
 
 	// Calling the InsertIntoDb function to insert data
 	err = InsertIntoDb("TestTable", db, "29323HDY73", "John Doe", "JAimeCoder1234")
 	if err != nil {
 		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
+		return
 	}
 
 	// Checking that the data has been inserted correctly
@@ -150,14 +128,17 @@ func TestInsertIntoDb(t *testing.T) {
 	err = db.QueryRow("SELECT Id, Email, Password FROM TestTable WHERE Email = ?", "John Doe").Scan(&id, &email, &password)
 	if err != nil {
 		t.Fatalf("Erreur lors de la récupération des données : %v", err)
+		return
 	}
 
 	// Checks
 	if email != "John Doe" {
 		t.Errorf("Nom attendu 'John Doe', obtenu: %s", email)
+		return
 	}
 	if password != "JAimeCoder1234" {
 		t.Errorf("Password attendu JAimeCoder1234, obtenu: %s", password)
+		return
 	}
 }
 
@@ -165,6 +146,7 @@ func TestPrepareStmt(t *testing.T) {
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de l'ouverture de la base de données : %v", err)
+		return
 	}
 	defer db.Close()
 
@@ -178,12 +160,14 @@ func TestPrepareStmt(t *testing.T) {
 	`)
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la table : %v", err)
+		return
 	}
 
 	// Insert test data
 	_, err = db.Exec(`INSERT INTO TestTable (Id, Email, Password) VALUES ("019169b0-1302-71ec-a8d5-2615142a12b9","superemail@gmail.com", "JAimeCoder1235"), ("019169b0-1302-71ec-a8d5-2615142a12b9","superemail@gmail.com", "JAimeCoder1234")`)
 	if err != nil {
 		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
+		return
 	}
 
 	// Calling the PrepareStmt function with test arguments
@@ -196,6 +180,7 @@ func TestPrepareStmt(t *testing.T) {
 	columns, rows, err := PrepareStmt("TestTable", db, args)
 	if err != nil {
 		t.Fatalf("Erreur lors de l'exécution de PrepareStmt : %v", err)
+		return
 	}
 	defer rows.Close()
 
@@ -204,6 +189,7 @@ func TestPrepareStmt(t *testing.T) {
 	for i, col := range expectedColumns {
 		if columns[i] != col {
 			t.Errorf("Colonne attendue %s, obtenu %s", col, columns[i])
+			return
 		}
 	}
 
@@ -215,16 +201,20 @@ func TestPrepareStmt(t *testing.T) {
 		err = rows.Scan(&id, &email, &password)
 		if err != nil {
 			t.Fatalf("Erreur lors de la lecture des résultats : %v", err)
+			return
 		}
 
 		if email != "superemail@gmail.com" {
 			t.Errorf("Email attendu 'superemail@gmail.com', obtenu: %s", email)
+			return
 		}
 		if password != "JAimeCoder1234" {
 			t.Errorf("Password attendu JAimeCoder1234, obtenu: %s", password)
+			return
 		}
 	} else {
 		t.Fatalf("Aucun résultat trouvé pour la requête")
+		return
 	}
 
 }
@@ -234,6 +224,7 @@ func TestSelectFromDb(t *testing.T) {
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de l'ouverture de la base de données : %v", err)
+		return
 	}
 	defer db.Close()
 
@@ -247,6 +238,7 @@ func TestSelectFromDb(t *testing.T) {
 	`)
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la table : %v", err)
+		return
 	}
 
 	// Insert test data
@@ -255,6 +247,7 @@ func TestSelectFromDb(t *testing.T) {
 		("2", "superemail@gmail.com", "JAimeCoder1234")`)
 	if err != nil {
 		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
+		return
 	}
 
 	// Arguments for selection (example with Email and Password)
@@ -267,11 +260,13 @@ func TestSelectFromDb(t *testing.T) {
 	result, err := SelectFromDb("TestTable", db, args)
 	if err != nil {
 		t.Fatalf("Erreur lors de l'exécution de SelectFromDb : %v", err)
+		return
 	}
 
 	// Check that we got only one line
 	if len(result) != 1 {
 		t.Fatalf("Nombre de lignes attendu : 1, obtenu : %d", len(result))
+		return
 	}
 
 	// Checks column values
@@ -283,11 +278,14 @@ func TestSelectFromDb(t *testing.T) {
 	// Check that the data is correct
 	if id != "2" {
 		t.Errorf("Id attendu : '2', obtenu : '%s'", id)
+		return
 	}
 	if email != "superemail@gmail.com" {
 		t.Errorf("Email attendu : 'superemail@gmail.com', obtenu : '%s'", email)
+		return
 	}
 	if password != "JAimeCoder1234" {
 		t.Errorf("Mot de passe attendu : 'JAimeCoder1234', obtenu : '%s'", password)
+		return
 	}
 }

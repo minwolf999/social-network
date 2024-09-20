@@ -28,6 +28,7 @@ func TestRoutes(t *testing.T) {
 		req, err := http.NewRequest(tt.method, tt.route, nil)
 		if err != nil {
 			t.Fatalf("Erreur lors de la création de la requête : %v", err)
+			return
 		}
 
 		// Simulate a request with httptest
@@ -37,6 +38,7 @@ func TestRoutes(t *testing.T) {
 		// Check that the status code is correct
 		if rr.Code != tt.status {
 			t.Errorf("Pour la route %s %s, code de statut attendu: %v, obtenu: %v", tt.method, tt.route, tt.status, rr.Code)
+			return
 		}
 	}
 }

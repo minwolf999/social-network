@@ -39,6 +39,14 @@ type Post struct {
 	IsGroup      string `json:"IsGroup"`
 }
 
+type Comment struct {
+	Id           string `json:"Id"`
+	AuthorId     string `json:"AuthorId"`
+	Text         string `json:"Text"`
+	CreationDate string `json:"CreationDate"`
+	PostId       string `json:"PostId"`
+}
+
 type ResponseWriter struct {
 	http.ResponseWriter
 }

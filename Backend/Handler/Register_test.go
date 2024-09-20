@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -17,10 +18,15 @@ func TestRegister(t *testing.T) {
 	db, err := utils.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
+		return
 	}
 	defer db.Close()
 
-	rr := TryRegister(t, db)
+	rr, err := TryRegister(t, db)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
 
 	expected := "Register successfully"
 	// Check the response body is what we expect.
@@ -28,14 +34,15 @@ func TestRegister(t *testing.T) {
 
 	if err := json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
 		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
+		return
 	}
 	if bodyValue["Success"] != true {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			rr.Body.String(), expected)
+		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
+		return
 	}
 }
 
-func TryRegister(t *testing.T, db *sql.DB) *httptest.ResponseRecorder {
+func TryRegister(t *testing.T, db *sql.DB) (*httptest.ResponseRecorder, error) {
 	// Create a table for testing
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS Auth (
@@ -56,7 +63,7 @@ func TryRegister(t *testing.T, db *sql.DB) *httptest.ResponseRecorder {
 	);
 `)
 	if err != nil {
-		t.Fatalf("Erreur lors de la création de la table : %v", err)
+		return nil, err
 	}
 
 	// Crée une structure Register de test
@@ -73,14 +80,14 @@ func TryRegister(t *testing.T, db *sql.DB) *httptest.ResponseRecorder {
 
 	body, err := json.Marshal(register)
 	if err != nil {
-		t.Fatalf("Erreur lors de la sérialisation du corps de la requête : %v", err)
+		return nil, err
 	}
 
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
 	req, err := http.NewRequest("POST", "/register", bytes.NewBuffer(body))
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
@@ -92,9 +99,9 @@ func TryRegister(t *testing.T, db *sql.DB) *httptest.ResponseRecorder {
 	handler.ServeHTTP(rr, req)
 	// Check the status code is what we expect.
 	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusOK)
+		return nil, fmt.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+
 	}
 
-	return rr
+	return rr, nil
 }

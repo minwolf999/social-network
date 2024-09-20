@@ -34,6 +34,10 @@ func Routes(mux *http.ServeMux) {
 	// Posts routes
 	mux.Handle("/createPost", handler.CreatePost(db))
 	mux.Handle("/getPost", handler.GetPost(db))
+
+	// Comments routes
+	mux.Handle("/createComment/{postId}", handler.CreateComment(db))
+	mux.Handle("/getComment/{postId}", handler.GetComment(db))
 }
 
 // Mock Login handler for testing

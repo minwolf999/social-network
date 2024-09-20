@@ -48,6 +48,7 @@ func TestRegisterVerification(t *testing.T) {
 			err := RegisterVerification(tt.data)
 			if (err != nil) != tt.shouldFail {
 				t.Fatalf("Test '%s' échoué : attendu erreur: %v, obtenu: %v", tt.name, tt.shouldFail, err != nil)
+				return
 			}
 		})
 	}
@@ -86,6 +87,7 @@ func TestIsValidPassword(t *testing.T) {
 			valid := IsValidPassword(tt.data)
 			if valid == tt.shouldFail {
 				t.Fatalf("Test '%s' échoué : attendu erreur: %v, obtenu: %v", tt.name, tt.shouldFail, !valid)
+				return
 			}
 		})
 	}
@@ -107,15 +109,18 @@ func TestCreateUuidAndCrypt(t *testing.T) {
 	err := CreateUuidAndCrypt(register)
 	if err != nil {
 		t.Fatalf("Erreur lors de l'exécution de CreateUuidAndCrypt: %v", err)
+		return
 	}
 
 	// Vérifier que le mot de passe a bien été crypté
 	if err := bcrypt.CompareHashAndPassword([]byte(register.Auth.Password), []byte("MonMotDePasse123!")); err != nil {
 		t.Errorf("Le mot de passe crypté ne correspond pas au mot de passe original")
+		return
 	}
 
 	// Vérifier que l'UUID a bien été généré
 	if register.Auth.Id == "" {
 		t.Errorf("L'UUID n'a pas été généré correctement")
+		return
 	}
 }

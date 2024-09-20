@@ -27,7 +27,7 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 		var post model.Post
 		json.Unmarshal(body, &post)
 
-		// We decrypt the post author ID
+		// We decrypt the post author Id
 		decryptAuthorId, err := utils.DecryptJWT(post.AuthorId)
 		if err != nil {
 			nw.Error("Invalid JWT")

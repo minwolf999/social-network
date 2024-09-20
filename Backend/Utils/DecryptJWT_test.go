@@ -33,6 +33,7 @@ func TestGenerateJWT(t *testing.T) {
 
 	if value != string(decrypt) {
 		t.Errorf("Invalid value in JWT")
+		return
 	}
 }
 
@@ -48,5 +49,6 @@ func TestDecryptJWT(t *testing.T) {
 
 	if decrypt != value {
 		t.Fatalf("Invalid value")
+		return
 	}
 }
