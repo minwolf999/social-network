@@ -2,11 +2,13 @@ package utils
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"math/rand"
 	model "social-network/Model"
 	"strings"
 
+	"github.com/gofrs/uuid"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -38,6 +40,11 @@ func LoadData(db *sql.DB) error {
 	firstNameList := []string{"Alice", "Bob", "Charlie", "David", "Eva", "Frank", "Grace", "Hannah", "Ivy", "Jack", "Karen", "Leo", "Mia", "Noah", "Olivia", "Paul", "Quinn", "Ruby", "Sam", "Tina", "Uma", "Victor", "Wendy", "Xander", "Yara", "Zane", "Adrian", "Bella", "Carl", "Diana", "Ethan", "Fiona", "George", "Helen", "Isaac", "Julia", "Kevin", "Lara", "Michael", "Nina", "Oscar", "Penny", "Quentin", "Rachel", "Steve", "Tara", "Uriel", "Violet", "Walter", "Xenia", "Yves", "Zelda", "Arthur", "Bianca", "Colin", "Derek", "Emma", "Felix", "Gina", "Harry", "Iris", "James", "Kara", "Louis", "Maria", "Nathan", "Owen", "Pam", "Ron", "Sophie", "Tom", "Ursula", "Vincent", "Will", "Ximena", "Yvonne", "Zach", "Angela", "Bruno", "Claire", "Damien", "Elise", "Freddy", "Gloria", "Henry", "Isabelle", "Julien", "Kurt", "Liam", "Nadine", "Olga", "Peter", "Quincy", "Rosie", "Simon", "Tracy", "Ulrich", "Victoria", "Wayne", "Xia", "Yasmine", "Zeke"}
 	lastNameList := []string{"Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores", "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell", "Carter", "Roberts", "Gomez", "Phillips", "Evans", "Turner", "Diaz", "Parker", "Cruz", "Edwards", "Collins", "Reyes", "Stewart", "Morris", "Morales", "Murphy", "Cook", "Rogers", "Gutierrez", "Ortiz", "Morgan", "Cooper", "Peterson", "Bailey", "Reed", "Kelly", "Howard", "Ramos", "Kim", "Cox", "Ward", "Richardson", "Watson", "Brooks", "Chavez", "Wood", "James", "Bennett", "Gray", "Mendoza", "Ruiz", "Hughes", "Price", "Alvarez", "Castillo", "Sanders", "Patel", "Myers", "Long", "Ross", "Foster", "Jimenez", "Powell", "Jenkins", "Perry", "Russell", "Sullivan", "Bell", "Coleman", "Butler", "Henderson", "Barnes"}
 
+	subjects := []string{"Le développeur", "L'algorithme", "Go", "Le projet open-source", "La communauté", "L'interface utilisateur", "Le serveur", "La technologie", "Le programmeur", "Le code"}
+	verbs := []string{"améliore", "optimise", "développe", "test", "documente", "déploie", "corrige", "met à jour", "construit", "gère"}
+	objects := []string{"la performance", "l'API", "le backend", "le frontend", "l'application web", "le système de fichiers", "la sécurité", "la base de données", "les requêtes HTTP", "la fonctionnalité asynchrone"}
+	adverbs := []string{"rapidement", "efficacement", "avec soin", "de manière innovante", "avec passion", "de façon concurrente", "sans erreur", "avec succès", "sans latence", "de manière fluide"}
+
 	// We loop at least 100 times
 	for i := 0; i < 100; i++ {
 		// We create a variable of type Register and set the value inside (we get a random first and last name in the 2 lists)
@@ -64,6 +71,27 @@ func LoadData(db *sql.DB) error {
 			continue
 		}
 		if err := InsertIntoDb("UserInfo", db, user.Auth.Id, user.Auth.Email, user.FirstName, user.LastName, user.BirthDate, user.ProfilePicture, user.Username, user.AboutMe); err != nil {
+			i--
+			continue
+		}
+
+		var post model.Post
+		post.AuthorId = user.Auth.Id
+		uuid, err := uuid.NewV7()
+		if err != nil {
+			return errors.New("there is a probleme with the generation of the uuid")
+		}
+		post.Id = uuid.String()
+
+		day = rand.Intn(31-0) + 0
+		mounth = rand.Intn(12-0) + 0
+		year = rand.Intn(2024-1980) + 1980
+		post.CreationDate = fmt.Sprintf("%d-%d-%d", year, mounth, day)
+
+		post.IsGroup = rand.Intn(2)
+		post.Text = fmt.Sprintf("%s %s %s %s.", subjects[rand.Intn(len(subjects))], verbs[rand.Intn(len(verbs))], objects[rand.Intn(len(objects))], adverbs[rand.Intn(len(adverbs))])
+
+		if err := InsertIntoDb("Post", db, post.Id, post.AuthorId, post.Text, post.Image, post.CreationDate, post.IsGroup); err != nil {
 			i--
 			continue
 		}
@@ -140,19 +168,19 @@ func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([]map[stri
 
 		values := make([]interface{}, len(columnTypes))
 		for i, ct := range columnTypes {
-            switch ct.DatabaseTypeName() {
-            case "VARCHAR", "TEXT", "CHAR": // handle string types
-                values[i] = new(string)
-            case "INT", "INTEGER", "BIGINT": // handle integer types
-                values[i] = new(int64)
-            case "FLOAT", "DOUBLE", "REAL": // handle float types
-                values[i] = new(float64)
-            case "BOOL", "BOOLEAN": // handle boolean types
-                values[i] = new(bool)
-            default:
-                values[i] = new(interface{}) // fallback for unknown types
-            }
-        }
+			switch ct.DatabaseTypeName() {
+			case "VARCHAR", "TEXT", "CHAR": // handle string types
+				values[i] = new(string)
+			case "INT", "INTEGER", "BIGINT": // handle integer types
+				values[i] = new(int64)
+			case "FLOAT", "DOUBLE", "REAL": // handle float types
+				values[i] = new(float64)
+			case "BOOL", "BOOLEAN": // handle boolean types
+				values[i] = new(bool)
+			default:
+				values[i] = new(interface{}) // fallback for unknown types
+			}
+		}
 
 		// We fill the variable with the values of the row
 		if err := rows.Scan(values...); err != nil {
