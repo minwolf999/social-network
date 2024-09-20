@@ -72,7 +72,6 @@ func TryCreatePost(t *testing.T, db *sql.DB, authorId string) *httptest.Response
 		Id: "Test",
 		AuthorId: authorId,
 		Text:     "Test",
-		IsGroup:  0,
 	}
 
 	body, err := json.Marshal(post)
@@ -146,7 +145,6 @@ func TestGetPost(t *testing.T) {
 		Id: "Test",
 		AuthorId: JWT,
 		Text:     "Test",
-		IsGroup:  0,
 	}
 
 	body, err := json.Marshal(post)

@@ -36,7 +36,7 @@ type Post struct {
 	Text         string `json:"Text"`
 	Image        string `json:"Image"`
 	CreationDate string `json:"CreationDate"`
-	IsGroup      int    `json:"IsGroup"`
+	IsGroup      string `json:"IsGroup"`
 }
 
 type ResponseWriter struct {

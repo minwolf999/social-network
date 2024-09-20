@@ -88,7 +88,6 @@ func LoadData(db *sql.DB) error {
 		year = rand.Intn(2024-1980) + 1980
 		post.CreationDate = fmt.Sprintf("%d-%d-%d", year, mounth, day)
 
-		post.IsGroup = rand.Intn(2)
 		post.Text = fmt.Sprintf("%s %s %s %s.", subjects[rand.Intn(len(subjects))], verbs[rand.Intn(len(verbs))], objects[rand.Intn(len(objects))], adverbs[rand.Intn(len(adverbs))])
 
 		if err := InsertIntoDb("Post", db, post.Id, post.AuthorId, post.Text, post.Image, post.CreationDate, post.IsGroup); err != nil {
