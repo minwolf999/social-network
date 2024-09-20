@@ -24,18 +24,19 @@ type Register struct {
 	BirthDate string `json:"BirthDate"`
 
 	// OPTIONNAL
-	ProfilePicture any    `json:"ProfilePicture"`
+	ProfilePicture string `json:"ProfilePicture"`
 	Username       string `json:"Username"`
 	AboutMe        string `json:"AboutMe"`
 	Gender         string `json:"Gender"`
 }
 
 type Post struct {
-	Id       string `json:"Id"`
-	AuthorId string `json:"AuthorId"`
-	Text     string `json:"Text"`
-	Image    any    `json:"Image"`
-	IsGroup  int   `json:"IsGroup"`
+	Id           string `json:"Id"`
+	AuthorId     string `json:"AuthorId"`
+	Text         string `json:"Text"`
+	Image        string `json:"Image"`
+	CreationDate string `json:"CreationDate"`
+	IsGroup      int    `json:"IsGroup"`
 }
 
 type ResponseWriter struct {

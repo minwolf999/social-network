@@ -42,10 +42,6 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if post.Image == nil {
-			post.Image = ""
-		}
-
 		// We create a UID for the post
 		uuid, err := uuid.NewV7()
 		if err != nil {

@@ -39,6 +39,12 @@ func Register(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		if len(register.ProfilePicture) > 400000 {
+			nw.Error("To big image")
+			log.Printf("[%s] [Register] To big image", r.RemoteAddr)
+			return
+		}
+
 		// We get the row in the db where the email is equal to the email send
 		authData, err := utils.SelectFromDb("Auth", db, map[string]any{"Email": register.Auth.Email})
 		if err != nil {

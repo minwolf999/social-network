@@ -97,9 +97,5 @@ func CreateUuidAndCrypt(register *model.Register) error {
 	}
 	register.Auth.Id = uuid.String()
 
-	if register.ProfilePicture == nil {
-		register.ProfilePicture = ""
-	}
-
 	return nil
 }
