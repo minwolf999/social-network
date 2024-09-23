@@ -38,17 +38,88 @@ func TestGenerateJWT(t *testing.T) {
 }
 
 func TestDecryptJWT(t *testing.T) {
-	value := "test"
-	JWT := GenerateJWT(value)
+	// Crée un mock de base de données (ou une vraie connexion en mémoire)
+	db, err := OpenDb("sqlite3", ":memory:")
+	if err != nil {
+		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
+		return
+	}
+	defer db.Close()
 
-	decrypt, err := DecryptJWT(JWT)
+	db.Exec(`
+		CREATE TABLE IF NOT EXISTS Auth (
+			Id VARCHAR(36) NOT NULL UNIQUE PRIMARY KEY,
+			Email VARCHAR(100) NOT NULL UNIQUE,
+			Password VARCHAR(50) NOT NULL
+		);
+	`)
+
+	var value struct {
+		Id       string
+		Email    string
+		Password string
+	}
+
+	value.Id = "Id"
+	value.Email = "Email"
+	value.Password = "Password"
+
+	_, err = db.Exec("INSERT INTO Auth VALUES (?,?,?)", value.Id, value.Email, value.Password)
+	if err != nil {
+		t.Fatalf("Error the insert in the db : %s", err)
+		return
+	}
+
+	JWT := GenerateJWT(value.Id)
+
+	decrypt, err := DecryptJWT(JWT, db)
 	if err != nil {
 		t.Fatalf("Error during the decrypt : %s", err)
 		return
 	}
 
-	if decrypt != value {
+	if decrypt != value.Id {
 		t.Fatalf("Invalid value")
+		return
+	}
+}
+
+
+func TestIfExistsInDB(t *testing.T) {
+	// Crée un mock de base de données (ou une vraie connexion en mémoire)
+	db, err := OpenDb("sqlite3", ":memory:")
+	if err != nil {
+		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
+		return
+	}
+	defer db.Close()
+
+	db.Exec(`
+		CREATE TABLE IF NOT EXISTS Auth (
+			Id VARCHAR(36) NOT NULL UNIQUE PRIMARY KEY,
+			Email VARCHAR(100) NOT NULL UNIQUE,
+			Password VARCHAR(50) NOT NULL
+		);
+	`)
+
+	var value struct {
+		Id       string
+		Email    string
+		Password string
+	}
+
+	value.Id = "Id"
+	value.Email = "Email"
+	value.Password = "Password"
+
+	_, err = db.Exec("INSERT INTO Auth VALUES (?,?,?)", value.Id, value.Email, value.Password)
+	if err != nil {
+		t.Fatalf("Error the insert in the db : %s", err)
+		return
+	}
+
+	if err = IfExistsInDB("Auth", db, map[string]any{"Id": value.Id}); err != nil {
+		t.Fatalf("Error during the function : %s", err)
 		return
 	}
 }

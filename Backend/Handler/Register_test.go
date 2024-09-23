@@ -22,7 +22,16 @@ func TestRegister(t *testing.T) {
 	}
 	defer db.Close()
 
-	rr, err := TryRegister(t, db)
+	rr, err := TryRegister(t, db, model.Register{
+			Auth: model.Auth{
+				Email:           "unemail@gmail.com",
+				Password:        "MonMotDePasse123!",
+				ConfirmPassword: "MonMotDePasse123!",
+			},
+			FirstName: "Jean",
+			LastName:  "Dujardin",
+			BirthDate: "1990-01-01",
+		})
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -42,7 +51,7 @@ func TestRegister(t *testing.T) {
 	}
 }
 
-func TryRegister(t *testing.T, db *sql.DB) (*httptest.ResponseRecorder, error) {
+func TryRegister(t *testing.T, db *sql.DB, register model.Register) (*httptest.ResponseRecorder, error) {
 	// Create a table for testing
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS Auth (
@@ -64,18 +73,6 @@ func TryRegister(t *testing.T, db *sql.DB) (*httptest.ResponseRecorder, error) {
 `)
 	if err != nil {
 		return nil, err
-	}
-
-	// Crée une structure Register de test
-	register := model.Register{
-		Auth: model.Auth{
-			Email:           "unemail@gmail.com",
-			Password:        "MonMotDePasse123!",
-			ConfirmPassword: "MonMotDePasse123!",
-		},
-		FirstName: "Jean",
-		LastName:  "Dujardin",
-		BirthDate: "1990-01-01",
 	}
 
 	body, err := json.Marshal(register)

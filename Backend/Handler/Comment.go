@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+
 	model "social-network/Model"
 	utils "social-network/Utils"
 
@@ -36,7 +37,7 @@ func CreateComment(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We decrypt the comment author Id
-		decryptAuthorId, err := utils.DecryptJWT(comment.AuthorId)
+		decryptAuthorId, err := utils.DecryptJWT(comment.AuthorId, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
 			log.Printf("[%s] [CreateComment] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
@@ -102,7 +103,7 @@ func GetComment(db *sql.DB) http.HandlerFunc {
 		comment.PostId = r.PathValue("postId")
 
 		// We decrypt the post author ID
-		_, err := utils.DecryptJWT(comment.AuthorId)
+		_, err := utils.DecryptJWT(comment.AuthorId, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
 			log.Printf("[%s] [GetPost] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)

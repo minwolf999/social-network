@@ -28,7 +28,7 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &post)
 
 		// We decrypt the post author Id
-		decryptAuthorId, err := utils.DecryptJWT(post.AuthorId)
+		decryptAuthorId, err := utils.DecryptJWT(post.AuthorId, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
 			log.Printf("[%s] [CreatePost] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
@@ -83,7 +83,7 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &post)
 
 		// We decrypt the post author ID
-		_, err := utils.DecryptJWT(post.AuthorId)
+		_, err := utils.DecryptJWT(post.AuthorId, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
 			log.Printf("[%s] [GetPost] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)

@@ -46,14 +46,7 @@ func Register(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We get the row in the db where the email is equal to the email send
-		authData, err := utils.SelectFromDb("Auth", db, map[string]any{"Email": register.Auth.Email})
-		if err != nil {
-			nw.Error("Internal error: Problem during database query: " + err.Error())
-			log.Printf("[%s] [Register] %s", r.RemoteAddr, err.Error())
-			return
-		}
-
-		if len(authData) != 0 {
+		if err := utils.IfExistsInDB("Auth", db, map[string]any{"Email": register.Auth.Email}); err != nil {
 			nw.Error("Email is already used")
 			log.Printf("[%s] [Register] %s", r.RemoteAddr, "Email is already used")
 			return
@@ -75,7 +68,7 @@ func Register(db *sql.DB) http.HandlerFunc {
 
 		// We send a success response to the request
 		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(map[string]any{
+		err := json.NewEncoder(w).Encode(map[string]any{
 			"Success":   true,
 			"Message":   "Login successfully",
 			"sessionId": utils.GenerateJWT(register.Auth.Id),
@@ -85,3 +78,4 @@ func Register(db *sql.DB) http.HandlerFunc {
 		}
 	}
 }
+

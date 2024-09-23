@@ -23,7 +23,16 @@ func TestCreatePost(t *testing.T) {
 	}
 	defer db.Close()
 
-	rr, err := TryRegister(t, db)
+	rr, err := TryRegister(t, db, model.Register{
+			Auth: model.Auth{
+				Email:           "unemail1@gmail.com",
+				Password:        "MonMotDePasse123!",
+				ConfirmPassword: "MonMotDePasse123!",
+			},
+			FirstName: "Jean",
+			LastName:  "Dujardin",
+			BirthDate: "1990-01-01",
+		})
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -120,7 +129,16 @@ func TestGetPost(t *testing.T) {
 	}
 	defer db.Close()
 
-	rr, err := TryRegister(t, db)
+	rr, err := TryRegister(t, db, model.Register{
+		Auth: model.Auth{
+			Email:           "unemail2@gmail.com",
+			Password:        "MonMotDePasse123!",
+			ConfirmPassword: "MonMotDePasse123!",
+		},
+		FirstName: "Jean",
+		LastName:  "Dujardin",
+		BirthDate: "1990-01-01",
+	})
 	if err != nil {
 		t.Fatal(err)
 		return

@@ -38,6 +38,9 @@ func Routes(mux *http.ServeMux) {
 	// Comments routes
 	mux.Handle("/createComment/{postId}", handler.CreateComment(db))
 	mux.Handle("/getComment/{postId}", handler.GetComment(db))
+
+	// Followers routes
+	mux.Handle("/addFollower", handler.AddFollower(db))
 }
 
 // Mock Login handler for testing

@@ -47,6 +47,12 @@ type Comment struct {
 	PostId       string `json:"PostId"`
 }
 
+type Follower struct {
+	Id     string `json:"Id"`
+	UserId string `json:"UserId"`
+	FollowersId []string `json:"FollowersId"`
+}
+
 type ResponseWriter struct {
 	http.ResponseWriter
 }
