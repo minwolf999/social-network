@@ -48,9 +48,9 @@ type Comment struct {
 }
 
 type Follower struct {
-	Id     string `json:"Id"`
-	UserId string `json:"UserId"`
-	FollowersId []string `json:"FollowersId"`
+	Id          string `json:"Id"`
+	UserId      string `json:"UserId"`
+	FollowerId string `json:"FollowerId"`
 }
 
 type ResponseWriter struct {

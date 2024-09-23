@@ -41,6 +41,7 @@ func Routes(mux *http.ServeMux) {
 
 	// Followers routes
 	mux.Handle("/addFollower", handler.AddFollower(db))
+	mux.Handle("/removeFollower", handler.RemoveFollower(db))
 }
 
 // Mock Login handler for testing

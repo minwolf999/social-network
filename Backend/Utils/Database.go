@@ -206,7 +206,7 @@ This function takes 2 arguments:
 The objective of this function is to format, prepare and execute the SQL request.
 
 The function gonna return:
-  - an int who corresponds to the row quantity of the table
+  - an array of string who contains the name of the rows
   - a *sql.Rows who contain the result of the SQL request
 */
 func PrepareStmt(tabelName string, db *sql.DB, Args map[string]any) ([]string, *sql.Rows, error) {
@@ -252,4 +252,47 @@ func PrepareStmt(tabelName string, db *sql.DB, Args map[string]any) ([]string, *
 
 	// We return the column and the result of the SQL request
 	return column, rows, nil
+}
+
+/*
+This function takes 2 arguments:
+  - a string who is the name of the table
+  - a map with containing the wanted values in each row
+
+The objective of this function is to Remove a row in the Db.
+
+The function gonna return:
+  - an error
+*/
+func RemoveFromDB(tabelName string, db *sql.DB, Args map[string]any) error {
+	var whereCondition string
+	var whereValues []any
+
+	// We build the condition of the request
+	for k, v := range Args {
+		whereCondition += fmt.Sprintf("%s = ?", k)
+		whereValues = append(whereValues, v)
+
+		if len(whereValues) != len(Args) {
+			whereCondition += " AND "
+		}
+	}
+
+	if whereCondition != "" {
+		whereCondition = "WHERE " + whereCondition
+	}
+	
+	// We prepare the request
+	stmt, err := db.Prepare(fmt.Sprintf("DELETE FROM %s %s", tabelName, whereCondition))
+	if err != nil {
+		return err
+	}
+
+	// We execute the SQL request
+	_, err = stmt.Exec(whereValues...)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

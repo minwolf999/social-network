@@ -289,3 +289,55 @@ func TestSelectFromDb(t *testing.T) {
 		return
 	}
 }
+
+func TestRemoveFromDb(t *testing.T) {
+	// Opens an in-memory SQLite database
+	db, err := OpenDb("sqlite3", ":memory:")
+	if err != nil {
+		t.Fatalf("Erreur lors de l'ouverture de la base de données : %v", err)
+		return
+	}
+	defer db.Close()
+
+	// Create a table for testing
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS TestTable (
+			Id TEXT,
+			Email TEXT,
+			Password INTEGER
+		);
+
+		CREATE TABLE IF NOT EXISTS Follower (
+			Id VARCHAR(36) NOT NULL UNIQUE,
+			UserId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id"),
+			FollowerId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id")
+		);
+	`)
+	if err != nil {
+		t.Fatalf("Erreur lors de la création de la table : %v", err)
+		return
+	}
+
+	// Calling the InsertIntoDb function to insert data
+	if err = InsertIntoDb("TestTable", db, "test1", "John Doe1", "JAimeCoder1234"); err != nil {
+		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
+		return
+	}
+
+	// Calling the InsertIntoDb function to insert data
+	if err = InsertIntoDb("TestTable", db, "test2", "John Doe2", "JAimeCoder1234"); err != nil {
+		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
+		return
+	}
+
+	// Calling the InsertIntoDb function to insert data
+	if err = InsertIntoDb("Follower", db, "id", "Test1", "Test2"); err != nil {
+		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
+		return
+	}
+
+	if err = RemoveFromDB("Follower", db, map[string]any{"UserId": "Test1", "FollowerId": "Test2"}); err != nil {
+		t.Fatalf("Erreur lors de la suppression des données : %v", err)
+		return
+	}
+}

@@ -22,11 +22,7 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 		body, _ := io.ReadAll(r.Body)
 		defer r.Body.Close()
 
-		var follower struct {
-			Id         string `json:"Id"`
-			UserId     string `json:"UserId"`
-			FollowerId string `json:"FollowerId"`
-		}
+		var follower model.Follower
 		json.Unmarshal(body, &follower)
 
 		// We decrypt the Id of the user make the request to follow someone
@@ -81,7 +77,54 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 			"Message": "Add follower successfully",
 		})
 		if err != nil {
-			log.Printf("[%s] [Register] %s", r.RemoteAddr, err.Error())
+			log.Printf("[%s] [AddFollower] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
+func RemoveFollower(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		// We read the request body and unmarshal it into a structure
+		body, _ := io.ReadAll(r.Body)
+		defer r.Body.Close()
+
+		var follower model.Follower
+		json.Unmarshal(body, &follower)
+
+		// We decrypt the Id of the user make the request to follow someone
+		decryptAuthorId, err := utils.DecryptJWT(follower.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [RemoveFollower] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		follower.UserId = decryptAuthorId
+
+		// We check if the Id of the people want"ed to follow has been forgotten
+		if follower.FollowerId == "" {
+			nw.Error("There is no id for the user to follow")
+			log.Printf("[%s] [RemoveFollower] There is no id for the user to follow", r.RemoteAddr)
+			return
+		}
+
+		if err = utils.RemoveFromDB("Follower", db, map[string]any{"UserId": follower.UserId, "FollowerId": follower.FollowerId}); err != nil {
+			nw.Error("Internal Error: There is a probleme during the delete in the DB: " + err.Error())
+			log.Printf("[%s] [RemoveFollower] %s", r.RemoteAddr, err.Error())
+			return
+		}
+
+		// We send a success response to the request
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Add follower successfully",
+		})
+		if err != nil {
+			log.Printf("[%s] [RemoveFollower] %s", r.RemoteAddr, err.Error())
 		}
 	}
 }
