@@ -46,8 +46,8 @@ func Register(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We get the row in the db where the email is equal to the email send
-		if err := utils.IfExistsInDB("Auth", db, map[string]any{"Email": register.Auth.Email}); err != nil {
-			nw.Error("Email is already used")
+		if err := utils.IfExistsInDB("Auth", db, map[string]any{"Email": register.Auth.Email}); err != nil && err.Error() != "there is no match" {
+			nw.Error("Email is already used : " + err.Error())
 			log.Printf("[%s] [Register] %s", r.RemoteAddr, "Email is already used")
 			return
 		}

@@ -52,7 +52,7 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 
 		// We look if the 2 Ids exists in the Db
 		if err = utils.IfExistsInDB("Auth", db, map[string]any{"Id": follower.UserId}); err != nil {
-			nw.Error("There is no user with the id of the JWT")
+			nw.Error("There is no user with the id of the JWT : " + follower.UserId)
 			log.Printf("[%s] [AddFollower] %s", r.RemoteAddr, "There is no user with the id of the JWT")
 			return
 		}
@@ -121,7 +121,7 @@ func RemoveFollower(db *sql.DB) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
-			"Message": "Add follower successfully",
+			"Message": "Remove follower successfully",
 		})
 		if err != nil {
 			log.Printf("[%s] [RemoveFollower] %s", r.RemoteAddr, err.Error())
