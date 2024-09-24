@@ -180,19 +180,6 @@ func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([]map[stri
 				values[i] = new(interface{}) // fallback for unknown types
 			}
 		}
-			switch ct.DatabaseTypeName() {
-			case "VARCHAR", "TEXT", "CHAR": // handle string types
-				values[i] = new(string)
-			case "INT", "INTEGER", "BIGINT": // handle integer types
-				values[i] = new(int64)
-			case "FLOAT", "DOUBLE", "REAL": // handle float types
-				values[i] = new(float64)
-			case "BOOL", "BOOLEAN": // handle boolean types
-				values[i] = new(bool)
-			default:
-				values[i] = new(interface{}) // fallback for unknown types
-			}
-		}
 
 		// We fill the variable with the values of the row
 		if err := rows.Scan(values...); err != nil {
@@ -288,7 +275,7 @@ func UpdateDb(tableName string, db *sql.DB, updateArgs map[string]any, whereArgs
 	return err
 }
 
-func PrepareUpdateStmt(tableName string, db *sql.DB, args map[string]any, colsToUpdate []string) (error) {
+func PrepareUpdateStmt(tableName string, db *sql.DB, args map[string]any, colsToUpdate []string) error {
 	var (
 		setClauses   []string
 		whereClauses []string
@@ -352,7 +339,7 @@ func RemoveFromDB(tabelName string, db *sql.DB, Args map[string]any) error {
 	if whereCondition != "" {
 		whereCondition = "WHERE " + whereCondition
 	}
-	
+
 	// We prepare the request
 	stmt, err := db.Prepare(fmt.Sprintf("DELETE FROM %s %s", tabelName, whereCondition))
 	if err != nil {

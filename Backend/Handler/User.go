@@ -22,7 +22,7 @@ func Settings(db *sql.DB) http.HandlerFunc {
 		var sessionId string
 		json.Unmarshal(body, &sessionId)
 
-		uid, err := utils.DecryptJWT(sessionId)
+		uid, err := utils.DecryptJWT(sessionId, db)
 		if err != nil {
 			nw.Error("Error when decrypt the JWT")
 			log.Printf("[%s] [Decrypt] %s", r.RemoteAddr, err.Error())
