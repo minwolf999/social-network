@@ -182,7 +182,7 @@ func GetFollowed(db *sql.DB) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
-			"Message": "Get posts successfuly",
+			"Message": "Get followed successfuly",
 			"Follow":  follows,
 		})
 		if err != nil {
@@ -238,7 +238,7 @@ func GetFollower(db *sql.DB) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
-			"Message": "Get posts successfuly",
+			"Message": "Get followed successfuly",
 			"Follow":  follows,
 		})
 		if err != nil {
