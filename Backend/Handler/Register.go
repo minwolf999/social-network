@@ -23,7 +23,6 @@ func Register(db *sql.DB) http.HandlerFunc {
 
 		var register model.Register
 		json.Unmarshal(body, &register)
-		json.Unmarshal(body, &register.Auth)
 
 		// We look if all is good in the datas send in the body of the request
 		if err := utils.RegisterVerification(register); err != nil {
@@ -78,4 +77,3 @@ func Register(db *sql.DB) http.HandlerFunc {
 		}
 	}
 }
-

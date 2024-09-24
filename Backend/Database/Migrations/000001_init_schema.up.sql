@@ -42,3 +42,18 @@ CREATE TABLE IF NOT EXISTS Follower (
 CREATE TABLE IF NOT EXISTS Groups (
 	Id VARCHAR(36) NOT NULL UNIQUE
 );
+
+
+CREATE VIEW PostDetail AS
+  SELECT 
+    p.Id,
+	p.Text,
+	p.Image,
+	p.CreationDate,
+	p.IsGroup,
+	u.FirstName,
+	u.LastName,
+	u.ProfilePicture,
+	u.Username
+FROM Post AS p
+INNER JOIN UserInfo AS u ON p.AuthorId = u.Id;

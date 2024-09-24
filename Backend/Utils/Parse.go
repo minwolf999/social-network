@@ -69,16 +69,26 @@ The function return 2 values:
   - an error
 */
 func ParsePostData(userData []map[string]any) ([]model.Post, error) {
-	// We marshal the map to get it in []byte
-	serializedData, err := json.Marshal(userData)
-	if err != nil {
-		return nil, errors.New("internal error: conversion problem")
+	var postResult []model.Post
+
+	for _, v := range userData {
+		var post model.Post
+
+		// We marshal the map to get it in []byte
+		serializedData, err := json.Marshal(v)
+		if err != nil {
+			return nil, errors.New("internal error: conversion problem")
+		}
+
+		// We Unmarshal in the good structure
+		if err = json.Unmarshal(serializedData, &post); err != nil {
+			return nil, err
+		}
+
+		postResult = append(postResult, post)
 	}
 
-	// We Unmarshal in the good structure
-	var postResult []model.Post
-	err = json.Unmarshal(serializedData, &postResult)
-	return postResult, err
+	return postResult, nil
 }
 
 func ParseFollowerData(follow []map[string]any) ([]model.Follower, error) {

@@ -35,7 +35,7 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 		}
 		post.AuthorId = decryptAuthorId
 
-		if post.Text == "" {
+		if post.Text == "" || post.CreationDate == "" {
 			nw.Error("There is no text for the post")
 			log.Printf("[%s] [CreatePost] There is no text for the post", r.RemoteAddr)
 			return
@@ -51,7 +51,7 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 		post.Id = uuid.String()
 
 		// We insert the post in the db
-		if err = utils.InsertIntoDb("Post", db, post.Id, post.AuthorId, post.Text, post.Image, post.IsGroup); err != nil {
+		if err = utils.InsertIntoDb("Post", db, post.Id, post.AuthorId, post.Text, post.Image, post.CreationDate, post.IsGroup); err != nil {
 			nw.Error("Internal Error: There is a probleme during the push in the DB: " + err.Error())
 			log.Printf("[%s] [Createpost] %s", r.RemoteAddr, err.Error())
 			return
@@ -92,9 +92,9 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 		// We check if there is a precise Post to get and make the request
 		var posts []map[string]any
 		if post.Id != "" {
-			posts, err = utils.SelectFromDb("Post", db, map[string]any{"Id": post.Id})
+			posts, err = utils.SelectFromDb("PostDetail", db, map[string]any{"Id": post.Id})
 		} else {
-			posts, err = utils.SelectFromDb("Post", db, map[string]any{})
+			posts, err = utils.SelectFromDb("PostDetail", db, map[string]any{})
 		}
 		if err != nil {
 			nw.Error("Error during the select in the db")

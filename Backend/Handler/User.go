@@ -45,7 +45,6 @@ func Settings(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [Login] %s", r.RemoteAddr, err.Error())
 		}
 	}
-
 }
 
 func displayInfos(db *sql.DB, uid string) ([]map[string]any, error) {

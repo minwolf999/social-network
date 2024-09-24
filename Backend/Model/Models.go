@@ -18,7 +18,7 @@ type Auth struct {
 }
 
 type Register struct {
-	Auth      Auth   `json:"Auth"`
+	Auth      `json:",inline"`
 	FirstName string `json:"FirstName"`
 	LastName  string `json:"LastName"`
 	BirthDate string `json:"BirthDate"`
@@ -34,9 +34,11 @@ type User struct {
 	Auth     Auth
 	Register Register
 }
+
 type Post struct {
 	Id           string `json:"Id"`
 	AuthorId     string `json:"AuthorId"`
+	Register     `json:",inline"`
 	Text         string `json:"Text"`
 	Image        string `json:"Image"`
 	CreationDate string `json:"CreationDate"`
