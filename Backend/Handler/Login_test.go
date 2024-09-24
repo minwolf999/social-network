@@ -93,25 +93,3 @@ func TestLogin(t *testing.T) {
 	}
 }
 
-func TestParseUserData(t *testing.T) {
-	testMap := map[string]any{
-		"Email":    "unemail@gmail.com",
-		"Password": "MonMotDePasse123!",
-	}
-
-	userData, err := ParseUserData(testMap)
-	if err != nil {
-		t.Errorf("Error during the parse: %v", err)
-		return
-	}
-
-	if userData.Email != testMap["Email"] {
-		t.Errorf("Email before and after the parse are not the same")
-		return
-	}
-
-	if userData.Password != testMap["Password"] {
-		t.Errorf("password before and after the parse are not the same")
-		return
-	}
-}

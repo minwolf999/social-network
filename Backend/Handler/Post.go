@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -104,7 +103,7 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We parse the result of the request in the good structure
-		formatedPosts, err := ParsePostData(posts)
+		formatedPosts, err := utils.ParsePostData(posts)
 		if err != nil {
 			nw.Error(err.Error())
 			log.Printf("[%s] [GetPost] %s", r.RemoteAddr, err.Error())
@@ -129,27 +128,4 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [GetPost] %s", r.RemoteAddr, err.Error())
 		}
 	}
-}
-
-/*
-This function takes 1 argument:
-  - a array of map who contain the value of the select and the name of the colum in the db selected
-
-The purpose of this function is to parse the datas into a good structure.
-
-The function return 2 values:
-  - an variable of type array of Post
-  - an error
-*/
-func ParsePostData(userData []map[string]any) ([]model.Post, error) {
-	// We marshal the map to get it in []byte
-	serializedData, err := json.Marshal(userData)
-	if err != nil {
-		return nil, errors.New("internal error: conversion problem")
-	}
-
-	// We Unmarshal in the good structure
-	var postResult []model.Post
-	err = json.Unmarshal(serializedData, &postResult)
-	return postResult, err
 }

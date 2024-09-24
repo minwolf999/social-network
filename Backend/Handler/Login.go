@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -50,7 +49,7 @@ func Login(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We parse the result into a good structure
-		userData, err := ParseUserData(authData[0])
+		userData, err := utils.ParseAuthData(authData[0])
 		if err != nil {
 			nw.Error(err.Error())
 			log.Printf("[%s] [Login] %s", r.RemoteAddr, err.Error())
@@ -74,28 +73,4 @@ func Login(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [Login] %s", r.RemoteAddr, err.Error())
 		}
 	}
-}
-
-/*
-This function takes 1 argument:
-  - a map who contain the value of the select and the name of the colum in the db selected
-
-The purpose of this function is to parse the datas into a good structure.
-
-The function return 2 values:
-  - an variable of type Auth
-  - an error
-*/
-func ParseUserData(userData map[string]any) (model.Auth, error) {
-	// We marshal the map to get it in []byte
-	serializedData, err := json.Marshal(userData)
-	if err != nil {
-		return model.Auth{}, errors.New("internal error: conversion problem")
-	}
-
-	// We Unmarshal in the good structure
-	var authResult model.Auth
-	err = json.Unmarshal(serializedData, &authResult)
-
-	return authResult, err
 }

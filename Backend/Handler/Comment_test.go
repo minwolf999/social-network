@@ -267,27 +267,3 @@ func TestGetComment(t *testing.T) {
 	}
 }
 
-func TestParseCommentData(t *testing.T) {
-	testMap := []map[string]any{
-		{
-			"AuthorId": "id",
-			"Text":     "Hello wold!",
-		},
-	}
-
-	userData, err := ParseCommentData(testMap)
-	if err != nil {
-		t.Fatalf("Error during the parse: %v", err)
-		return
-	}
-
-	if userData[0].Text != testMap[0]["Text"] {
-		t.Fatal("Text before and after the parse are not the same")
-		return
-	}
-
-	if userData[0].AuthorId != testMap[0]["AuthorId"] {
-		t.Fatal("AuthorId before and after the parse are not the same")
-		return
-	}
-}

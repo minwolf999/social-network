@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -124,7 +123,7 @@ func GetComment(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We parse the result of the request in the good structure
-		formatedComments, err := ParseCommentData(comments)
+		formatedComments, err := utils.ParseCommentData(comments)
 		if err != nil {
 			nw.Error(err.Error())
 			log.Printf("[%s] [GetPost] %s", r.RemoteAddr, err.Error())
@@ -141,17 +140,4 @@ func GetComment(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [GetComment] %s", r.RemoteAddr, err.Error())
 		}
 	}
-}
-
-func ParseCommentData(userData []map[string]any) ([]model.Comment, error) {
-	// We marshal the map to get it in []byte
-	serializedData, err := json.Marshal(userData)
-	if err != nil {
-		return nil, errors.New("internal error: conversion problem")
-	}
-
-	// We Unmarshal in the good structure
-	var postResult []model.Comment
-	err = json.Unmarshal(serializedData, &postResult)
-	return postResult, err
 }

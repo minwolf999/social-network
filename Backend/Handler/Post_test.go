@@ -226,33 +226,3 @@ func TestGetPost(t *testing.T) {
 	}
 }
 
-func TestParsePostData(t *testing.T) {
-	testMap := []map[string]any{
-		{
-			"AuthorId": "id",
-			"Text":     "Hello wold!",
-			"IsGroup":  "0",
-		},
-	}
-
-	userData, err := ParsePostData(testMap)
-	if err != nil {
-		t.Errorf("Error during the parse: %v", err)
-		return
-	}
-
-	if userData[0].Text != testMap[0]["Text"] {
-		t.Errorf("Text before and after the parse are not the same")
-		return
-	}
-
-	if userData[0].IsGroup != testMap[0]["IsGroup"] {
-		t.Errorf("IsGroup before and after the parse are not the same")
-		return
-	}
-
-	if userData[0].AuthorId != testMap[0]["AuthorId"] {
-		t.Errorf("AuthorId before and after the parse are not the same")
-		return
-	}
-}

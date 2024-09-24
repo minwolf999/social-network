@@ -76,7 +76,7 @@ func CheckDatasForCookie(authData []map[string]any) error {
 	}
 
 	// We parse the datas
-	userData, err := ParseUserData(authData[0])
+	userData, err := utils.ParseAuthData(authData[0])
 	if err != nil {
 		return err
 	}
