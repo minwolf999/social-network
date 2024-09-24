@@ -88,3 +88,16 @@ func IfExistsInDB(table string, db *sql.DB, args map[string]any) error {
 
 	return nil
 }
+
+func IfNotExistsInDB(table string, db *sql.DB, args map[string]any) error {
+	authData, err := SelectFromDb(table, db, args)
+	if err != nil {
+		return err
+	}
+
+	if len(authData) != 0 {
+		return errors.New("there is a match")
+	}
+
+	return nil
+}

@@ -3,7 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"errors"
-	
+
 	model "social-network/Model"
 )
 
@@ -79,4 +79,27 @@ func ParsePostData(userData []map[string]any) ([]model.Post, error) {
 	var postResult []model.Post
 	err = json.Unmarshal(serializedData, &postResult)
 	return postResult, err
+}
+
+func ParseFollowerData(follow []map[string]any) (struct{ Follow []model.Follower }, error) {
+	var res struct {
+		Follow []model.Follower
+	}
+
+	for _, v := range follow {
+		serializedData, err := json.Marshal(v)
+		if err != nil {
+			return res, errors.New("internal error: conversion problem")
+		}
+
+		var tmp model.Follower
+		if err = json.Unmarshal(serializedData, &tmp); err != nil {
+			return res, err
+		}
+
+		res.Follow = append(res.Follow, tmp)
+
+	}
+
+	return res, nil
 }

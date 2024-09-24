@@ -63,6 +63,12 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		if err = utils.IfNotExistsInDB("Follower", db, map[string]any{"UserId": follower.UserId, "FollowerId": follower.FollowerId}); err != nil {
+			nw.Error("The user already follows this user")
+			log.Printf("[%s] [AddFollower] The user already follows this user", r.RemoteAddr)
+			return
+		}
+
 		// We insert in the table Follower of the db the structure created
 		if err := utils.InsertIntoDb("Follower", db, follower.Id, follower.UserId, follower.FollowerId); err != nil {
 			nw.Error("Internal Error: There is a probleme during the push in the DB: " + err.Error())
@@ -125,6 +131,62 @@ func RemoveFollower(db *sql.DB) http.HandlerFunc {
 		})
 		if err != nil {
 			log.Printf("[%s] [RemoveFollower] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
+func GetFollower(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		// We read the request body and unmarshal it into a structure
+		body, _ := io.ReadAll(r.Body)
+		defer r.Body.Close()
+
+		var follower struct {
+			UserId string `json:"UserId"`
+		}
+		json.Unmarshal(body, &follower)
+
+		// We decrypt the Id of the user make the request to follow someone
+		decryptAuthorId, err := utils.DecryptJWT(follower.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [GetFollower] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		follower.UserId = decryptAuthorId
+
+		if err = utils.IfExistsInDB("Auth", db, map[string]any{"Id": follower.UserId}); err != nil {
+			nw.Error("Invalid Id in the JWT")
+			log.Printf("[%s] [GetFollower] Invalid Id in the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+
+		follow, err := utils.SelectFromDb("Follower", db, map[string]any{"UserId": follower.UserId})
+		if err != nil {
+			nw.Error("Internal Error: There is a probleme during the selecte in the DB: " + err.Error())
+			log.Printf("[%s] [GetFollower] %s", r.RemoteAddr, err.Error())
+			return
+		}
+
+		follows, err := utils.ParseFollowerData(follow)
+		if err != nil {
+			nw.Error("Internal Error: There is a probleme during the parse of the structure : " + err.Error())
+			log.Printf("[%s] [GetFollower] %s", r.RemoteAddr, err.Error())
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Get posts successfuly",
+			"Follow":  follows,
+		})
+		if err != nil {
+			log.Printf("[%s] [GetFollower] %s", r.RemoteAddr, err.Error())
 		}
 	}
 }
