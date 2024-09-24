@@ -180,6 +180,19 @@ func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([]map[stri
 				values[i] = new(interface{}) // fallback for unknown types
 			}
 		}
+			switch ct.DatabaseTypeName() {
+			case "VARCHAR", "TEXT", "CHAR": // handle string types
+				values[i] = new(string)
+			case "INT", "INTEGER", "BIGINT": // handle integer types
+				values[i] = new(int64)
+			case "FLOAT", "DOUBLE", "REAL": // handle float types
+				values[i] = new(float64)
+			case "BOOL", "BOOLEAN": // handle boolean types
+				values[i] = new(bool)
+			default:
+				values[i] = new(interface{}) // fallback for unknown types
+			}
+		}
 
 		// We fill the variable with the values of the row
 		if err := rows.Scan(values...); err != nil {
@@ -252,6 +265,64 @@ func PrepareStmt(tabelName string, db *sql.DB, Args map[string]any) ([]string, *
 
 	// We return the column and the result of the SQL request
 	return column, rows, nil
+}
+
+func UpdateDb(tableName string, db *sql.DB, updateArgs map[string]any, whereArgs map[string]any) error {
+	// Prepare the list of columns to update
+	var colsToUpdate []string
+	for col := range updateArgs {
+		colsToUpdate = append(colsToUpdate, col)
+	}
+
+	// Combine updateArgs and whereArgs for the PrepareUpdateStmt function
+	allArgs := make(map[string]any)
+	for k, v := range updateArgs {
+		allArgs[k] = v
+	}
+	for k, v := range whereArgs {
+		allArgs[k] = v
+	}
+
+	// We prepare and execute the update request
+	err := PrepareUpdateStmt(tableName, db, allArgs, colsToUpdate)
+	return err
+}
+
+func PrepareUpdateStmt(tableName string, db *sql.DB, args map[string]any, colsToUpdate []string) (error) {
+	var (
+		setClauses   []string
+		whereClauses []string
+		params       []any
+	)
+
+	// Building the SET clause
+	for _, col := range colsToUpdate {
+		if value, ok := args[col]; ok {
+			setClauses = append(setClauses, fmt.Sprintf("%s = ?", col))
+			params = append(params, value)
+			delete(args, col)
+		}
+	}
+
+	if len(setClauses) == 0 {
+		return fmt.Errorf("no columns to update")
+	}
+
+	// Building the WHERE clause with remaining parameters
+	for column, value := range args {
+		whereClauses = append(whereClauses, fmt.Sprintf("%s = ?", column))
+		params = append(params, value)
+	}
+
+	// Construct the query
+	query := fmt.Sprintf("UPDATE %s SET %s", tableName, strings.Join(setClauses, ", "))
+	if len(whereClauses) > 0 {
+		query += " WHERE " + strings.Join(whereClauses, " AND ")
+	}
+
+	// Execute the query
+	_, err := db.Exec(query, params...)
+	return err
 }
 
 /*

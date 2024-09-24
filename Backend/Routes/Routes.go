@@ -30,7 +30,7 @@ func Routes(mux *http.ServeMux) {
 
 	// Cookie route
 	mux.Handle("/verificationSessionId", handler.VerificationSessionId(db))
-
+	mux.Handle("/user", handler.Settings(db))
 	// Posts routes
 	mux.Handle("/createPost", handler.CreatePost(db))
 	mux.Handle("/getPost", handler.GetPost(db))

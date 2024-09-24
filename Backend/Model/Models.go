@@ -30,6 +30,10 @@ type Register struct {
 	Gender         string `json:"Gender"`
 }
 
+type User struct {
+	Auth     Auth
+	Register Register
+}
 type Post struct {
 	Id           string `json:"Id"`
 	AuthorId     string `json:"AuthorId"`
