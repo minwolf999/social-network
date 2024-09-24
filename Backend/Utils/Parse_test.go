@@ -115,3 +115,28 @@ func TestParseCommentData(t *testing.T) {
 		return
 	}
 }
+
+func TestParseFollowerData(t *testing.T) {
+	testMap := []map[string]any{
+		{
+			"UserId": "U_Id",
+			"FollowerId":     "F_Id",
+		},
+	}
+
+	userData, err := ParseFollowerData(testMap)
+	if err != nil {
+		t.Fatalf("Error during the parse: %v", err)
+		return
+	}
+
+	if userData[0].UserId != testMap[0]["UserId"] {
+		t.Fatal("Text before and after the parse are not the same")
+		return
+	}
+
+	if userData[0].FollowerId != testMap[0]["FollowerId"] {
+		t.Fatal("AuthorId before and after the parse are not the same")
+		return
+	}
+}

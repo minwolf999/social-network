@@ -81,24 +81,21 @@ func ParsePostData(userData []map[string]any) ([]model.Post, error) {
 	return postResult, err
 }
 
-func ParseFollowerData(follow []map[string]any) (struct{ Follow []model.Follower }, error) {
-	var res struct {
-		Follow []model.Follower
-	}
+func ParseFollowerData(follow []map[string]any) ([]model.Follower, error) {
+	var res []model.Follower
 
 	for _, v := range follow {
 		serializedData, err := json.Marshal(v)
 		if err != nil {
-			return res, errors.New("internal error: conversion problem")
+			return nil, errors.New("internal error: conversion problem")
 		}
 
 		var tmp model.Follower
 		if err = json.Unmarshal(serializedData, &tmp); err != nil {
-			return res, err
+			return nil, err
 		}
 
-		res.Follow = append(res.Follow, tmp)
-
+		res = append(res, tmp)
 	}
 
 	return res, nil
