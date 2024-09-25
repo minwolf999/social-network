@@ -5,9 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"social-network/Model"
-	"social-network/Utils"
 )
 
 // HandleLike manages the like system for posts
@@ -57,7 +54,7 @@ func handleLikeLogic(db *sql.DB, postID, userID string) error {
 }
 
 func hasUserLikedPost(db *sql.DB, postID, userID string) (bool, error) {
-	query := "SELECT COUNT(*) FROM Likes WHERE PostID = ? AND UserID = ?"
+	query := "SELECT COUNT(*) FROM LikePost WHERE PostID = ? AND UserID = ?"
 	var count int
 	err := db.QueryRow(query, postID, userID).Scan(&count)
 	if err != nil {
@@ -67,7 +64,7 @@ func hasUserLikedPost(db *sql.DB, postID, userID string) (bool, error) {
 }
 
 func addLike(db *sql.DB, postID, userID string) error {
-	_, err := db.Exec("INSERT INTO Likes (PostID, UserID) VALUES (?, ?)", postID, userID)
+	_, err := db.Exec("INSERT INTO LikePost (PostID, UserID) VALUES (?, ?)", postID, userID)
 	if err != nil {
 		return err
 	}
@@ -75,7 +72,7 @@ func addLike(db *sql.DB, postID, userID string) error {
 }
 
 func removeLike(db *sql.DB, postID, userID string) error {
-	result, err := db.Exec("DELETE FROM Likes WHERE PostID = ? AND UserID = ?", postID, userID)
+	result, err := db.Exec("DELETE FROM LikePost WHERE PostID = ? AND UserID = ?", postID, userID)
 	if err != nil {
 		return err
 	}

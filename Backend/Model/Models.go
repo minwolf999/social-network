@@ -43,6 +43,7 @@ type Post struct {
 	Image        string `json:"Image"`
 	CreationDate string `json:"CreationDate"`
 	IsGroup      string `json:"IsGroup"`
+	LikeCount    int    `json:"LikeCount"`
 }
 
 type Comment struct {
