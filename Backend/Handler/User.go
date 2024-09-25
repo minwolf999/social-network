@@ -49,9 +49,5 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 }
 
 func displayInfos(db *sql.DB, uid string) ([]map[string]any, error) {
-	infos, err := utils.SelectFromDb("UserInfo", db, map[string]any{"Id": uid})
-	if err != nil {
-		return nil, err
-	}
-	return infos, nil
+	return utils.SelectFromDb("UserInfo", db, map[string]any{"Id": uid})
 }
