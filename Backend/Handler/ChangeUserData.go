@@ -6,11 +6,64 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	model "social-network/Model"
 	utils "social-network/Utils"
 
 	"golang.org/x/crypto/bcrypt"
 )
+
+func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		var request struct {
+			SessionId string `json:"SessionId"`
+			NewName   string `json:"NewName"`
+			NewPass   string `json:"NewPass"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [ChangeUserData] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		uid, err := utils.DecryptJWT(request.SessionId, db)
+		if err != nil {
+			nw.Error("Error when decrypt the JWT")
+			log.Printf("[%s] [ChangeUserData] %s", r.RemoteAddr, err.Error())
+			return
+		}
+
+		if request.NewName != "" {
+			if err := ChangeUserName(db, request.NewName, uid); err != nil {
+				nw.Error("Error changing username")
+				log.Printf("[%s] [ChangeUserData] Error changing username: %v", r.RemoteAddr, err)
+				return
+			}
+		}
+
+		if request.NewPass != "" {
+			if err := ChangePass(db, request.NewPass, uid); err != nil {
+				nw.Error("Error changing password")
+				log.Printf("[%s] [ChangeUserData] Error changing password: %v", r.RemoteAddr, err)
+				return
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "User data updated successfully",
+		})
+		if err != nil {
+			log.Printf("[%s] [ChangeUserData] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
 
 func ChangeUserName(db *sql.DB, name, uid string) error {
 	actualname, err := utils.SelectFromDb("UserInfo", db, map[string]any{"Id": uid})
@@ -56,7 +109,6 @@ func ChangePass(db *sql.DB, newpass, uid string) error {
 	}
 	return nil
 }
-
 
 func ParseUserDataInfos(userData map[string]any) (model.Register, error) {
 	// We marshal the map to get it in []byte

@@ -49,6 +49,7 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/getFollower", handler.GetFollower(db))
 
 	mux.Handle("/like", handler.HandleLike(db))
+	mux.Handle("/settings", handler.HandleChangeUserData(db))
 }
 
 // Mock Login handler for testing

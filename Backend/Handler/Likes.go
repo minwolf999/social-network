@@ -20,7 +20,7 @@ func HandleLike(db *sql.DB) http.HandlerFunc {
 		var request struct {
 			PostID string `json:"PostID"`
 			UserID string `json:"UserID"`
-			Table  string `json:"table"`
+			Table  string `json:"Table"`
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
