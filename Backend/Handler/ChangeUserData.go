@@ -81,7 +81,7 @@ func ChangeUserName(db *sql.DB, name, uid string) error {
 		log.Println("New Username and current Username are the same", err)
 		return err
 	} else {
-		utils.UpdateDb("UserInfos", db, map[string]any{"Username": name}, map[string]any{"Id": uid})
+		utils.UpdateDb("UserInfo", db, map[string]any{"Username": name}, map[string]any{"Id": uid})
 		fmt.Println("Change username Succes")
 	}
 
@@ -89,7 +89,7 @@ func ChangeUserName(db *sql.DB, name, uid string) error {
 }
 
 func ChangePass(db *sql.DB, newpass, uid string) error {
-	actualpass, err := utils.SelectFromDb("UserInfo", db, map[string]any{"Id": uid})
+	actualpass, err := utils.SelectFromDb("Auth", db, map[string]any{"Id": uid})
 	if err != nil {
 		return err
 	}
@@ -100,11 +100,15 @@ func ChangePass(db *sql.DB, newpass, uid string) error {
 		return err
 	}
 
-	if err = bcrypt.CompareHashAndPassword([]byte(userdata.Password), []byte(newpass)); err != nil {
+	if err = bcrypt.CompareHashAndPassword([]byte(userdata.Password), []byte(newpass)); err == nil {
 		log.Println("This Password is already used", err)
 		return err
 	} else {
-		utils.UpdateDb("Auth", db, map[string]any{"Password": newpass}, map[string]any{"Id": uid})
+		hashedPass, err := bcrypt.GenerateFromPassword([]byte(newpass), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+		utils.UpdateDb("Auth", db, map[string]any{"Password": hashedPass}, map[string]any{"Id": uid})
 		fmt.Println("Change password Succes")
 	}
 	return nil
