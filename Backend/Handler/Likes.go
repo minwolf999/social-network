@@ -11,8 +11,8 @@ import (
 func HandleLike(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request struct {
-			PostID string `json:"postID"`
-			UserID string `json:"userID"`
+			PostID string `json:"PostID"`
+			UserID string `json:"UserID"`
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -60,7 +60,7 @@ func hasUserLikedPost(db *sql.DB, postID, userID string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return count > 0, nil
+	return count != 0, nil
 }
 
 func addLike(db *sql.DB, postID, userID string) error {
@@ -87,6 +87,6 @@ func removeLike(db *sql.DB, postID, userID string) error {
 }
 
 func updateLikeCount(db *sql.DB, postID string, delta int) error {
-	_, err := db.Exec("UPDATE Posts SET LikeCount = LikeCount + ? WHERE ID = ?", delta, postID)
+	_, err := db.Exec("UPDATE Post SET LikeCount = LikeCount + ? WHERE ID = ?", delta, postID)
 	return err
 }
