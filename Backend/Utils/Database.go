@@ -66,7 +66,7 @@ func LoadData(db *sql.DB) error {
 		}
 
 		// We insert the values in the tables
-		if err := InsertIntoDb("Auth", db, user.Auth.Id, user.Auth.Email, user.Auth.Password); err != nil {
+		if err := InsertIntoDb("Auth", db, user.Auth.Id, user.Auth.Email, user.Auth.Password, user.Auth.ConnectionAttempt); err != nil {
 			i--
 			continue
 		}

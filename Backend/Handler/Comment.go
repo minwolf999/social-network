@@ -68,7 +68,7 @@ func CreateComment(db *sql.DB) http.HandlerFunc {
 		comment.Id = uuid.String()
 
 		// We insert the comment in the db
-		if err = utils.InsertIntoDb("Comment", db, comment.Id, comment.AuthorId, comment.Text, comment.CreationDate, comment.PostId); err != nil {
+		if err = utils.InsertIntoDb("Comment", db, comment.Id, comment.AuthorId, comment.Text, comment.CreationDate, comment.PostId, 0, 0); err != nil {
 			nw.Error("Internal Error: There is a probleme during the push in the DB: " + err.Error())
 			log.Printf("[%s] [CreateComment] %s", r.RemoteAddr, err.Error())
 			return

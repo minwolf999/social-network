@@ -11,10 +11,11 @@ const (
 )
 
 type Auth struct {
-	Id              string `json:"Id"`
-	Email           string `json:"Email"`
-	Password        string `json:"Password"`
-	ConfirmPassword string `json:"ConfirmPassword"`
+	Id                string `json:"Id"`
+	Email             string `json:"Email"`
+	Password          string `json:"Password"`
+	ConfirmPassword   string `json:"ConfirmPassword"`
+	ConnectionAttempt int    `json:"ConnectionAttempt"`
 }
 
 type Register struct {

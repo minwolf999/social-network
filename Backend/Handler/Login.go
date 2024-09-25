@@ -56,11 +56,34 @@ func Login(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		if userData.ConnectionAttempt >= 10 {
+			//-------------------------------------------------------------------------------------------------------------------------------------
+			//-------------------------------------------------------------------------------------------------------------------------------------
+			// 								Send an email to reset the account
+			//-------------------------------------------------------------------------------------------------------------------------------------
+			//-------------------------------------------------------------------------------------------------------------------------------------
+
+			nw.Error("Your account has been locked due to multiple unsuccessful logins, an email has been sent to you to reset your password and unlock your account")
+			log.Printf("[%s] [Login] Your account have been locked for to many connection", r.RemoteAddr)
+			return
+		}
+
 		// We compare the password give and the crypted password
 		if err = bcrypt.CompareHashAndPassword([]byte(userData.Password), []byte(loginData.Password)); err != nil {
 			nw.Error("Invalid password")
 			log.Printf("[%s] [Login] %s", r.RemoteAddr, err.Error())
+			
+			userData.ConnectionAttempt++
+			if err = utils.UpdateDb("Auth", db, map[string]any{"ConnectionAttempt": userData.ConnectionAttempt}, map[string]any{"Id": userData.Id}); err != nil {
+				log.Printf("Error during the update in the Db: %v", err)
+			}
+
 			return
+		}
+
+		userData.ConnectionAttempt = 0
+		if err = utils.UpdateDb("Auth", db, map[string]any{"ConnectionAttempt": userData.ConnectionAttempt}, map[string]any{"Id": userData.Id}); err != nil {
+			log.Printf("Error during the update in the Db: %v", err)
 		}
 
 		w.Header().Set("Content-Type", "application/json")
