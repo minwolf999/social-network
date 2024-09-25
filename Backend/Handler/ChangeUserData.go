@@ -2,8 +2,11 @@ package handler
 
 import (
 	"database/sql"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
+	model "social-network/Model"
 	utils "social-network/Utils"
 
 	"golang.org/x/crypto/bcrypt"
@@ -54,11 +57,6 @@ func ChangePass(db *sql.DB, newpass, uid string) error {
 	return nil
 }
 
-/*
-if err = bcrypt.CompareHashAndPassword([]byte(userdata.Username), []byte(name)); err != nil {
-	log.Println("New Username and current Username are the same", err)
-	return err
-} else { */
 
 func ParseUserDataInfos(userData map[string]any) (model.Register, error) {
 	// We marshal the map to get it in []byte
