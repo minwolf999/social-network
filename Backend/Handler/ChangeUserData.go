@@ -108,7 +108,7 @@ func ChangePass(db *sql.DB, newpass, uid string) error {
 		if err != nil {
 			return err
 		}
-		utils.UpdateDb("Auth", db, map[string]any{"Password": hashedPass}, map[string]any{"Id": uid})
+		utils.UpdateDb("Auth", db, map[string]any{"Password": string(hashedPass)}, map[string]any{"Id": uid})
 		fmt.Println("Change password Succes")
 	}
 	return nil
