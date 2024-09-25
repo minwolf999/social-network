@@ -10,9 +10,9 @@ CREATE TABLE IF NOT EXISTS UserInfo (
 	FirstName VARCHAR(50) NOT NULL, 
 	LastName VARCHAR(50) NOT NULL,
 	BirthDate VARCHAR(20) NOT NULL,
-	ProfilePicture VARCHAR(100),
+	ProfilePicture VARCHAR(400000),
 	Username VARCHAR(50),
-	AboutMe VARCHAR(280)  
+	AboutMe VARCHAR(280)
 );
 
 CREATE TABLE IF NOT EXISTS Post (
@@ -20,5 +20,40 @@ CREATE TABLE IF NOT EXISTS Post (
 	AuthorId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id"),
 	Text VARCHAR(1000) NOT NULL,
 	Image VARCHAR(100),
-	IsGroup INTEGER NOT NULL
+	CreationDate VARCHAR(20) NOT NULL,
+	IsGroup VARCHAR(36) REFERENCES "Groups"("Id")
 );
+
+CREATE TABLE IF NOT EXISTS Comment (
+	Id VARCHAR(36) NOT NULL UNIQUE,
+	AuthorId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id"),
+	Text VARCHAR(1000) NOT NULL,
+	CreationDate VARCHAR(20) NOT NULL,
+
+	PostId VARCHAR(36) REFERENCES "Post"("Id")
+);
+
+CREATE TABLE IF NOT EXISTS Follower (
+	Id VARCHAR(36) NOT NULL UNIQUE,
+	UserId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id"),
+	FollowerId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id")
+);
+
+CREATE TABLE IF NOT EXISTS Groups (
+	Id VARCHAR(36) NOT NULL UNIQUE
+);
+
+
+CREATE VIEW PostDetail AS
+  SELECT 
+    p.Id,
+	p.Text,
+	p.Image,
+	p.CreationDate,
+	p.IsGroup,
+	u.FirstName,
+	u.LastName,
+	u.ProfilePicture,
+	u.Username
+FROM Post AS p
+INNER JOIN UserInfo AS u ON p.AuthorId = u.Id;

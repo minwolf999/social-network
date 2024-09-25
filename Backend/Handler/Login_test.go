@@ -17,6 +17,7 @@ func TestLogin(t *testing.T) {
 	db, err := utils.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
+		return
 	}
 	defer db.Close()
 
@@ -30,6 +31,7 @@ func TestLogin(t *testing.T) {
 	`)
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la table : %v", err)
+		return
 	}
 
 	// Crée une structure Register de test
@@ -41,15 +43,18 @@ func TestLogin(t *testing.T) {
 	cryptedPassword, err := bcrypt.GenerateFromPassword([]byte(login.Password), 12)
 	if err != nil {
 		t.Fatalf("Erreur lors du cryptage du mot de passe : %v", err)
+		return
 	}
 
 	if err = utils.InsertIntoDb("Auth", db, "0", login.Email, string(cryptedPassword)); err != nil {
 		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
+		return
 	}
 
 	body, err := json.Marshal(login)
 	if err != nil {
 		t.Fatalf("Erreur lors de la sérialisation du corps de la requête : %v", err)
+		return
 	}
 
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -57,6 +62,7 @@ func TestLogin(t *testing.T) {
 	req, err := http.NewRequest("POST", "/login", bytes.NewBuffer(body))
 	if err != nil {
 		t.Fatal(err)
+		return
 	}
 
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
@@ -68,8 +74,8 @@ func TestLogin(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 	// Check the status code is what we expect.
 	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusOK)
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+		return
 	}
 
 	// Check the response body is what we expect.
@@ -78,33 +84,12 @@ func TestLogin(t *testing.T) {
 
 	if err = json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
 		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
+		return
 	}
 
 	if bodyValue["Success"] != true {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			rr.Body.String(), expected)
-	}
-}
-
-func TestParseUserData(t *testing.T) {
-	testMap := map[string]any{
-		"Email":    "unemail@gmail.com",
-		"Password": "MonMotDePasse123!",
-	}
-
-	userData, err := ParseUserData(testMap)
-	if err != nil {
-		t.Errorf("Error during the parse: %v", err)
-		return
-	}
-
-	if userData.Email != testMap["Email"] {
-		t.Errorf("Email before and after the parse are not the same")
-		return
-	}
-
-	if userData.Password != testMap["Password"] {
-		t.Errorf("password before and after the parse are not the same")
+		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
 		return
 	}
 }
+

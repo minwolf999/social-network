@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"database/sql"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -53,7 +54,7 @@ The function return 2 values:
   - a string who contain the value set in the JWT
   - an error
 */
-func DecryptJWT(JWT string) (string, error) {
+func DecryptJWT(JWT string, db *sql.DB) (string, error) {
 	// We split the 3 part of the JWT
 	splitSessionId := strings.Split(JWT, ".")
 	if len(splitSessionId) != 3 {
@@ -67,5 +68,36 @@ func DecryptJWT(JWT string) (string, error) {
 
 	// We decode the sessionId
 	decryptId, err := base64.StdEncoding.DecodeString(splitSessionId[1])
+	if err != nil {
+
+	}
+
+	IfExistsInDB("Auth", db, map[string]any{"Id": string(decryptId)})
 	return string(decryptId), err
+}
+
+func IfExistsInDB(table string, db *sql.DB, args map[string]any) error {
+	authData, err := SelectFromDb(table, db, args)
+	if err != nil {
+		return err
+	}
+
+	if len(authData) != 1 {
+		return errors.New("there is no match")
+	}
+
+	return nil
+}
+
+func IfNotExistsInDB(table string, db *sql.DB, args map[string]any) error {
+	authData, err := SelectFromDb(table, db, args)
+	if err != nil {
+		return err
+	}
+
+	if len(authData) != 0 {
+		return errors.New("there is a match")
+	}
+
+	return nil
 }

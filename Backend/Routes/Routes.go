@@ -30,10 +30,23 @@ func Routes(mux *http.ServeMux) {
 
 	// Cookie route
 	mux.Handle("/verificationSessionId", handler.VerificationSessionId(db))
-	mux.Handle("/user", handler.Settings(db))
+	
+	// UserDatas routes
+	mux.Handle("/getUser", handler.GetUser(db))
+
 	// Posts routes
 	mux.Handle("/createPost", handler.CreatePost(db))
 	mux.Handle("/getPost", handler.GetPost(db))
+
+	// Comments routes
+	mux.Handle("/createComment/{postId}", handler.CreateComment(db))
+	mux.Handle("/getComment/{postId}", handler.GetComment(db))
+
+	// Followers routes
+	mux.Handle("/addFollowed", handler.AddFollower(db))
+	mux.Handle("/removeFollowed", handler.RemoveFollower(db))
+	mux.Handle("/getFollowed", handler.GetFollowed(db))
+	mux.Handle("/getFollower", handler.GetFollower(db))
 }
 
 // Mock Login handler for testing

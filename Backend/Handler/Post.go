@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -27,8 +26,8 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 		var post model.Post
 		json.Unmarshal(body, &post)
 
-		// We decrypt the post author ID
-		decryptAuthorId, err := utils.DecryptJWT(post.AuthorId)
+		// We decrypt the post author Id
+		decryptAuthorId, err := utils.DecryptJWT(post.AuthorId, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
 			log.Printf("[%s] [CreatePost] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
@@ -36,14 +35,10 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 		}
 		post.AuthorId = decryptAuthorId
 
-		if post.Text == "" {
+		if post.Text == "" || post.CreationDate == "" {
 			nw.Error("There is no text for the post")
 			log.Printf("[%s] [CreatePost] There is no text for the post", r.RemoteAddr)
 			return
-		}
-
-		if post.Image == nil {
-			post.Image = ""
 		}
 
 		// We create a UID for the post
@@ -56,7 +51,7 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 		post.Id = uuid.String()
 
 		// We insert the post in the db
-		if err = utils.InsertIntoDb("Post", db, post.Id, post.AuthorId, post.Text, post.Image, post.IsGroup); err != nil {
+		if err = utils.InsertIntoDb("Post", db, post.Id, post.AuthorId, post.Text, post.Image, post.CreationDate, post.IsGroup); err != nil {
 			nw.Error("Internal Error: There is a probleme during the push in the DB: " + err.Error())
 			log.Printf("[%s] [Createpost] %s", r.RemoteAddr, err.Error())
 			return
@@ -87,7 +82,7 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &post)
 
 		// We decrypt the post author ID
-		_, err := utils.DecryptJWT(post.AuthorId)
+		_, err := utils.DecryptJWT(post.AuthorId, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
 			log.Printf("[%s] [GetPost] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
@@ -97,9 +92,9 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 		// We check if there is a precise Post to get and make the request
 		var posts []map[string]any
 		if post.Id != "" {
-			posts, err = utils.SelectFromDb("Post", db, map[string]any{"Id": post.Id})
+			posts, err = utils.SelectFromDb("PostDetail", db, map[string]any{"Id": post.Id})
 		} else {
-			posts, err = utils.SelectFromDb("Post", db, map[string]any{})
+			posts, err = utils.SelectFromDb("PostDetail", db, map[string]any{})
 		}
 		if err != nil {
 			nw.Error("Error during the select in the db")
@@ -108,12 +103,20 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We parse the result of the request in the good structure
-		formatedPosts, err := ParsePostData(posts)
+		formatedPosts, err := utils.ParsePostData(posts)
 		if err != nil {
 			nw.Error(err.Error())
 			log.Printf("[%s] [GetPost] %s", r.RemoteAddr, err.Error())
 			return
 		}
+
+		//---------------------------------------------------------------------------------------------------------------------------------------------------
+		//---------------------------------------------------------------------------------------------------------------------------------------------------
+		//---------------------------------------------------------------------------------------------------------------------------------------------------
+		//							Filtrer les posts pour n'obtenir que ceux des amis
+		//---------------------------------------------------------------------------------------------------------------------------------------------------
+		//---------------------------------------------------------------------------------------------------------------------------------------------------
+		//---------------------------------------------------------------------------------------------------------------------------------------------------
 
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
@@ -125,27 +128,4 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [GetPost] %s", r.RemoteAddr, err.Error())
 		}
 	}
-}
-
-/*
-This function takes 1 argument:
-  - a array of map who contain the value of the select and the name of the colum in the db selected
-
-The purpose of this function is to parse the datas into a good structure.
-
-The function return 2 values:
-  - an variable of type array of Post
-  - an error
-*/
-func ParsePostData(userData []map[string]any) ([]model.Post, error) {
-	// We marshal the map to get it in []byte
-	serializedData, err := json.Marshal(userData)
-	if err != nil {
-		return nil, errors.New("internal error: conversion problem")
-	}
-
-	// We Unmarshal in the good structure
-	var postResult []model.Post
-	err = json.Unmarshal(serializedData, &postResult)
-	return postResult, err
 }

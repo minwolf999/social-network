@@ -23,7 +23,6 @@ func Register(db *sql.DB) http.HandlerFunc {
 
 		var register model.Register
 		json.Unmarshal(body, &register)
-		json.Unmarshal(body, &register.Auth)
 
 		// We look if all is good in the datas send in the body of the request
 		if err := utils.RegisterVerification(register); err != nil {
@@ -39,16 +38,15 @@ func Register(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// We get the row in the db where the email is equal to the email send
-		authData, err := utils.SelectFromDb("Auth", db, map[string]any{"Email": register.Auth.Email})
-		if err != nil {
-			nw.Error("Internal error: Problem during database query: " + err.Error())
-			log.Printf("[%s] [Register] %s", r.RemoteAddr, err.Error())
+		if len(register.ProfilePicture) > 400000 {
+			nw.Error("To big image")
+			log.Printf("[%s] [Register] To big image", r.RemoteAddr)
 			return
 		}
 
-		if len(authData) != 0 {
-			nw.Error("Email is already used")
+		// We get the row in the db where the email is equal to the email send
+		if err := utils.IfExistsInDB("Auth", db, map[string]any{"Email": register.Auth.Email}); err != nil && err.Error() != "there is no match" {
+			nw.Error("Email is already used : " + err.Error())
 			log.Printf("[%s] [Register] %s", r.RemoteAddr, "Email is already used")
 			return
 		}
@@ -69,7 +67,7 @@ func Register(db *sql.DB) http.HandlerFunc {
 
 		// We send a success response to the request
 		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(map[string]any{
+		err := json.NewEncoder(w).Encode(map[string]any{
 			"Success":   true,
 			"Message":   "Login successfully",
 			"sessionId": utils.GenerateJWT(register.Auth.Id),

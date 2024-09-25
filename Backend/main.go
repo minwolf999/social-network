@@ -30,9 +30,12 @@ func init() {
 		}
 		defer db.Close()
 		
+		start := time.Now()
 		if err = utils.LoadData(db); err != nil {
 			fmt.Println(err)
 		}
+		end := time.Now()
+		fmt.Println(end.Sub(start))
 	}
 }
 

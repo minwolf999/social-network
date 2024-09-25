@@ -18,13 +18,13 @@ type Auth struct {
 }
 
 type Register struct {
-	Auth      Auth   `json:"Auth"`
+	Auth      `json:",inline"`
 	FirstName string `json:"FirstName"`
 	LastName  string `json:"LastName"`
 	BirthDate string `json:"BirthDate"`
 
 	// OPTIONNAL
-	ProfilePicture any    `json:"ProfilePicture"`
+	ProfilePicture string `json:"ProfilePicture"`
 	Username       string `json:"Username"`
 	AboutMe        string `json:"AboutMe"`
 	Gender         string `json:"Gender"`
@@ -34,12 +34,29 @@ type User struct {
 	Auth     Auth
 	Register Register
 }
+
 type Post struct {
-	Id       string `json:"Id"`
-	AuthorId string `json:"AuthorId"`
-	Text     string `json:"Text"`
-	Image    any    `json:"Image"`
-	IsGroup  int    `json:"IsGroup"`
+	Id           string `json:"Id"`
+	AuthorId     string `json:"AuthorId"`
+	Register     `json:",inline"`
+	Text         string `json:"Text"`
+	Image        string `json:"Image"`
+	CreationDate string `json:"CreationDate"`
+	IsGroup      string `json:"IsGroup"`
+}
+
+type Comment struct {
+	Id           string `json:"Id"`
+	AuthorId     string `json:"AuthorId"`
+	Text         string `json:"Text"`
+	CreationDate string `json:"CreationDate"`
+	PostId       string `json:"PostId"`
+}
+
+type Follower struct {
+	Id         string `json:"Id"`
+	UserId     string `json:"UserId"`
+	FollowerId string `json:"FollowerId"`
 }
 
 type ResponseWriter struct {

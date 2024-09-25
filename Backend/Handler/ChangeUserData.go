@@ -2,11 +2,8 @@ package handler
 
 import (
 	"database/sql"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
-	model "social-network/Model"
 	utils "social-network/Utils"
 
 	"golang.org/x/crypto/bcrypt"
@@ -18,7 +15,7 @@ func ChangeUserName(db *sql.DB, name, uid string) error {
 		return err
 	}
 
-	userdata, err := ParseUserDataInfos(actualname[0])
+	userdata, err := utils.ParseRegisterData(actualname[0])
 	if err != nil {
 		log.Println("Error Parsing Data", err)
 		return err
@@ -41,7 +38,7 @@ func ChangePass(db *sql.DB, newpass, uid string) error {
 		return err
 	}
 
-	userdata, err := ParseUserData(actualpass[0])
+	userdata, err := utils.ParseAuthData(actualpass[0])
 	if err != nil {
 		log.Println("Error Parsing Data", err)
 		return err
@@ -56,6 +53,12 @@ func ChangePass(db *sql.DB, newpass, uid string) error {
 	}
 	return nil
 }
+
+/*
+if err = bcrypt.CompareHashAndPassword([]byte(userdata.Username), []byte(name)); err != nil {
+	log.Println("New Username and current Username are the same", err)
+	return err
+} else { */
 
 func ParseUserDataInfos(userData map[string]any) (model.Register, error) {
 	// We marshal the map to get it in []byte

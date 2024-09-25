@@ -25,7 +25,7 @@ func VerificationSessionId(db *sql.DB) http.HandlerFunc {
 		var sessionId string
 		json.Unmarshal(body, &sessionId)
 
-		decryptId, err := utils.DecryptJWT(sessionId)
+		decryptId, err := utils.DecryptJWT(sessionId, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
 			log.Printf("[%s] [VerificationSessionId] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
@@ -76,7 +76,7 @@ func CheckDatasForCookie(authData []map[string]any) error {
 	}
 
 	// We parse the datas
-	userData, err := ParseUserData(authData[0])
+	userData, err := utils.ParseAuthData(authData[0])
 	if err != nil {
 		return err
 	}
