@@ -6,11 +6,12 @@ import (
 	"io"
 	"log"
 	"net/http"
+
 	model "social-network/Model"
 	utils "social-network/Utils"
 )
 
-func Settings(db *sql.DB) http.HandlerFunc {
+func GetUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nw := model.ResponseWriter{
 			ResponseWriter: w,
@@ -25,13 +26,13 @@ func Settings(db *sql.DB) http.HandlerFunc {
 		uid, err := utils.DecryptJWT(sessionId, db)
 		if err != nil {
 			nw.Error("Error when decrypt the JWT")
-			log.Printf("[%s] [Decrypt] %s", r.RemoteAddr, err.Error())
+			log.Printf("[%s] [Settings] %s", r.RemoteAddr, err.Error())
 			return
 		}
 		userInfos, err := displayInfos(db, uid)
 		if err != nil {
 			nw.Error("Error when get infos")
-			log.Printf("[%s] [Infos] %s", r.RemoteAddr, err.Error())
+			log.Printf("[%s] [Settings] %s", r.RemoteAddr, err.Error())
 			return
 		}
 
@@ -42,7 +43,7 @@ func Settings(db *sql.DB) http.HandlerFunc {
 			"userInfos": userInfos,
 		})
 		if err != nil {
-			log.Printf("[%s] [Login] %s", r.RemoteAddr, err.Error())
+			log.Printf("[%s] [Settings] %s", r.RemoteAddr, err.Error())
 		}
 	}
 }
