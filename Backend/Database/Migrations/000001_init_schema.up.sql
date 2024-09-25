@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS Post (
 	Image VARCHAR(100),
 	CreationDate VARCHAR(20) NOT NULL,
 	IsGroup VARCHAR(36) REFERENCES "Groups"("Id"),
-	LikeCount INTEGER
+	LikeCount INTEGER,
+	DislikeCount INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS LikePost (
@@ -41,7 +42,10 @@ CREATE TABLE IF NOT EXISTS Comment (
 	Text VARCHAR(1000) NOT NULL,
 	CreationDate VARCHAR(20) NOT NULL,
 
-	PostId VARCHAR(36) REFERENCES "Post"("Id")
+	PostId VARCHAR(36) REFERENCES "Post"("Id"),
+
+	LikeCount INTEGER,
+	DislikeCount INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS LikeComment (

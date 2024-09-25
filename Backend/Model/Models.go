@@ -44,6 +44,7 @@ type Post struct {
 	CreationDate string `json:"CreationDate"`
 	IsGroup      string `json:"IsGroup"`
 	LikeCount    int    `json:"LikeCount"`
+	DislikeCount int    `json:"DislikeCount"`
 }
 
 type Comment struct {
@@ -52,6 +53,8 @@ type Comment struct {
 	Text         string `json:"Text"`
 	CreationDate string `json:"CreationDate"`
 	PostId       string `json:"PostId"`
+	LikeCount    int    `json:"LikeCount"`
+	DislikeCount int    `json:"DislikeCount"`
 }
 
 type Follower struct {
