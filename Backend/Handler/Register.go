@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
-	"io"
 	"log"
 	"net/http"
 
@@ -18,11 +17,12 @@ func Register(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We read the request body and unmarshal it into a structure
-		body, _ := io.ReadAll(r.Body)
-		defer r.Body.Close()
-
 		var register model.Register
-		json.Unmarshal(body, &register)
+		if err := json.NewDecoder(r.Body).Decode(&register); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [Register] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
 
 		// We look if all is good in the datas send in the body of the request
 		if err := utils.RegisterVerification(register); err != nil {

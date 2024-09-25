@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
-	"io"
 	"log"
 	"net/http"
 
@@ -20,11 +19,12 @@ func Login(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We read the request body and unmarshal it into a structure
-		body, _ := io.ReadAll(r.Body)
-		defer r.Body.Close()
-
 		var loginData model.Auth
-		json.Unmarshal(body, &loginData)
+		if err := json.NewDecoder(r.Body).Decode(&loginData); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [Login] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
 
 		// We look if all is good in the datas send in the body of the request
 		if loginData.Email == "" || loginData.Password == "" {

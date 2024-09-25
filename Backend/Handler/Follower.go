@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
-	"io"
 	"log"
 	"net/http"
 	model "social-network/Model"
@@ -19,11 +18,12 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We read the request body and unmarshal it into a structure
-		body, _ := io.ReadAll(r.Body)
-		defer r.Body.Close()
-
 		var follower model.Follower
-		json.Unmarshal(body, &follower)
+		if err := json.NewDecoder(r.Body).Decode(&follower); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [AddFollower] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
 
 		// We decrypt the Id of the user make the request to follow someone
 		decryptAuthorId, err := utils.DecryptJWT(follower.UserId, db)
@@ -95,11 +95,12 @@ func RemoveFollower(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We read the request body and unmarshal it into a structure
-		body, _ := io.ReadAll(r.Body)
-		defer r.Body.Close()
-
 		var follower model.Follower
-		json.Unmarshal(body, &follower)
+		if err := json.NewDecoder(r.Body).Decode(&follower); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [RemoveFollower] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
 
 		// We decrypt the Id of the user make the request to follow someone
 		decryptAuthorId, err := utils.DecryptJWT(follower.UserId, db)
@@ -142,13 +143,14 @@ func GetFollowed(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We read the request body and unmarshal it into a structure
-		body, _ := io.ReadAll(r.Body)
-		defer r.Body.Close()
-
 		var follower struct {
 			UserId string `json:"UserId"`
 		}
-		json.Unmarshal(body, &follower)
+		if err := json.NewDecoder(r.Body).Decode(&follower); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [GetFollower] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
 
 		// We decrypt the Id of the user make the request to follow someone
 		decryptAuthorId, err := utils.DecryptJWT(follower.UserId, db)
@@ -198,13 +200,14 @@ func GetFollower(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We read the request body and unmarshal it into a structure
-		body, _ := io.ReadAll(r.Body)
-		defer r.Body.Close()
-
 		var follower struct {
 			UserId string `json:"UserId"`
 		}
-		json.Unmarshal(body, &follower)
+		if err := json.NewDecoder(r.Body).Decode(&follower); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [GetFollower] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
 
 		// We decrypt the Id of the user make the request to follow someone
 		decryptAuthorId, err := utils.DecryptJWT(follower.UserId, db)

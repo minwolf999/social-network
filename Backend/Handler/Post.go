@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
-	"io"
 	"log"
 	"net/http"
 
@@ -20,11 +19,12 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We read the request body and unmarshal it into a structure
-		body, _ := io.ReadAll(r.Body)
-		defer r.Body.Close()
-
 		var post model.Post
-		json.Unmarshal(body, &post)
+		if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [CreatePost] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
 
 		// We decrypt the post author Id
 		decryptAuthorId, err := utils.DecryptJWT(post.AuthorId, db)
@@ -75,11 +75,12 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We read the request body and unmarshal it into a structure
-		body, _ := io.ReadAll(r.Body)
-		defer r.Body.Close()
-
 		var post model.Post
-		json.Unmarshal(body, &post)
+		if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [GetPost] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
 
 		// We decrypt the post author ID
 		_, err := utils.DecryptJWT(post.AuthorId, db)

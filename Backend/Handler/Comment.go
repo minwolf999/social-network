@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
-	"io"
 	"log"
 	"net/http"
 
@@ -20,11 +19,12 @@ func CreateComment(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We read the request body and unmarshal it into a structure
-		body, _ := io.ReadAll(r.Body)
-		defer r.Body.Close()
-
 		var comment model.Comment
-		json.Unmarshal(body, &comment)
+		if err := json.NewDecoder(r.Body).Decode(&comment); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [CreateComent] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
 
 		// We take the post id from the url used
 		comment.PostId = r.PathValue("postId")
@@ -92,11 +92,12 @@ func GetComment(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We read the request body and unmarshal it into a structure
-		body, _ := io.ReadAll(r.Body)
-		defer r.Body.Close()
-
 		var comment model.Comment
-		json.Unmarshal(body, &comment)
+		if err := json.NewDecoder(r.Body).Decode(&comment); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [GetComment] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
 
 		// We take the post id from the url used
 		comment.PostId = r.PathValue("postId")
@@ -105,7 +106,7 @@ func GetComment(db *sql.DB) http.HandlerFunc {
 		_, err := utils.DecryptJWT(comment.AuthorId, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
-			log.Printf("[%s] [GetPost] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [GetComment] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
 			return
 		}
 

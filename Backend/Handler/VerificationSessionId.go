@@ -4,10 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"io"
 	"log"
 	"net/http"
-	
+
 	model "social-network/Model"
 	utils "social-network/Utils"
 )
@@ -19,11 +18,12 @@ func VerificationSessionId(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We read the request body and unmarshal it into a structure
-		body, _ := io.ReadAll(r.Body)
-		defer r.Body.Close()
-
 		var sessionId string
-		json.Unmarshal(body, &sessionId)
+		if err := json.NewDecoder(r.Body).Decode(&sessionId); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [Login] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
 
 		decryptId, err := utils.DecryptJWT(sessionId, db)
 		if err != nil {
