@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	model "social-network/Model"
@@ -73,19 +72,14 @@ func ChangeUserName(db *sql.DB, name, uid string) error {
 
 	userdata, err := utils.ParseRegisterData(actualname[0])
 	if err != nil {
-		log.Println("Error Parsing Data", err)
 		return err
 	}
 
 	if userdata.Username == name {
-		log.Println("New Username and current Username are the same", err)
-		return err
+		return errors.New("new username and current username are the same")
 	} else {
-		utils.UpdateDb("UserInfo", db, map[string]any{"Username": name}, map[string]any{"Id": uid})
-		fmt.Println("Change username Succes")
+		return utils.UpdateDb("UserInfo", db, map[string]any{"Username": name}, map[string]any{"Id": uid})
 	}
-
-	return nil
 }
 
 func ChangePass(db *sql.DB, newpass, uid string) error {
@@ -96,22 +90,19 @@ func ChangePass(db *sql.DB, newpass, uid string) error {
 
 	userdata, err := utils.ParseAuthData(actualpass[0])
 	if err != nil {
-		log.Println("Error Parsing Data", err)
 		return err
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(userdata.Password), []byte(newpass)); err == nil {
-		log.Println("This Password is already used", err)
-		return err
+		return errors.New("new password and current password are the same")
 	} else {
 		hashedPass, err := bcrypt.GenerateFromPassword([]byte(newpass), bcrypt.DefaultCost)
 		if err != nil {
 			return err
 		}
-		utils.UpdateDb("Auth", db, map[string]any{"Password": string(hashedPass)}, map[string]any{"Id": uid})
-		fmt.Println("Change password Succes")
+
+		return utils.UpdateDb("Auth", db, map[string]any{"Password": string(hashedPass)}, map[string]any{"Id": uid})
 	}
-	return nil
 }
 
 func ParseUserDataInfos(userData map[string]any) (model.Register, error) {
