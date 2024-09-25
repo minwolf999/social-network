@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -29,53 +30,21 @@ func CreateComment(db *sql.DB) http.HandlerFunc {
 		// We take the post id from the url used
 		comment.PostId = r.PathValue("postId")
 
-		if comment.Text == "" {
-			nw.Error("There is no text for the comment")
-			log.Printf("[%s] [CreateComment] There is no text for the comment", r.RemoteAddr)
-			return
-		}
-
-		// We decrypt the comment author Id
-		decryptAuthorId, err := utils.DecryptJWT(comment.AuthorId, db)
-		if err != nil {
-			nw.Error("Invalid JWT")
-			log.Printf("[%s] [CreateComment] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
-			return
-		}
-		comment.AuthorId = decryptAuthorId
-
-		// We check if the id given for the parent post fit with a real post id in the db
-		post, err := utils.SelectFromDb("Post", db, map[string]any{"Id": comment.PostId})
-		if err != nil {
-			nw.Error("Internal error: Problem during database query: " + err.Error())
+		if err := Verification(&comment, db); err != nil {
+			nw.Error("Internal Error: There is a probleme during the verification: " + err.Error())
 			log.Printf("[%s] [CreateComment] %s", r.RemoteAddr, err.Error())
 			return
 		}
 
-		if len(post) != 1 {
-			nw.Error("There is no post with the Id : " + comment.PostId)
-			log.Printf("[%s] [CreateComment] There is no post with the Id : %s", r.RemoteAddr, comment.PostId)
-			return
-		}
-
-		// We create a UID for the comment
-		uuid, err := uuid.NewV7()
-		if err != nil {
-			nw.Error("There is a probleme with the generation of the uuid")
-			log.Printf("[%s] [CreateComment] There is a probleme with the generation of the uuid : %s", r.RemoteAddr, err)
-			return
-		}
-		comment.Id = uuid.String()
-
 		// We insert the comment in the db
-		if err = utils.InsertIntoDb("Comment", db, comment.Id, comment.AuthorId, comment.Text, comment.CreationDate, comment.PostId); err != nil {
+		if err := utils.InsertIntoDb("Comment", db, comment.Id, comment.AuthorId, comment.Text, comment.CreationDate, comment.PostId); err != nil {
 			nw.Error("Internal Error: There is a probleme during the push in the DB: " + err.Error())
 			log.Printf("[%s] [CreateComment] %s", r.RemoteAddr, err.Error())
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(map[string]any{
+		err := json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
 			"Message": "Comment created successfully",
 		})
@@ -83,6 +52,38 @@ func CreateComment(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [CreateComment] %s", r.RemoteAddr, err.Error())
 		}
 	}
+}
+
+func Verification(comment *model.Comment, db *sql.DB) error {
+	if comment.Text == "" {
+		return errors.New("there is no text for the comment")
+	}
+
+	// We decrypt the comment author Id
+	decryptAuthorId, err := utils.DecryptJWT(comment.AuthorId, db)
+	if err != nil {
+		return err
+	}
+	comment.AuthorId = decryptAuthorId
+
+	// We check if the id given for the parent post fit with a real post id in the db
+	post, err := utils.SelectFromDb("Post", db, map[string]any{"Id": comment.PostId})
+	if err != nil {
+		return err
+	}
+
+	if len(post) != 1 {
+		return errors.New("There is no post with the Id : " + comment.PostId)
+	}
+
+	// We create a UID for the comment
+	uuid, err := uuid.NewV7()
+	if err != nil {
+		return err
+	}
+	comment.Id = uuid.String()
+
+	return nil
 }
 
 func GetComment(db *sql.DB) http.HandlerFunc {
@@ -109,13 +110,8 @@ func GetComment(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		var comments []map[string]any
 		// We check if there is a precise Comment to get and make the request
-		if comment.Id != "" {
-			comments, err = utils.SelectFromDb("Comment", db, map[string]any{"Id": comment.Id})
-		} else {
-			comments, err = utils.SelectFromDb("Comment", db, map[string]any{})
-		}
+		comments, err := SwitchCaseRequest("Comment", db, comment)
 		if err != nil {
 			nw.Error("Error during the select in the db")
 			log.Printf("[%s] [GetComment] Error during the select in the db : %v", r.RemoteAddr, err)
@@ -139,5 +135,13 @@ func GetComment(db *sql.DB) http.HandlerFunc {
 		if err != nil {
 			log.Printf("[%s] [GetComment] %s", r.RemoteAddr, err.Error())
 		}
+	}
+}
+
+func SwitchCaseRequest(table string, db *sql.DB, comment model.Comment) ([]map[string]any, error) {
+	if comment.Id != "" {
+		return utils.SelectFromDb(table, db, map[string]any{"Id": comment.Id})
+	} else {
+		return utils.SelectFromDb(table, db, map[string]any{})
 	}
 }

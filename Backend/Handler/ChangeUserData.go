@@ -54,8 +54,3 @@ func ChangePass(db *sql.DB, newpass, uid string) error {
 	return nil
 }
 
-/*
-if err = bcrypt.CompareHashAndPassword([]byte(userdata.Username), []byte(name)); err != nil {
-	log.Println("New Username and current Username are the same", err)
-	return err
-} else { */

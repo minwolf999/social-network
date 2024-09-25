@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -25,47 +26,10 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 		var follower model.Follower
 		json.Unmarshal(body, &follower)
 
-		// We decrypt the Id of the user make the request to follow someone
-		decryptAuthorId, err := utils.DecryptJWT(follower.UserId, db)
+		err := VerificationInDb(db, &follower)
 		if err != nil {
-			nw.Error("Invalid JWT")
-			log.Printf("[%s] [AddFollower] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
-			return
-		}
-		follower.UserId = decryptAuthorId
-
-		// We check if the Id of the people want"ed to follow has been forgotten
-		if follower.FollowerId == "" {
-			nw.Error("There is no id for the user to follow")
-			log.Printf("[%s] [AddFollower] There is no id for the user to follow", r.RemoteAddr)
-			return
-		}
-
-		// We create a UID for the following link
-		uuid, err := uuid.NewV7()
-		if err != nil {
-			nw.Error("There is a probleme with the generation of the uuid")
-			log.Printf("[%s] [AddFollower] There is a probleme with the generation of the uuid : %s", r.RemoteAddr, err)
-			return
-		}
-		follower.Id = uuid.String()
-
-		// We look if the 2 Ids exists in the Db
-		if err = utils.IfExistsInDB("Auth", db, map[string]any{"Id": follower.UserId}); err != nil {
-			nw.Error("There is no user with the id of the JWT : " + follower.UserId)
-			log.Printf("[%s] [AddFollower] %s", r.RemoteAddr, "There is no user with the id of the JWT")
-			return
-		}
-
-		if err = utils.IfExistsInDB("Auth", db, map[string]any{"Id": follower.FollowerId}); err != nil {
-			nw.Error("There Id of the people you want to follow didn't exist")
-			log.Printf("[%s] [AddFollower] %s", r.RemoteAddr, "There Id of the people you want to follow didn't exist")
-			return
-		}
-
-		if err = utils.IfNotExistsInDB("Follower", db, map[string]any{"UserId": follower.UserId, "FollowerId": follower.FollowerId}); err != nil {
-			nw.Error("The user already follows this user")
-			log.Printf("[%s] [AddFollower] The user already follows this user", r.RemoteAddr)
+			nw.Error("Internal Error: There is a probleme during the verification in the DB: " + err.Error())
+			log.Printf("[%s] [AddFollower] %s", r.RemoteAddr, err.Error())
 			return
 		}
 
@@ -86,6 +50,42 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [AddFollower] %s", r.RemoteAddr, err.Error())
 		}
 	}
+}
+
+func VerificationInDb(db *sql.DB, follower *model.Follower) error {
+	// We decrypt the Id of the user make the request to follow someone
+	decryptAuthorId, err := utils.DecryptJWT(follower.UserId, db)
+	if err != nil {
+		return err
+	}
+	follower.UserId = decryptAuthorId
+
+	// We check if the Id of the people want"ed to follow has been forgotten
+	if follower.FollowerId == "" {
+		return errors.New("there is no id for the user to follow")
+	}
+
+	// We create a UID for the following link
+	uuid, err := uuid.NewV7()
+	if err != nil {
+		return err
+	}
+	follower.Id = uuid.String()
+
+	// We look if the 2 Ids exists in the Db
+	if err := utils.IfExistsInDB("Auth", db, map[string]any{"Id": follower.UserId}); err != nil {
+		return err
+	}
+
+	if err := utils.IfExistsInDB("Auth", db, map[string]any{"Id": follower.FollowerId}); err != nil {
+		return err
+	}
+
+	if err := utils.IfNotExistsInDB("Follower", db, map[string]any{"UserId": follower.UserId, "FollowerId": follower.FollowerId}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func RemoveFollower(db *sql.DB) http.HandlerFunc {
