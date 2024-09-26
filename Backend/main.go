@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
@@ -29,7 +30,7 @@ func init() {
 			fmt.Println(err)
 		}
 		defer db.Close()
-		
+
 		start := time.Now()
 		if err = utils.LoadData(db); err != nil {
 			fmt.Println(err)
@@ -40,15 +41,11 @@ func init() {
 }
 
 func main() {
-	fmt.Println("\033[96mServer started at: http://localhost:8080\033[0m")
-
 	// We create a log file and redirect the stdout to the new file
 	logFile, _ := os.Create("./Log/" + time.Now().Format("2006-01-02__15-04-05") + ".log")
 	defer logFile.Close()
 
 	log.SetOutput(logFile)
-
-	log.Println("Server started at: http://localhost:8080")
 
 	// We launch the server
 	mux := http.NewServeMux()
@@ -61,6 +58,10 @@ func main() {
 	// We set all the endpoints
 	routes.Routes(mux)
 
+	tlsConfig := &tls.Config{
+		MinVersion: tls.VersionTLS12,
+	}
+
 	// We set the time out limit
 	srv := &http.Server{
 		Handler:      handler,
@@ -68,12 +69,18 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
+		TLSConfig:    tlsConfig,
 	}
 
 	go func() {
-		// We start the listening of the port
-		if err := srv.ListenAndServe(); err != nil {
-			log.Println(err)
+		certFile := "Key/cert.pem"
+		keyFile := "Key/key.pem"
+
+		log.Printf("Server listening on https://%s", srv.Addr)
+		fmt.Printf("\033[96mServer started at: https://%s\033[0m\n", srv.Addr)
+
+		if err := srv.ListenAndServeTLS(certFile, keyFile); err != nil {
+			log.Fatalf("Error starting TLS server: %v", err)
 		}
 	}()
 
