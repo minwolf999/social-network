@@ -39,8 +39,8 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/getPost", handler.GetPost(db))
 
 	// Comments routes
-	mux.Handle("/createComment/{postId}", handler.CreateComment(db))
-	mux.Handle("/getComment/{postId}", handler.GetComment(db))
+	mux.Handle("/createComment", handler.CreateComment(db))
+	mux.Handle("/getComment", handler.GetComment(db))
 
 	// Followers routes
 	mux.Handle("/addFollowed", handler.AddFollower(db))

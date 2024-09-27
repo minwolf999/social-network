@@ -15,6 +15,9 @@ RUN apt-get update && \
 # Copier les fichiers Go et autres fichiers nécessaires
 COPY . .
 
+RUN cd Backend && \
+    go mod tidy
+
 # Exposer le port
 EXPOSE 8080
 

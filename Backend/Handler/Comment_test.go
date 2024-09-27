@@ -22,15 +22,15 @@ func TestCreateComment(t *testing.T) {
 	defer db.Close()
 
 	rr, err := TryRegister(t, db, model.Register{
-			Auth: model.Auth{
-				Email:           "unemail3@gmail.com",
-				Password:        "MonMotDePasse123!",
-				ConfirmPassword: "MonMotDePasse123!",
-			},
-			FirstName: "Jean",
-			LastName:  "Dujardin",
-			BirthDate: "1990-01-01",
-		})
+		Auth: model.Auth{
+			Email:           "unemail3@gmail.com",
+			Password:        "MonMotDePasse123!",
+			ConfirmPassword: "MonMotDePasse123!",
+		},
+		FirstName: "Jean",
+		LastName:  "Dujardin",
+		BirthDate: "1990-01-01",
+	})
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -72,7 +72,7 @@ func TestCreateComment(t *testing.T) {
 		return
 	}
 
-	rr, err = TryCreateComment(t, db, JWT)
+	rr, err = TryCreateComment(t, db, JWT, bodyValue["IdPost"].(string))
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -93,7 +93,7 @@ func TestCreateComment(t *testing.T) {
 	}
 }
 
-func TryCreateComment(t *testing.T, db *sql.DB, authorId string) (*httptest.ResponseRecorder, error) {
+func TryCreateComment(t *testing.T, db *sql.DB, authorId, postId string) (*httptest.ResponseRecorder, error) {
 	// Create a table for testing
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS Comment (
@@ -101,8 +101,11 @@ func TryCreateComment(t *testing.T, db *sql.DB, authorId string) (*httptest.Resp
 			AuthorId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id"),
 			Text VARCHAR(1000) NOT NULL,
 			CreationDate VARCHAR(20) NOT NULL,
-
-			PostId VARCHAR(36) REFERENCES "Post"("Id")
+		
+			PostId VARCHAR(36) REFERENCES "Post"("Id"),
+		
+			LikeCount INTEGER,
+			DislikeCount INTEGER
 		);
 	`)
 	if err != nil {
@@ -110,9 +113,10 @@ func TryCreateComment(t *testing.T, db *sql.DB, authorId string) (*httptest.Resp
 	}
 
 	post := model.Comment{
-		Id:       "Test",
-		AuthorId: authorId,
-		Text:     "Test",
+		PostId:       postId,
+		AuthorId:     authorId,
+		Text:         "Test",
+		CreationDate: "1970-01-01",
 	}
 
 	body, err := json.Marshal(post)
@@ -122,14 +126,14 @@ func TryCreateComment(t *testing.T, db *sql.DB, authorId string) (*httptest.Resp
 
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
-	req, err := http.NewRequest("POST", "/CreatePost/Test", bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", "/createComment/Test", bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
 
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(CreatePost(db))
+	handler := http.HandlerFunc(CreateComment(db))
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 	// directly and pass in our Request and ResponseRecorder.
@@ -152,15 +156,15 @@ func TestGetComment(t *testing.T) {
 	defer db.Close()
 
 	rr, err := TryRegister(t, db, model.Register{
-			Auth: model.Auth{
-				Email:           "unemail4@gmail.com",
-				Password:        "MonMotDePasse123!",
-				ConfirmPassword: "MonMotDePasse123!",
-			},
-			FirstName: "Jean",
-			LastName:  "Dujardin",
-			BirthDate: "1990-01-01",
-		})
+		Auth: model.Auth{
+			Email:           "unemail4@gmail.com",
+			Password:        "MonMotDePasse123!",
+			ConfirmPassword: "MonMotDePasse123!",
+		},
+		FirstName: "Jean",
+		LastName:  "Dujardin",
+		BirthDate: "1990-01-01",
+	})
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -202,7 +206,7 @@ func TestGetComment(t *testing.T) {
 		return
 	}
 
-	rr, err = TryCreateComment(t, db, JWT)
+	rr, err = TryCreateComment(t, db, JWT, bodyValue["IdPost"].(string))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -242,7 +246,7 @@ func TestGetComment(t *testing.T) {
 
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	rr = httptest.NewRecorder()
-	handler := http.HandlerFunc(CreatePost(db))
+	handler := http.HandlerFunc(GetComment(db))
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 	// directly and pass in our Request and ResponseRecorder.
@@ -266,4 +270,3 @@ func TestGetComment(t *testing.T) {
 		return
 	}
 }
-

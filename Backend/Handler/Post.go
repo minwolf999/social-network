@@ -61,6 +61,7 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
 			"Message": "Post created successfully",
+			"IdPost": post.Id,
 		})
 		if err != nil {
 			log.Printf("[%s] [CreatePost] %s", r.RemoteAddr, err.Error())

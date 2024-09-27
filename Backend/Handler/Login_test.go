@@ -23,10 +23,11 @@ func TestLogin(t *testing.T) {
 
 	// Create a table for testing
 	_, err = db.Exec(`
-			CREATE TABLE IF NOT EXISTS Auth (
+		CREATE TABLE IF NOT EXISTS Auth (
 			Id VARCHAR(36) NOT NULL UNIQUE PRIMARY KEY,
 			Email VARCHAR(100) NOT NULL UNIQUE,
-			Password VARCHAR(50) NOT NULL
+			Password VARCHAR(50) NOT NULL,
+			ConnectionAttempt INTEGER
 		);
 	`)
 	if err != nil {
@@ -46,7 +47,7 @@ func TestLogin(t *testing.T) {
 		return
 	}
 
-	if err = utils.InsertIntoDb("Auth", db, "0", login.Email, string(cryptedPassword)); err != nil {
+	if err = utils.InsertIntoDb("Auth", db, "0", login.Email, string(cryptedPassword), 0); err != nil {
 		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
 		return
 	}

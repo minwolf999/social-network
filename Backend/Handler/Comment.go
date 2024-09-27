@@ -26,9 +26,6 @@ func CreateComment(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// We take the post id from the url used
-		comment.PostId = r.PathValue("postId")
-
 		if comment.Text == "" {
 			nw.Error("There is no text for the comment")
 			log.Printf("[%s] [CreateComment] There is no text for the comment", r.RemoteAddr)

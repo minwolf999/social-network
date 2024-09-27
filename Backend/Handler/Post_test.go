@@ -81,7 +81,10 @@ func TryCreatePost(t *testing.T, db *sql.DB, authorId string) (*httptest.Respons
 			AuthorId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id"),
 			Text VARCHAR(1000) NOT NULL,
 			Image VARCHAR(100),
-			IsGroup INTEGER NOT NULL
+			CreationDate VARCHAR(20) NOT NULL,
+			IsGroup VARCHAR(36) REFERENCES "Groups"("Id"),
+			LikeCount INTEGER,
+			DislikeCount INTEGER
 		);
 	`)
 	if err != nil {
@@ -89,9 +92,9 @@ func TryCreatePost(t *testing.T, db *sql.DB, authorId string) (*httptest.Respons
 	}
 
 	post := model.Post{
-		Id:       "Test",
 		AuthorId: authorId,
 		Text:     "Test",
+		CreationDate: "1970-01-01",
 	}
 
 	body, err := json.Marshal(post)
@@ -101,7 +104,7 @@ func TryCreatePost(t *testing.T, db *sql.DB, authorId string) (*httptest.Respons
 
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
-	req, err := http.NewRequest("POST", "/CreatePost", bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", "/createPost", bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
@@ -183,6 +186,7 @@ func TestGetPost(t *testing.T) {
 		Id:       "Test",
 		AuthorId: JWT,
 		Text:     "Test",
+		CreationDate: "1970-01-01",
 	}
 
 	body, err := json.Marshal(post)
