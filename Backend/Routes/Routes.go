@@ -50,6 +50,8 @@ func Routes(mux *http.ServeMux) {
 
 	mux.Handle("/like", handler.HandleLike(db))
 	mux.Handle("/settings", handler.HandleChangeUserData(db))
+
+	mux.Handle("/websocket", handler.Websocket(db))
 }
 
 // Mock Login handler for testing

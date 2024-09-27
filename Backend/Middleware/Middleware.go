@@ -50,12 +50,17 @@ func LookMethod(next http.Handler) http.Handler {
 			ResponseWriter: w,
 		}
 
-		if r.Method != http.MethodPost {
-			nw.Error("Invalid method !")
-			log.Printf("[%s] [LookMethod] Invalid method !", r.RemoteAddr)
+		if r.Header.Get("Upgrade") == "websocket" {
+			next.ServeHTTP(w, r)
 			return
 		}
 
-		next.ServeHTTP(w, r)
+		if r.Method == http.MethodPost {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		nw.Error("Invalid method !")
+		log.Printf("[%s] [LookMethod] Invalid method !", r.RemoteAddr)
 	})
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
@@ -58,9 +57,9 @@ func main() {
 	// We set all the endpoints
 	routes.Routes(mux)
 
-	tlsConfig := &tls.Config{
-		MinVersion: tls.VersionTLS12,
-	}
+	// tlsConfig := &tls.Config{
+	// 	MinVersion: tls.VersionTLS12,
+	// }
 
 	// We set the time out limit
 	srv := &http.Server{
@@ -69,17 +68,17 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
-		TLSConfig:    tlsConfig,
+		// TLSConfig:    tlsConfig,
 	}
 
 	go func() {
-		certFile := "Key/cert.pem"
-		keyFile := "Key/key.pem"
+		// certFile := "Key/localhost.pem"
+		// keyFile := "Key/localhost.key"
 
-		log.Printf("Server listening on https://%s", srv.Addr)
-		fmt.Printf("\033[96mServer started at: https://%s\033[0m\n", srv.Addr)
+		log.Printf("Server listening on http://%s", srv.Addr)
+		fmt.Printf("\033[96mServer started at: http://%s\033[0m\n", srv.Addr)
 
-		if err := srv.ListenAndServeTLS(certFile, keyFile); err != nil {
+		if err := srv.ListenAndServe(); err != nil {
 			log.Fatalf("Error starting TLS server: %v", err)
 		}
 	}()
