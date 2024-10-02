@@ -52,7 +52,7 @@ func Register(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We insert in the table Auth of the db the id, email and password of the people trying to register
-		if err := utils.InsertIntoDb("Auth", db, register.Auth.Id, register.Auth.Email, register.Auth.Password); err != nil {
+		if err := utils.InsertIntoDb("Auth", db, register.Auth.Id, register.Auth.Email, register.Auth.Password, 0); err != nil {
 			nw.Error("Internal Error: There is a probleme during the push in the DB: " + err.Error())
 			log.Printf("[%s] [Register] %s", r.RemoteAddr, err.Error())
 			return
