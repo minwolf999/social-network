@@ -96,9 +96,6 @@ func GetComment(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// We take the post id from the url used
-		comment.PostId = r.PathValue("postId")
-
 		// We decrypt the post author ID
 		_, err := utils.DecryptJWT(comment.AuthorId, db)
 		if err != nil {
@@ -109,7 +106,7 @@ func GetComment(db *sql.DB) http.HandlerFunc {
 
 		var comments []map[string]any
 		// We check if there is a precise Comment to get and make the request
-		if comment.Id != "" {
+		if comment.PostId != "" {
 			comments, err = utils.SelectFromDb("Comment", db, map[string]any{"Id": comment.Id})
 		} else {
 			comments, err = utils.SelectFromDb("Comment", db, map[string]any{})
