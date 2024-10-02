@@ -48,9 +48,16 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/getFollowed", handler.GetFollowed(db))
 	mux.Handle("/getFollower", handler.GetFollower(db))
 
+	// Like route
 	mux.Handle("/like", handler.HandleLike(db))
+
+	// Setting route
 	mux.Handle("/settings", handler.HandleChangeUserData(db))
 
+	// Group routes
+	mux.Handle("/CreateGroup", handler.CreateGroup(db))
+
+	// Websocket route
 	mux.Handle("/websocket", handler.Websocket(db))
 }
 

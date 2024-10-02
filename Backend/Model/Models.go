@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -63,6 +64,23 @@ type Follower struct {
 	Id         string `json:"Id"`
 	UserId     string `json:"UserId"`
 	FollowerId string `json:"FollowerId"`
+}
+
+type Group struct {
+	Id             string `json:"Id"`
+	LeaderId       string `json:"LeaderId"`
+	MemberIds      string `json:"MemberIds"`
+	SplitMemberIds []string
+	GroupName      string `json:"GroupName"`
+	CreationDate   string `json:"CreationDate"`
+}
+
+func (group *Group) SplitMembers() {
+	group.SplitMemberIds = strings.Split(group.MemberIds, " | ")
+}
+
+func (group *Group) JoinMembers() {
+	group.MemberIds = strings.Join(group.SplitMemberIds, " | ")
 }
 
 type ResponseWriter struct {
