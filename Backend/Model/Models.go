@@ -56,6 +56,7 @@ type Comment struct {
 	PostId       string `json:"PostId"`
 	LikeCount    int    `json:"LikeCount"`
 	DislikeCount int    `json:"DislikeCount"`
+	Register     `json:",inline"`
 }
 
 type Follower struct {

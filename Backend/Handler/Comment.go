@@ -107,9 +107,9 @@ func GetComment(db *sql.DB) http.HandlerFunc {
 		var comments []map[string]any
 		// We check if there is a precise Comment to get and make the request
 		if comment.PostId != "" {
-			comments, err = utils.SelectFromDb("Comment", db, map[string]any{"Id": comment.Id})
+			comments, err = utils.SelectFromDb("CommentDetail", db, map[string]any{"PostId": comment.Id})
 		} else {
-			comments, err = utils.SelectFromDb("Comment", db, map[string]any{})
+			comments, err = utils.SelectFromDb("CommentDetail", db, map[string]any{})
 		}
 		if err != nil {
 			nw.Error("Error during the select in the db")

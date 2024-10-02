@@ -77,10 +77,28 @@ CREATE VIEW PostDetail AS
 	p.Image,
 	p.CreationDate,
 	p.IsGroup,
-	u.Id as AuthorId,
+	p.AuthorId,
+	p.LikeCount,
+	p.DislikeCount,
 	u.FirstName,
 	u.LastName,
 	u.ProfilePicture,
 	u.Username
 FROM Post AS p
 INNER JOIN UserInfo AS u ON p.AuthorId = u.Id;
+
+CREATE VIEW CommentDetail AS
+  SELECT 
+    c.Id,
+	c.Text,
+	c.CreationDate,
+	c.AuthorId,
+	c.LikeCount,
+	c.DislikeCount,
+	c.PostId,
+	u.FirstName,
+	u.LastName,
+	u.ProfilePicture,
+	u.Username
+FROM Comment AS c
+INNER JOIN UserInfo AS u ON c.AuthorId = u.Id;
