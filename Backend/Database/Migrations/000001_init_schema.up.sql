@@ -77,6 +77,7 @@ CREATE VIEW PostDetail AS
 	p.Image,
 	p.CreationDate,
 	p.IsGroup,
+	u.Id as AuthorId,
 	u.FirstName,
 	u.LastName,
 	u.ProfilePicture,

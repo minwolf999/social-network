@@ -77,11 +77,11 @@ func LoadData(db *sql.DB) error {
 
 		var post model.Post
 		post.AuthorId = user.Auth.Id
-		uuid, err := uuid.NewV7()
+		uid, err := uuid.NewV7()
 		if err != nil {
 			return errors.New("there is a probleme with the generation of the uuid")
 		}
-		post.Id = uuid.String()
+		post.Id = uid.String()
 
 		day = rand.Intn(31-0) + 0
 		mounth = rand.Intn(12-0) + 0
@@ -91,6 +91,28 @@ func LoadData(db *sql.DB) error {
 		post.Text = fmt.Sprintf("%s %s %s %s.", subjects[rand.Intn(len(subjects))], verbs[rand.Intn(len(verbs))], objects[rand.Intn(len(objects))], adverbs[rand.Intn(len(adverbs))])
 
 		if err := InsertIntoDb("Post", db, post.Id, post.AuthorId, post.Text, post.Image, post.CreationDate, post.IsGroup, 0, 0); err != nil {
+			i--
+			continue
+		}
+
+		var comment model.Comment
+		uid, err = uuid.NewV7()
+		if err != nil {
+			return errors.New("there is a probleme with the generation of the uuid")
+		}
+
+		comment.Id = uid.String()
+		comment.AuthorId = user.Id
+		comment.PostId = post.Id
+
+		day = rand.Intn(31-0) + 0
+		mounth = rand.Intn(12-0) + 0
+		year = rand.Intn(2024-1980) + 1980
+		comment.CreationDate = fmt.Sprintf("%d-%d-%d", year, mounth, day)
+
+		comment.Text = fmt.Sprintf("%s %s %s %s.", subjects[rand.Intn(len(subjects))], verbs[rand.Intn(len(verbs))], objects[rand.Intn(len(objects))], adverbs[rand.Intn(len(adverbs))])
+
+		if err := InsertIntoDb("Comment", db, comment.Id, comment.AuthorId, comment.Text, comment.CreationDate, comment.PostId, comment.LikeCount, comment.DislikeCount); err != nil {
 			i--
 			continue
 		}
