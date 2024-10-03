@@ -110,3 +110,17 @@ func ParseFollowerData(follow []map[string]any) ([]model.Follower, error) {
 
 	return res, nil
 }
+
+func ParseGroupData(userData []map[string]any) ([]model.Group, error) {
+	// We marshal the map to get it in []byte
+	serializedData, err := json.Marshal(userData)
+	if err != nil {
+		return nil, errors.New("internal error: conversion problem")
+	}
+
+	// We Unmarshal in the good structure
+	var authResult []model.Group
+	err = json.Unmarshal(serializedData, &authResult)
+
+	return authResult, err
+}
