@@ -158,6 +158,8 @@ func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
 					break
 				}
 			}
+
+			DetailGroup.LeaderId = DetailGroup.SplitMemberIds[0]
 		}
 
 		DetailGroup.JoinMembers()
@@ -175,6 +177,135 @@ func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
 		})
 		if err != nil {
 			log.Printf("[%s] [JoinAndLeaveGroup] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
+func GetGroup(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		// We read the request body and unmarshal it into a structure
+		var datas struct {
+			UserId  string `json:"UserId"`
+			GroupId string `json:"GroupId"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [GetGroup] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		// We decrypt the Id of the user make the request to follow someone
+		decryptAuthorId, err := utils.DecryptJWT(datas.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [GetGroup] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+
+		datas.UserId = decryptAuthorId
+
+		groupDatas, err := utils.SelectFromDb("Groups", db, map[string]any{"Id": datas.GroupId})
+		if err != nil {
+			nw.Error("Internal error: Problem during database query")
+			log.Printf("[%s] [GetGroup] %v", r.RemoteAddr, err)
+			return
+		}
+
+		group, err := utils.ParseGroupData(groupDatas)
+		if err != nil {
+			nw.Error("Internal Error: There is a probleme during the parse of the structure : " + err.Error())
+			log.Printf("[%s] [GetGroup] %s", r.RemoteAddr, err.Error())
+			return
+		}
+
+		if len(group) != 1 {
+			nw.Error("Internal Error: There is no group with this id")
+			log.Printf("[%s] [GetGroup] There is no group with this id", r.RemoteAddr)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Group obtained successfully",
+			"Group": group[0],
+		})
+		if err != nil {
+			log.Printf("[%s] [GetGroup] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
+func DeleteGroup(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		// We read the request body and unmarshal it into a structure
+		var datas struct {
+			UserId  string `json:"UserId"`
+			GroupId string `json:"GroupId"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [DeleteGroup] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		// We decrypt the Id of the user make the request to follow someone
+		decryptAuthorId, err := utils.DecryptJWT(datas.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [DeleteGroup] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+
+		datas.UserId = decryptAuthorId
+
+		groupDatas, err := utils.SelectFromDb("Groups", db, map[string]any{"Id": datas.GroupId})
+		if err != nil {
+			nw.Error("Internal error: Problem during database query")
+			log.Printf("[%s] [DeleteGroup] %v", r.RemoteAddr, err)
+			return
+		}
+
+		group, err := utils.ParseGroupData(groupDatas)
+		if err != nil {
+			nw.Error("Internal Error: There is a probleme during the parse of the structure : " + err.Error())
+			log.Printf("[%s] [DeleteGroup] %s", r.RemoteAddr, err.Error())
+			return
+		}
+
+		if len(group) != 1 {
+			nw.Error("Internal Error: There is no group with this id")
+			log.Printf("[%s] [DeleteGroup] There is no group with this id", r.RemoteAddr)
+			return
+		}
+
+		if group[0].LeaderId != datas.UserId {
+			nw.Error("You can't delete this group")
+			log.Printf("[%s] [DeleteGroup] You can't delete this group", r.RemoteAddr)
+			return
+		}
+
+		if err = utils.RemoveFromDB("Groups", db, map[string]any{"Id": datas.GroupId}); err != nil {
+			nw.Error("Error during the remove of the db")
+			log.Printf("[%s] [DeleteGroup] Error during the remove in the db: %v", r.RemoteAddr, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Group delete successfully",
+		})
+		if err != nil {
+			log.Printf("[%s] [DeleteGroup] %s", r.RemoteAddr, err.Error())
 		}
 	}
 }

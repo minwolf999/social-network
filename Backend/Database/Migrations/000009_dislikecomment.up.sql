@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS DislikeComment (
+	PostId VARCHAR(36) NOT NULL,
+	UserId VARCHAR(36) NOT NULL,
+
+	CONSTRAINT fk_postid FOREIGN KEY (PostId) REFERENCES "Post"("Id"),
+	CONSTRAINT fk_userid FOREIGN KEY (UserId) REFERENCES "UserInfo"("Id")
+);

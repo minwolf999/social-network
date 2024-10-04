@@ -67,10 +67,12 @@ func LoadData(db *sql.DB) error {
 
 		// We insert the values in the tables
 		if err := InsertIntoDb("Auth", db, user.Auth.Id, user.Auth.Email, user.Auth.Password, user.Auth.ConnectionAttempt); err != nil {
+			fmt.Println(err)
 			i--
 			continue
 		}
 		if err := InsertIntoDb("UserInfo", db, user.Auth.Id, user.Auth.Email, user.FirstName, user.LastName, user.BirthDate, user.ProfilePicture, user.Username, user.AboutMe); err != nil {
+			fmt.Println(err)
 			i--
 			continue
 		}
@@ -90,7 +92,8 @@ func LoadData(db *sql.DB) error {
 
 		post.Text = fmt.Sprintf("%s %s %s %s.", subjects[rand.Intn(len(subjects))], verbs[rand.Intn(len(verbs))], objects[rand.Intn(len(objects))], adverbs[rand.Intn(len(adverbs))])
 
-		if err := InsertIntoDb("Post", db, post.Id, post.AuthorId, post.Text, post.Image, post.CreationDate, post.IsGroup, 0, 0); err != nil {
+		if err := InsertIntoDb("Post", db, post.Id, post.AuthorId, post.Text, post.Image, post.CreationDate, sql.NullString{Valid: false}, 0, 0); err != nil {
+			fmt.Println(err)
 			i--
 			continue
 		}
@@ -113,6 +116,7 @@ func LoadData(db *sql.DB) error {
 		comment.Text = fmt.Sprintf("%s %s %s %s.", subjects[rand.Intn(len(subjects))], verbs[rand.Intn(len(verbs))], objects[rand.Intn(len(objects))], adverbs[rand.Intn(len(adverbs))])
 
 		if err := InsertIntoDb("Comment", db, comment.Id, comment.AuthorId, comment.Text, comment.CreationDate, comment.PostId, comment.LikeCount, comment.DislikeCount); err != nil {
+			fmt.Println(err)
 			i--
 			continue
 		}
@@ -134,12 +138,12 @@ The function gonna return:
 func InsertIntoDb(tabelName string, db *sql.DB, Args ...any) error {
 	// We format the values to write them into a string
 	var stringMAP string
-	for i, j := range Args {
-		if i < len(Args)-1 {
-			stringMAP += fmt.Sprintf("\"%v\", ", j)
-		} else {
-			stringMAP += fmt.Sprintf("\"%v\"", j)
+	for i := range Args {
+		if i > 0 {
+			stringMAP += ", "
 		}
+		
+		stringMAP += "?"
 	}
 
 	// We prepare the SQL query to avoid SQL injections
@@ -149,7 +153,7 @@ func InsertIntoDb(tabelName string, db *sql.DB, Args ...any) error {
 	}
 
 	// We execute the SQL request
-	_, err = stmt.Exec()
+	_, err = stmt.Exec(Args...)
 	if err != nil {
 		return err
 	}

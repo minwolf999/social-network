@@ -50,8 +50,14 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 		}
 		post.Id = uuid.String()
 
+		var isGroup = sql.NullString{Valid: false}
+		if post.IsGroup != "" {
+			isGroup.String = post.IsGroup
+			isGroup.Valid = true
+		}
+
 		// We insert the post in the db
-		if err = utils.InsertIntoDb("Post", db, post.Id, post.AuthorId, post.Text, post.Image, post.CreationDate, post.IsGroup, 0, 0); err != nil {
+		if err = utils.InsertIntoDb("Post", db, post.Id, post.AuthorId, post.Text, post.Image, post.CreationDate, isGroup, 0, 0); err != nil {
 			nw.Error("Internal Error: There is a probleme during the push in the DB: " + err.Error())
 			log.Printf("[%s] [Createpost] %s", r.RemoteAddr, err.Error())
 			return
@@ -61,7 +67,7 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
 			"Message": "Post created successfully",
-			"IdPost": post.Id,
+			"IdPost":  post.Id,
 		})
 		if err != nil {
 			log.Printf("[%s] [CreatePost] %s", r.RemoteAddr, err.Error())
