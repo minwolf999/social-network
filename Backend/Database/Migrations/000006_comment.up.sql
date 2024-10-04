@@ -1,3 +1,5 @@
+PRAGMA foreign_keys = ON;
+
 CREATE TABLE IF NOT EXISTS Comment (
 	Id VARCHAR(36) NOT NULL,
 	AuthorId VARCHAR(36) NOT NULL,

@@ -1,4 +1,6 @@
-CREATE TABLE IF NOT EXISTS LikePost (
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS DislikeComment (
 	PostId VARCHAR(36) NOT NULL,
 	UserId VARCHAR(36) NOT NULL,
 

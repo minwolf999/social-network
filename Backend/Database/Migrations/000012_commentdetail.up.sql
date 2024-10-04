@@ -1,3 +1,5 @@
+PRAGMA foreign_keys = ON;
+
 CREATE VIEW CommentDetail AS
   SELECT 
     c.Id,

@@ -1,3 +1,5 @@
+PRAGMA foreign_keys = ON;
+
 CREATE TABLE IF NOT EXISTS Groups (
 	Id VARCHAR(36) NOT NULL,
 	LeaderId VARCHAR(36) NOT NULL,
