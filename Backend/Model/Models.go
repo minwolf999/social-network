@@ -44,6 +44,7 @@ type Post struct {
 	Text         string `json:"Text"`
 	Image        string `json:"Image"`
 	CreationDate string `json:"CreationDate"`
+	Status       string `json:"Status"`
 	IsGroup      string `json:"IsGroup"`
 	LikeCount    int    `json:"LikeCount"`
 	DislikeCount int    `json:"DislikeCount"`

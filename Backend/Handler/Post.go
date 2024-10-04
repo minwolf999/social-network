@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"slices"
+	"strings"
 
 	model "social-network/Model"
 	utils "social-network/Utils"
@@ -35,9 +37,9 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 		}
 		post.AuthorId = decryptAuthorId
 
-		if post.Text == "" || post.CreationDate == "" {
-			nw.Error("There is no text for the post")
-			log.Printf("[%s] [CreatePost] There is no text for the post", r.RemoteAddr)
+		if post.Text == "" || post.CreationDate == "" || (post.Status != "public" && post.Status != "private" && strings.Split(post.Status, " | ")[0] != "almost private") {
+			nw.Error("There is an empty field")
+			log.Printf("[%s] [CreatePost] there is an empty field", r.RemoteAddr)
 			return
 		}
 
@@ -57,7 +59,7 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We insert the post in the db
-		if err = utils.InsertIntoDb("Post", db, post.Id, post.AuthorId, post.Text, post.Image, post.CreationDate, isGroup, 0, 0); err != nil {
+		if err = utils.InsertIntoDb("Post", db, post.Id, post.AuthorId, post.Text, post.Image, post.CreationDate, post.Status, isGroup, 0, 0); err != nil {
 			nw.Error("Internal Error: There is a probleme during the push in the DB: " + err.Error())
 			log.Printf("[%s] [Createpost] %s", r.RemoteAddr, err.Error())
 			return
@@ -118,13 +120,15 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		//---------------------------------------------------------------------------------------------------------------------------------------------------
-		//---------------------------------------------------------------------------------------------------------------------------------------------------
-		//---------------------------------------------------------------------------------------------------------------------------------------------------
-		//							Filtrer les posts pour n'obtenir que ceux des amis
-		//---------------------------------------------------------------------------------------------------------------------------------------------------
-		//---------------------------------------------------------------------------------------------------------------------------------------------------
-		//---------------------------------------------------------------------------------------------------------------------------------------------------
+		for i, v := range formatedPosts {
+			if (v.Status == "private" && !IsFollowedBy(post.AuthorId, v.AuthorId, db)) || (strings.Split(v.Status, " | ")[0] == "almost private" && !slices.Contains(strings.Split(v.Status, " | ")[1:], post.AuthorId)) {
+				if i < len(formatedPosts)-1 {
+					formatedPosts = append(formatedPosts[:i], formatedPosts[i+1:]...)
+				} else {
+					formatedPosts = formatedPosts[:i]
+				}
+			}
+		}
 
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{

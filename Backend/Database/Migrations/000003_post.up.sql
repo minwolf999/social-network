@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS Post (
     Text VARCHAR(1000) NOT NULL,
     Image VARCHAR(100),
     CreationDate VARCHAR(20) NOT NULL,
+    Status Text NOT NULL,
     IsGroup VARCHAR(36),
     LikeCount INTEGER,
     DislikeCount INTEGER,

@@ -249,3 +249,17 @@ func GetFollower(db *sql.DB) http.HandlerFunc {
 		}
 	}
 }
+
+func IsFollowedBy(follower, followed string, db *sql.DB) bool {
+	follow, err := utils.SelectFromDb("Follower", db, map[string]any{"UserId": follower, "FollowedId": followed})
+	if err != nil {
+		return false
+	}
+
+	follows, err := utils.ParseFollowerData(follow)
+	if err != nil {
+		return false
+	}
+
+	return len(follows) == 1
+}
