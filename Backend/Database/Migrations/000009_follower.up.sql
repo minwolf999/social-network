@@ -7,6 +7,6 @@ CREATE TABLE IF NOT EXISTS Follower (
 
 	PRIMARY KEY (Id),
 
-	CONSTRAINT fk_userid FOREIGN KEY (UserId) REFERENCES "UserInfo"("Id"),
-	CONSTRAINT fk_followerid FOREIGN KEY (FollowerId) REFERENCES "UserInfo"("Id")
+	CONSTRAINT fk_userid FOREIGN KEY (UserId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE,
+	CONSTRAINT fk_followerid FOREIGN KEY (FollowerId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE
 );
