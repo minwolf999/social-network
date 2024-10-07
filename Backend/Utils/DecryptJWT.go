@@ -11,10 +11,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const (
-	SecretKey = "tYrEQins27rw0ehqkKfJE0Ofxyd6r8QISFtpomcIILFUfRacmDuBa3nS9NXTpZfV99E1AEaU"
-)
-
 /*
 This function takes 1 argument:
   - a string who contain the value to set in the JWT
@@ -35,7 +31,7 @@ func GenerateJWT(str string) string {
 
 retry:
 	// We hash the key for the last part od the JWT
-	key, err := bcrypt.GenerateFromPassword([]byte(SecretKey), 12)
+	key, err := bcrypt.GenerateFromPassword([]byte(model.SecretKey), 12)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -65,7 +61,7 @@ func DecryptJWT(JWT string, db *sql.DB) (string, error) {
 	}
 
 	// We check if the secret key is good
-	if err := bcrypt.CompareHashAndPassword([]byte(splitSessionId[2]), []byte(SecretKey)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(splitSessionId[2]), []byte(model.SecretKey)); err != nil {
 		return "", err
 	}
 

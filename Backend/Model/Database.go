@@ -50,7 +50,7 @@ The function return an error
 	// We loop at least 100 times
 	for i := 0; i < 100; i++ {
 		// We create a variable of type Register and set the value inside (we get a random first and last name in the 2 lists)
-		var user model.Register
+		var user Register
 		user.FirstName = firstNameList[rand.Intn(len(firstNameList))]
 		user.LastName = lastNameList[rand.Intn(len(lastNameList))]
 		user.Auth.Password = "Azerty&1234"
@@ -63,7 +63,7 @@ The function return an error
 		user.BirthDate = fmt.Sprintf("%d-%d-%d", year, mounth, day)
 
 		// We create an UUID and hash the password
-		if err := CreateUuidAndCrypt(&user); err != nil {
+		if err := handler.CreateUuidAndCrypt(&user); err != nil {
 			return err
 		}
 
@@ -79,7 +79,7 @@ The function return an error
 			continue
 		}
 
-		var post model.Post
+		var post Post
 		post.AuthorId = user.Auth.Id
 		uid, err := uuid.NewV7()
 		if err != nil {
@@ -100,7 +100,7 @@ The function return an error
 			continue
 		}
 
-		var comment model.Comment
+		var comment Comment
 		uid, err = uuid.NewV7()
 		if err != nil {
 			return errors.New("there is a probleme with the generation of the uuid")

@@ -4,6 +4,10 @@ import (
 	"net/http"
 )
 
+var (
+	SecretKey = "tYrEQins27rw0ehqkKfJE0Ofxyd6r8QISFtpomcIILFUfRacmDuBa3nS9NXTpZfV99E1AEaU"
+)
+
 type Auth struct {
 	Id                string `json:"Id"`
 	Email             string `json:"Email"`

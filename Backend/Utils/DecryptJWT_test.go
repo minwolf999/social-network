@@ -19,7 +19,7 @@ func TestGenerateJWT(t *testing.T) {
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(splitJWT[2]), []byte(SecretKey)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(splitJWT[2]), []byte(model.SecretKey)); err != nil {
 		t.Errorf("Invalid secret key: %v", err)
 		return
 	}

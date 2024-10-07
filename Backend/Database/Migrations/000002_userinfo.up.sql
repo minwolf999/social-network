@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS UserInfo (
 	FirstName VARCHAR(50) NOT NULL, 
 	LastName VARCHAR(50) NOT NULL,
 	BirthDate VARCHAR(20) NOT NULL,
-	ProfilePicture VARCHAR(400000),
+	ProfilePicture TEXT,
 	Username VARCHAR(50),
 	AboutMe VARCHAR(280),
 
