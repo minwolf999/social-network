@@ -7,19 +7,20 @@ import (
 	"net/http/httptest"
 
 	model "social-network/Model"
-	utils "social-network/Utils"
 
 	"testing"
 )
 
 func TestAddFollower(t *testing.T) {
 	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := utils.OpenDb("sqlite3", ":memory:")
+	db, err := model.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
 		return
 	}
 	defer db.Close()
+
+	CreateTables(db)
 
 	rr, err := TryRegister(t, db, model.Register{
 		Auth: model.Auth{
@@ -76,14 +77,6 @@ func TestAddFollower(t *testing.T) {
 		t.Fatalf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
 		return
 	}
-
-	db.Exec(`
-	CREATE TABLE IF NOT EXISTS Follower (
-		Id VARCHAR(36) NOT NULL UNIQUE,
-		UserId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id"),
-		FollowerId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id")
-	);
-	`)
 
 	var id string
 	db.QueryRow("SELECT Id FROM Auth WHERE Email = ?", "unemail7@gmail.com").Scan(&id)
@@ -135,12 +128,14 @@ func TestAddFollower(t *testing.T) {
 
 func TestRemoveFollower(t *testing.T) {
 	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := utils.OpenDb("sqlite3", ":memory:")
+	db, err := model.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
 		return
 	}
 	defer db.Close()
+
+	CreateTables(db)
 
 	rr, err := TryRegister(t, db, model.Register{
 		Auth: model.Auth{
@@ -197,14 +192,6 @@ func TestRemoveFollower(t *testing.T) {
 		t.Fatalf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
 		return
 	}
-
-	db.Exec(`
-CREATE TABLE IF NOT EXISTS Follower (
-	Id VARCHAR(36) NOT NULL UNIQUE,
-	UserId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id"),
-	FollowerId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id")
-);
-`)
 
 	var id string
 	db.QueryRow("SELECT Id FROM Auth WHERE Email = ?", "unemail7@gmail.com").Scan(&id)
@@ -289,12 +276,14 @@ CREATE TABLE IF NOT EXISTS Follower (
 
 func TestGetFollowed(t *testing.T) {
 	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := utils.OpenDb("sqlite3", ":memory:")
+	db, err := model.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
 		return
 	}
 	defer db.Close()
+
+	CreateTables(db)
 
 	rr, err := TryRegister(t, db, model.Register{
 		Auth: model.Auth{
@@ -352,14 +341,6 @@ func TestGetFollowed(t *testing.T) {
 		return
 	}
 
-	db.Exec(`
-CREATE TABLE IF NOT EXISTS Follower (
-	Id VARCHAR(36) NOT NULL UNIQUE,
-	UserId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id"),
-	FollowerId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id")
-);
-`)
-
 	var id string
 	db.QueryRow("SELECT Id FROM Auth WHERE Email = ?", "unemail7@gmail.com").Scan(&id)
 
@@ -408,7 +389,7 @@ CREATE TABLE IF NOT EXISTS Follower (
 	}
 
 	follow = map[string]any{
-		"UserId":     JWT,
+		"UserId": JWT,
 	}
 
 	body, err = json.Marshal(follow)
@@ -453,12 +434,14 @@ CREATE TABLE IF NOT EXISTS Follower (
 
 func TestGetFollower(t *testing.T) {
 	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := utils.OpenDb("sqlite3", ":memory:")
+	db, err := model.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
 		return
 	}
 	defer db.Close()
+
+	CreateTables(db)
 
 	rr, err := TryRegister(t, db, model.Register{
 		Auth: model.Auth{
@@ -518,14 +501,6 @@ func TestGetFollower(t *testing.T) {
 
 	JWT2 := bodyValue["sessionId"]
 
-	db.Exec(`
-CREATE TABLE IF NOT EXISTS Follower (
-	Id VARCHAR(36) NOT NULL UNIQUE,
-	UserId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id"),
-	FollowerId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id")
-);
-`)
-
 	var id string
 	db.QueryRow("SELECT Id FROM Auth WHERE Email = ?", "unemail7@gmail.com").Scan(&id)
 
@@ -574,7 +549,7 @@ CREATE TABLE IF NOT EXISTS Follower (
 	}
 
 	follow = map[string]any{
-		"UserId":     JWT2,
+		"UserId": JWT2,
 	}
 
 	body, err = json.Marshal(follow)

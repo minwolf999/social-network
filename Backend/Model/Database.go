@@ -1,14 +1,10 @@
-package utils
+package model
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
-	"math/rand"
-	model "social-network/Model"
 	"strings"
 
-	"github.com/gofrs/uuid"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -41,7 +37,7 @@ This function takes 1 argument:
 
 The function return an error
 */
-func LoadData(db *sql.DB) error {
+/*func LoadData(db *sql.DB) error {
 	// We set a list of first and last name
 	firstNameList := []string{"Alice", "Bob", "Charlie", "David", "Eva", "Frank", "Grace", "Hannah", "Ivy", "Jack", "Karen", "Leo", "Mia", "Noah", "Olivia", "Paul", "Quinn", "Ruby", "Sam", "Tina", "Uma", "Victor", "Wendy", "Xander", "Yara", "Zane", "Adrian", "Bella", "Carl", "Diana", "Ethan", "Fiona", "George", "Helen", "Isaac", "Julia", "Kevin", "Lara", "Michael", "Nina", "Oscar", "Penny", "Quentin", "Rachel", "Steve", "Tara", "Uriel", "Violet", "Walter", "Xenia", "Yves", "Zelda", "Arthur", "Bianca", "Colin", "Derek", "Emma", "Felix", "Gina", "Harry", "Iris", "James", "Kara", "Louis", "Maria", "Nathan", "Owen", "Pam", "Ron", "Sophie", "Tom", "Ursula", "Vincent", "Will", "Ximena", "Yvonne", "Zach", "Angela", "Bruno", "Claire", "Damien", "Elise", "Freddy", "Gloria", "Henry", "Isabelle", "Julien", "Kurt", "Liam", "Nadine", "Olga", "Peter", "Quincy", "Rosie", "Simon", "Tracy", "Ulrich", "Victoria", "Wayne", "Xia", "Yasmine", "Zeke"}
 	lastNameList := []string{"Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores", "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell", "Carter", "Roberts", "Gomez", "Phillips", "Evans", "Turner", "Diaz", "Parker", "Cruz", "Edwards", "Collins", "Reyes", "Stewart", "Morris", "Morales", "Murphy", "Cook", "Rogers", "Gutierrez", "Ortiz", "Morgan", "Cooper", "Peterson", "Bailey", "Reed", "Kelly", "Howard", "Ramos", "Kim", "Cox", "Ward", "Richardson", "Watson", "Brooks", "Chavez", "Wood", "James", "Bennett", "Gray", "Mendoza", "Ruiz", "Hughes", "Price", "Alvarez", "Castillo", "Sanders", "Patel", "Myers", "Long", "Ross", "Foster", "Jimenez", "Powell", "Jenkins", "Perry", "Russell", "Sullivan", "Bell", "Coleman", "Butler", "Henderson", "Barnes"}
@@ -129,7 +125,7 @@ func LoadData(db *sql.DB) error {
 	}
 
 	return nil
-}
+}*/
 
 /*
 This function takes a minimum of 2 arguments:
@@ -148,7 +144,7 @@ func InsertIntoDb(tabelName string, db *sql.DB, Args ...any) error {
 		if i > 0 {
 			stringMAP += ", "
 		}
-		
+
 		stringMAP += "?"
 	}
 
@@ -178,21 +174,21 @@ The function gonna return:
   - an map where each key corresponds to a column in the db
   - an error
 */
-func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([]map[string]any, error) {
+func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) (UserData, error) {
 	// We prepare and execute the select request
 	column, rows, err := PrepareStmt(tabelName, db, Args)
 	if err != nil {
-		return nil, err
+		return UserData{}, err
 	}
 
 	// Fetch the column types for correct handling of the result set
 	columnTypes, err := rows.ColumnTypes()
 	if err != nil {
-		return nil, err
+		return UserData{}, err
 	}
 
 	// We loop on the result to stock them into the []map[string]any
-	var result []map[string]any
+	var result UserData
 	for rows.Next() {
 		// We initialize the variable who gonna contain the current result row
 		row := make(map[string]any)
@@ -215,7 +211,7 @@ func SelectFromDb(tabelName string, db *sql.DB, Args map[string]any) ([]map[stri
 
 		// We fill the variable with the values of the row
 		if err := rows.Scan(values...); err != nil {
-			return nil, err
+			return UserData{}, err
 		}
 
 		// We add the values row by row in the current map

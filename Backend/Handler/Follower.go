@@ -70,7 +70,7 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We insert in the table Follower of the db the structure created
-		if err := utils.InsertIntoDb("Follower", db, follower.Id, follower.UserId, follower.FollowerId); err != nil {
+		if err := follower.InsertIntoDb(db); err != nil {
 			nw.Error("Internal Error: There is a probleme during the push in the DB: " + err.Error())
 			log.Printf("[%s] [AddFollower] %s", r.RemoteAddr, err.Error())
 			return
@@ -118,7 +118,7 @@ func RemoveFollower(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if err = utils.RemoveFromDB("Follower", db, map[string]any{"UserId": follower.UserId, "FollowerId": follower.FollowerId}); err != nil {
+		if err = model.RemoveFromDB("Follower", db, map[string]any{"UserId": follower.UserId, "FollowerId": follower.FollowerId}); err != nil {
 			nw.Error("Internal Error: There is a probleme during the delete in the DB: " + err.Error())
 			log.Printf("[%s] [RemoveFollower] %s", r.RemoteAddr, err.Error())
 			return
@@ -143,9 +143,7 @@ func GetFollowed(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We read the request body and unmarshal it into a structure
-		var follower struct {
-			UserId string `json:"UserId"`
-		}
+		var follower model.Follower
 		if err := json.NewDecoder(r.Body).Decode(&follower); err != nil {
 			nw.Error("Invalid request body")
 			log.Printf("[%s] [GetFollower] Invalid request body: %v", r.RemoteAddr, err)
@@ -167,16 +165,16 @@ func GetFollowed(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		follow, err := utils.SelectFromDb("Follower", db, map[string]any{"UserId": follower.UserId})
-		if err != nil {
-			nw.Error("Internal Error: There is a probleme during the selecte in the DB: " + err.Error())
-			log.Printf("[%s] [GetFollower] %s", r.RemoteAddr, err.Error())
-			return
+		var follows = model.Followers{
+			{
+				UserId: follower.UserId,
+			},
 		}
 
-		follows, err := utils.ParseFollowerData(follow)
-		if err != nil {
-			nw.Error("Internal Error: There is a probleme during the parse of the structure : " + err.Error())
+		// var follows model.Followers
+		// follows[0].UserId = follower.UserId
+		if err := follows.SelectFromDbByUserId(db); err != nil {
+			nw.Error("Internal Error: There is a probleme during the selecte in the DB: " + err.Error())
 			log.Printf("[%s] [GetFollower] %s", r.RemoteAddr, err.Error())
 			return
 		}
@@ -224,19 +222,20 @@ func GetFollower(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		follow, err := utils.SelectFromDb("Follower", db, map[string]any{"FollowerId": follower.UserId})
-		if err != nil {
+		var follows = model.Followers{
+			{
+				FollowerId: follower.UserId,
+			},
+		}
+
+		// var follows model.Followers
+		// follows[0].FollowerId = follower.UserId
+		if err := follows.SelectFromDbByFollowerId(db); err != nil {
 			nw.Error("Internal Error: There is a probleme during the selecte in the DB: " + err.Error())
 			log.Printf("[%s] [GetFollower] %s", r.RemoteAddr, err.Error())
 			return
 		}
 
-		follows, err := utils.ParseFollowerData(follow)
-		if err != nil {
-			nw.Error("Internal Error: There is a probleme during the parse of the structure : " + err.Error())
-			log.Printf("[%s] [GetFollower] %s", r.RemoteAddr, err.Error())
-			return
-		}
 
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
@@ -251,12 +250,12 @@ func GetFollower(db *sql.DB) http.HandlerFunc {
 }
 
 func IsFollowedBy(follower, followed string, db *sql.DB) bool {
-	follow, err := utils.SelectFromDb("Follower", db, map[string]any{"UserId": follower, "FollowedId": followed})
+	follow, err := model.SelectFromDb("Follower", db, map[string]any{"UserId": follower, "FollowedId": followed})
 	if err != nil {
 		return false
 	}
 
-	follows, err := utils.ParseFollowerData(follow)
+	follows, err := follow.ParseFollowersData()
 	if err != nil {
 		return false
 	}

@@ -15,25 +15,14 @@ import (
 
 func TestVerificationSessionId(t *testing.T) {
 	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := utils.OpenDb("sqlite3", ":memory:")
+	db, err := model.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
 		return
 	}
 	defer db.Close()
 
-	// Create a table for testing
-	_, err = db.Exec(`
-			CREATE TABLE IF NOT EXISTS Auth (
-			Id VARCHAR(36) NOT NULL UNIQUE PRIMARY KEY,
-			Email VARCHAR(100) NOT NULL UNIQUE,
-			Password VARCHAR(50) NOT NULL
-		);
-	`)
-	if err != nil {
-		t.Fatalf("Erreur lors de la création de la table : %v", err)
-		return
-	}
+	CreateTables(db)
 
 	// Crée une structure Register de test
 	login := model.Auth{
@@ -48,7 +37,7 @@ func TestVerificationSessionId(t *testing.T) {
 		return
 	}
 
-	if err = utils.InsertIntoDb("Auth", db, login.Id, login.Email, string(cryptedPassword)); err != nil {
+	if err = model.InsertIntoDb("Auth", db, login.Id, login.Email, string(cryptedPassword), 0); err != nil {
 		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
 		return
 	}
@@ -98,12 +87,10 @@ func TestVerificationSessionId(t *testing.T) {
 }
 
 func TestCheckDatasForCookie(t *testing.T) {
-	login := []map[string]any{
-		{
-			"Id":       "test",
-			"Email":    "unemail@gmail.com",
-			"Password": "MonMotDePasse123!",
-		},
+	login := model.Auth{
+		Id:       "test",
+		Email:    "unemail@gmail.com",
+		Password: "MonMotDePasse123!",
 	}
 
 	if err := CheckDatasForCookie(login); err != nil {

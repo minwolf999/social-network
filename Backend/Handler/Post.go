@@ -52,14 +52,8 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 		}
 		post.Id = uuid.String()
 
-		var isGroup = sql.NullString{Valid: false}
-		if post.IsGroup != "" {
-			isGroup.String = post.IsGroup
-			isGroup.Valid = true
-		}
-
 		// We insert the post in the db
-		if err = utils.InsertIntoDb("Post", db, post.Id, post.AuthorId, post.Text, post.Image, post.CreationDate, post.Status, isGroup, 0, 0); err != nil {
+		if err = post.InsertIntoDb(db); err != nil {
 			nw.Error("Internal Error: There is a probleme during the push in the DB: " + err.Error())
 			log.Printf("[%s] [Createpost] %s", r.RemoteAddr, err.Error())
 			return
@@ -100,11 +94,12 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We check if there is a precise Post to get and make the request
-		var posts []map[string]any
+		var posts model.Posts
 		if post.Id != "" {
-			posts, err = utils.SelectFromDb("PostDetail", db, map[string]any{"Id": post.Id})
+			err = post.SelectFromDbById(db)
+			posts[0] = post
 		} else {
-			posts, err = utils.SelectFromDb("PostDetail", db, map[string]any{})
+			err = posts.SelectAllFromDb(db)
 		}
 		if err != nil {
 			nw.Error("Error during the select in the db")
@@ -112,20 +107,12 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// We parse the result of the request in the good structure
-		formatedPosts, err := utils.ParsePostData(posts)
-		if err != nil {
-			nw.Error(err.Error())
-			log.Printf("[%s] [GetPost] %s", r.RemoteAddr, err.Error())
-			return
-		}
-
-		for i, v := range formatedPosts {
+		for i, v := range posts {
 			if (v.Status == "private" && !IsFollowedBy(post.AuthorId, v.AuthorId, db)) || (strings.Split(v.Status, " | ")[0] == "almost private" && !slices.Contains(strings.Split(v.Status, " | ")[1:], post.AuthorId)) {
-				if i < len(formatedPosts)-1 {
-					formatedPosts = append(formatedPosts[:i], formatedPosts[i+1:]...)
+				if i < len(posts)-1 {
+					posts = append(posts[:i], posts[i+1:]...)
 				} else {
-					formatedPosts = formatedPosts[:i]
+					posts = posts[:i]
 				}
 			}
 		}
@@ -134,7 +121,7 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
 			"Message": "Get posts successfuly",
-			"Posts":   formatedPosts,
+			"Posts":   posts,
 		})
 		if err != nil {
 			log.Printf("[%s] [GetPost] %s", r.RemoteAddr, err.Error())

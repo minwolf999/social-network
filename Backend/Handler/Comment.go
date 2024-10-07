@@ -41,15 +41,18 @@ func CreateComment(db *sql.DB) http.HandlerFunc {
 		}
 		comment.AuthorId = decryptAuthorId
 
+		var post = model.Post{
+			Id: comment.PostId,
+		}
+
 		// We check if the id given for the parent post fit with a real post id in the db
-		post, err := utils.SelectFromDb("Post", db, map[string]any{"Id": comment.PostId})
-		if err != nil {
+		if err := post.SelectFromDbById(db); err != nil {
 			nw.Error("Internal error: Problem during database query: " + err.Error())
 			log.Printf("[%s] [CreateComment] %s", r.RemoteAddr, err.Error())
 			return
 		}
 
-		if len(post) != 1 {
+		if post.Text == "" {
 			nw.Error("There is no post with the Id : " + comment.PostId)
 			log.Printf("[%s] [CreateComment] There is no post with the Id : %s", r.RemoteAddr, comment.PostId)
 			return
@@ -65,7 +68,7 @@ func CreateComment(db *sql.DB) http.HandlerFunc {
 		comment.Id = uuid.String()
 
 		// We insert the comment in the db
-		if err = utils.InsertIntoDb("Comment", db, comment.Id, comment.AuthorId, comment.Text, comment.CreationDate, comment.PostId, 0, 0); err != nil {
+		if err = comment.InsertIntoDb(db); err != nil {
 			nw.Error("Internal Error: There is a probleme during the push in the DB: " + err.Error())
 			log.Printf("[%s] [CreateComment] %s", r.RemoteAddr, err.Error())
 			return
@@ -104,12 +107,13 @@ func GetComment(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		var comments []map[string]any
+		var comments model.Comments
 		// We check if there is a precise Comment to get and make the request
 		if comment.PostId != "" {
-			comments, err = utils.SelectFromDb("CommentDetail", db, map[string]any{"PostId": comment.Id})
+			err = comment.SelectFromDbById(db)
+			comments[0] = comment
 		} else {
-			comments, err = utils.SelectFromDb("CommentDetail", db, map[string]any{})
+			err = comments.SelectAllFromDb(db)
 		}
 		if err != nil {
 			nw.Error("Error during the select in the db")
@@ -117,19 +121,11 @@ func GetComment(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// We parse the result of the request in the good structure
-		formatedComments, err := utils.ParseCommentData(comments)
-		if err != nil {
-			nw.Error(err.Error())
-			log.Printf("[%s] [GetPost] %s", r.RemoteAddr, err.Error())
-			return
-		}
-
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
 			"Message": "Get comments successfuly",
-			"Posts":   formatedComments,
+			"Posts":   comments,
 		})
 		if err != nil {
 			log.Printf("[%s] [GetComment] %s", r.RemoteAddr, err.Error())

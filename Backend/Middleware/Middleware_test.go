@@ -7,12 +7,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	utils "social-network/Utils"
+	model "social-network/Model"
 )
 
 func TestLookMethodMiddleware(t *testing.T) {
 	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := utils.OpenDb("sqlite3", ":memory:")
+	db, err := model.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
 	}
@@ -56,7 +56,7 @@ func TestLookMethodMiddleware(t *testing.T) {
 
 func TestSetHeaderAccessControllMiddleware(t *testing.T) {
 	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := utils.OpenDb("sqlite3", ":memory:")
+	db, err := model.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
 	}

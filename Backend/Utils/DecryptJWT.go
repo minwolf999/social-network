@@ -5,11 +5,14 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	model "social-network/Model"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
+)
 
-	model "social-network/Model"
+const (
+	SecretKey = "tYrEQins27rw0ehqkKfJE0Ofxyd6r8QISFtpomcIILFUfRacmDuBa3nS9NXTpZfV99E1AEaU"
 )
 
 /*
@@ -32,7 +35,7 @@ func GenerateJWT(str string) string {
 
 retry:
 	// We hash the key for the last part od the JWT
-	key, err := bcrypt.GenerateFromPassword([]byte(model.SecretKey), 12)
+	key, err := bcrypt.GenerateFromPassword([]byte(SecretKey), 12)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -62,7 +65,7 @@ func DecryptJWT(JWT string, db *sql.DB) (string, error) {
 	}
 
 	// We check if the secret key is good
-	if err := bcrypt.CompareHashAndPassword([]byte(splitSessionId[2]), []byte(model.SecretKey)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(splitSessionId[2]), []byte(SecretKey)); err != nil {
 		return "", err
 	}
 
@@ -77,7 +80,7 @@ func DecryptJWT(JWT string, db *sql.DB) (string, error) {
 }
 
 func IfExistsInDB(table string, db *sql.DB, args map[string]any) error {
-	authData, err := SelectFromDb(table, db, args)
+	authData, err := model.SelectFromDb(table, db, args)
 	if err != nil {
 		return err
 	}
@@ -90,7 +93,7 @@ func IfExistsInDB(table string, db *sql.DB, args map[string]any) error {
 }
 
 func IfNotExistsInDB(table string, db *sql.DB, args map[string]any) error {
-	authData, err := SelectFromDb(table, db, args)
+	authData, err := model.SelectFromDb(table, db, args)
 	if err != nil {
 		return err
 	}

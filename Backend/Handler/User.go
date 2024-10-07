@@ -39,8 +39,10 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 			uid = valueJWT
 		}
 
-		userInfos, err := displayInfos(db, uid)
-		if err != nil {
+		var userData model.Register
+		userData.Id = uid
+
+		if err = displayInfos(db, userData); err != nil {
 			nw.Error("Error when get infos")
 			log.Printf("[%s] [Settings] %s", r.RemoteAddr, err.Error())
 			return
@@ -50,7 +52,7 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success":   true,
 			"Message":   "Sending Infos",
-			"userInfos": userInfos,
+			"userInfos": userData,
 		})
 		if err != nil {
 			log.Printf("[%s] [Settings] %s", r.RemoteAddr, err.Error())
@@ -58,6 +60,6 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func displayInfos(db *sql.DB, uid string) ([]map[string]any, error) {
-	return utils.SelectFromDb("UserInfo", db, map[string]any{"Id": uid})
+func displayInfos(db *sql.DB, userData model.Register) (error) {
+	return userData.SelectFromDbById(db)
 }

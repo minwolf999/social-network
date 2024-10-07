@@ -26,6 +26,8 @@ func Login(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		password := loginData.Password
+
 		// We look if all is good in the datas send in the body of the request
 		if loginData.Email == "" || loginData.Password == "" {
 			nw.Error("There is an empty field")
@@ -34,29 +36,20 @@ func Login(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We get the row in the db where the email is equal to the email send
-		authData, err := utils.SelectFromDb("Auth", db, map[string]any{"Email": loginData.Email})
-		if err != nil {
+		if err := loginData.SelectFromDbByEmail(db); err != nil {
 			nw.Error("Internal error: Problem during database query: " + err.Error())
 			log.Printf("[%s] [Login] %s", r.RemoteAddr, err.Error())
 			return
 		}
 
 		// We check if there is no result
-		if len(authData) != 1 {
+		if loginData.Password == "" {
 			nw.Error("Incorrect email")
 			log.Printf("[%s] [Login] %s", r.RemoteAddr, "Incorrect email")
 			return
 		}
 
-		// We parse the result into a good structure
-		userData, err := utils.ParseAuthData(authData[0])
-		if err != nil {
-			nw.Error(err.Error())
-			log.Printf("[%s] [Login] %s", r.RemoteAddr, err.Error())
-			return
-		}
-
-		if userData.ConnectionAttempt >= 10 {
+		if loginData.ConnectionAttempt >= 10 {
 			//-------------------------------------------------------------------------------------------------------------------------------------
 			//-------------------------------------------------------------------------------------------------------------------------------------
 			// 								Send an email to reset the account
@@ -69,28 +62,28 @@ func Login(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We compare the password give and the crypted password
-		if err = bcrypt.CompareHashAndPassword([]byte(userData.Password), []byte(loginData.Password)); err != nil {
+		if err := bcrypt.CompareHashAndPassword([]byte(loginData.Password), []byte(password)); err != nil {
 			nw.Error("Invalid password")
 			log.Printf("[%s] [Login] %s", r.RemoteAddr, err.Error())
-			
-			userData.ConnectionAttempt++
-			if err = utils.UpdateDb("Auth", db, map[string]any{"ConnectionAttempt": userData.ConnectionAttempt}, map[string]any{"Id": userData.Id}); err != nil {
+
+			loginData.ConnectionAttempt++
+			if err = model.UpdateDb("Auth", db, map[string]any{"ConnectionAttempt": loginData.ConnectionAttempt}, map[string]any{"Id": loginData.Id}); err != nil {
 				log.Printf("Error during the update in the Db: %v", err)
 			}
 
 			return
 		}
 
-		userData.ConnectionAttempt = 0
-		if err = utils.UpdateDb("Auth", db, map[string]any{"ConnectionAttempt": userData.ConnectionAttempt}, map[string]any{"Id": userData.Id}); err != nil {
+		loginData.ConnectionAttempt = 0
+		if err := model.UpdateDb("Auth", db, map[string]any{"ConnectionAttempt": loginData.ConnectionAttempt}, map[string]any{"Id": loginData.Id}); err != nil {
 			log.Printf("Error during the update in the Db: %v", err)
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(map[string]any{
+		err := json.NewEncoder(w).Encode(map[string]any{
 			"Success":   true,
 			"Message":   "Login successfully",
-			"sessionId": utils.GenerateJWT(userData.Id),
+			"sessionId": utils.GenerateJWT(loginData.Id),
 		})
 		if err != nil {
 			log.Printf("[%s] [Login] %s", r.RemoteAddr, err.Error())

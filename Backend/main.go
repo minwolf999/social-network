@@ -13,8 +13,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	middleware "social-network/Middleware"
+	model "social-network/Model"
 	routes "social-network/Routes"
-	utils "social-network/Utils"
 )
 
 func init() {
@@ -24,18 +24,18 @@ func init() {
 	}
 
 	if strings.ToLower(args[1]) == "--loaddata" || strings.ToLower(args[1]) == "-l" {
-		db, err := utils.OpenDb("sqlite3", "./Database/Database.sqlite")
+		db, err := model.OpenDb("sqlite3", "./Database/Database.sqlite")
 		if err != nil {
 			fmt.Println(err)
 		}
 		defer db.Close()
 
-		start := time.Now()
-		if err = utils.LoadData(db); err != nil {
-			fmt.Println(err)
-		}
-		end := time.Now()
-		fmt.Println(end.Sub(start))
+		// start := time.Now()
+		// if err = utils.LoadData(db); err != nil {
+		// 	fmt.Println(err)
+		// }
+		// end := time.Now()
+		// fmt.Println(end.Sub(start))
 	}
 }
 

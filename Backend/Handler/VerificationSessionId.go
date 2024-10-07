@@ -32,17 +32,17 @@ func VerificationSessionId(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		var auth model.Auth
+		auth.Id = decryptId
+
 		// We get the People who have this id in the db
-		authData, err := utils.SelectFromDb("Auth", db, map[string]any{
-			"Id": string(decryptId),
-		})
-		if err != nil {
+		if err = auth.SelectFromDbById(db); err != nil {
 			nw.Error("Internal error: Problem during database query: " + err.Error())
 			log.Printf("[%s] [VerificationSessionId] %s", r.RemoteAddr, err.Error())
 			return
 		}
 
-		if err := CheckDatasForCookie(authData); err != nil {
+		if err := CheckDatasForCookie(auth); err != nil {
 			nw.Error(err.Error())
 			log.Printf("[%s] [VerificationSessionId] %s", r.RemoteAddr, err.Error())
 			return
@@ -69,20 +69,9 @@ The purpose of this function is to check if the datas are empty or not.
 The function return 1 value:
   - an error
 */
-func CheckDatasForCookie(authData []map[string]any) error {
-	// We check if there is exactly 1 people with this id
-	if len(authData) != 1 {
-		return errors.New("nobody have this Id")
-	}
-
-	// We parse the datas
-	userData, err := utils.ParseAuthData(authData[0])
-	if err != nil {
-		return err
-	}
-
+func CheckDatasForCookie(authData model.Auth) error {
 	// We check if the datas get are empty or not
-	if userData.Id == "" || userData.Email == "" || userData.Password == "" {
+	if authData.Id == "" || authData.Email == "" || authData.Password == "" {
 		return errors.New("nobody have this Id")
 	}
 

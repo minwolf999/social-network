@@ -3,11 +3,15 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 
 	model "social-network/Model"
 	utils "social-network/Utils"
+
+	"github.com/gofrs/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func Register(db *sql.DB) http.HandlerFunc {
@@ -25,18 +29,21 @@ func Register(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We look if all is good in the datas send in the body of the request
-		if err := utils.RegisterVerification(register); err != nil {
+		if err := RegisterVerification(register); err != nil {
 			nw.Error(err.Error())
 			log.Printf("[%s] [Register] %s", r.RemoteAddr, err.Error())
 			return
 		}
 
 		// We generate an UUID and crypt the password
-		if err := utils.CreateUuidAndCrypt(&register); err != nil {
+		if err := CreateUuidAndCrypt(&register); err != nil {
 			nw.Error(err.Error())
 			log.Printf("[%s] [Register] %s", r.RemoteAddr, err.Error())
 			return
 		}
+
+		register.Id = register.Auth.Id
+		register.Email = register.Auth.Email
 
 		if len(register.ProfilePicture) > 400000 {
 			nw.Error("To big image")
@@ -52,14 +59,14 @@ func Register(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We insert in the table Auth of the db the id, email and password of the people trying to register
-		if err := utils.InsertIntoDb("Auth", db, register.Auth.Id, register.Auth.Email, register.Auth.Password, 0); err != nil {
+		if err := register.Auth.InsertIntoDb(db); err != nil {
 			nw.Error("Internal Error: There is a probleme during the push in the DB: " + err.Error())
 			log.Printf("[%s] [Register] %s", r.RemoteAddr, err.Error())
 			return
 		}
 
 		// We insert in the table UserInfo of the db the rest of the values
-		if err := utils.InsertIntoDb("UserInfo", db, register.Auth.Id, register.Auth.Email, register.FirstName, register.LastName, register.BirthDate, register.ProfilePicture, register.Username, register.AboutMe); err != nil {
+		if err := register.InsertIntoDb(db); err != nil {
 			nw.Error("Internal Error: There is a probleme during the push in the DB: " + err.Error())
 			log.Printf("[%s] [Register] %s", r.RemoteAddr, err.Error())
 			return
@@ -76,4 +83,95 @@ func Register(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [Register] %s", r.RemoteAddr, err.Error())
 		}
 	}
+}
+
+/*
+This function takes 1 argument:
+  - an Register variable who contain the datas send in the body of the request
+
+The purpose of this function is to Verificate the content of the request make to the Register function.
+
+The function return an error
+*/
+func RegisterVerification(register model.Register) error {
+	// We check if the password match to the confimation of the password
+	if register.Auth.Password != register.Auth.ConfirmPassword {
+		return errors.New("password and password confirmation do not match")
+	}
+
+	// We check if the password is secure enough
+	if !IsValidPassword(register.Auth.Password) {
+		return errors.New("incorrect password ! the password must contain 8 characters, 1 uppercase letter, 1 special character, 1 number")
+	}
+
+	// We check if all the needed information are here
+	if register.Auth.Email == "" || register.Auth.Password == "" || register.FirstName == "" || register.LastName == "" || register.BirthDate == "" {
+		return errors.New("there is an empty field")
+	}
+
+	return nil
+}
+
+/*
+This function takes 1 argument:
+  - a string who contain the password
+
+# The purpose of this function is to look if the password is secure enough
+
+The function return an boolean
+*/
+func IsValidPassword(password string) bool {
+	// We start by initializing the check variable
+	isLongEnought := false
+	containUpper := false
+	containSpeChar := false
+	containNumber := false
+
+	// We look if the password contain at least 8 characters
+	if len(password) >= 8 {
+		isLongEnought = true
+	}
+
+	// We look if there is at least 1 lowercase, uppercase, number, special character
+	for _, r := range password {
+		if r >= 'A' && r <= 'Z' {
+			containUpper = true
+		} else if r >= '0' && r <= '9' {
+			containNumber = true
+		} else if r < 'a' || r > 'z' {
+			containSpeChar = true
+		}
+	}
+
+	// If all goes well we return true otherwise false
+	if isLongEnought && containNumber && containSpeChar && containUpper {
+		return true
+	}
+	return false
+}
+
+/*
+This function takes 1 argument:
+  - a *Register variable who contain the datas send in the body of the request
+
+# The purpose of this function is to create a new UUID and crypt the password who is in the structure Register
+
+The function return an error
+*/
+func CreateUuidAndCrypt(register *model.Register) error {
+	// We crypt the password and replace the previous password by the crypted version
+	cryptedPassword, err := bcrypt.GenerateFromPassword([]byte(register.Auth.Password), 12)
+	if err != nil {
+		return errors.New("there is a probleme with bcrypt")
+	}
+	register.Auth.Password = string(cryptedPassword)
+
+	// We generate a new UUID and store it into the structure
+	uuid, err := uuid.NewV7()
+	if err != nil {
+		return errors.New("there is a probleme with the generation of the uuid")
+	}
+	register.Auth.Id = uuid.String()
+
+	return nil
 }

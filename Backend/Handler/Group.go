@@ -60,7 +60,7 @@ func CreateGroup(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We insert in the table Follower of the db the structure created
-		if err := utils.InsertIntoDb("Groups", db, group.Id, group.LeaderId, group.MemberIds, group.GroupName, group.CreationDate); err != nil {
+		if err := model.InsertIntoDb("Groups", db, group.Id, group.LeaderId, group.MemberIds, group.GroupName, group.CreationDate); err != nil {
 			nw.Error("Internal Error: There is a probleme during the push in the DB: " + err.Error())
 			log.Printf("[%s] [CreateGroup] %s", r.RemoteAddr, err.Error())
 			return
@@ -107,23 +107,17 @@ func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
 
 		datas.UserId = decryptAuthorId
 
-		groupDatas, err := utils.SelectFromDb("Groups", db, map[string]any{"Id": datas.GroupId})
+		groupDatas, err := model.SelectFromDb("Groups", db, map[string]any{"Id": datas.GroupId})
 		if err != nil {
 			nw.Error("Internal error: Problem during database query")
 			log.Printf("[%s] [JoinAndLeaveGroup] %v", r.RemoteAddr, err)
 			return
 		}
 
-		group, err := utils.ParseGroupData(groupDatas)
+		group, err := groupDatas.ParseGroupData()
 		if err != nil {
 			nw.Error("Internal Error: There is a probleme during the parse of the structure : " + err.Error())
 			log.Printf("[%s] [JoinAndLeaveGroup] %s", r.RemoteAddr, err.Error())
-			return
-		}
-
-		if len(group) != 1 {
-			nw.Error("Internal Error: There is no group with this id")
-			log.Printf("[%s] [JoinAndLeaveGroup] There is no group with this id", r.RemoteAddr)
 			return
 		}
 
@@ -135,7 +129,7 @@ func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		DetailGroup := group[0]
+		DetailGroup := group
 		DetailGroup.SplitMembers()
 
 		if datas.JoinOrLeave == "join" {
@@ -164,7 +158,7 @@ func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
 
 		DetailGroup.JoinMembers()
 
-		if err = utils.UpdateDb("Groups", db, map[string]any{"MemberIds": DetailGroup.MemberIds}, map[string]any{"Id": DetailGroup.Id}); err != nil {
+		if err = model.UpdateDb("Groups", db, map[string]any{"MemberIds": DetailGroup.MemberIds}, map[string]any{"Id": DetailGroup.Id}); err != nil {
 			nw.Error("Internal error: Problem during database update")
 			log.Printf("[%s] [JoinAndLeaveGroup] %v", r.RemoteAddr, err)
 			return
@@ -208,23 +202,17 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 
 		datas.UserId = decryptAuthorId
 
-		groupDatas, err := utils.SelectFromDb("Groups", db, map[string]any{"Id": datas.GroupId})
+		groupDatas, err := model.SelectFromDb("Groups", db, map[string]any{"Id": datas.GroupId})
 		if err != nil {
 			nw.Error("Internal error: Problem during database query")
 			log.Printf("[%s] [GetGroup] %v", r.RemoteAddr, err)
 			return
 		}
 
-		group, err := utils.ParseGroupData(groupDatas)
+		group, err := groupDatas.ParseGroupData()
 		if err != nil {
 			nw.Error("Internal Error: There is a probleme during the parse of the structure : " + err.Error())
 			log.Printf("[%s] [GetGroup] %s", r.RemoteAddr, err.Error())
-			return
-		}
-
-		if len(group) != 1 {
-			nw.Error("Internal Error: There is no group with this id")
-			log.Printf("[%s] [GetGroup] There is no group with this id", r.RemoteAddr)
 			return
 		}
 
@@ -232,7 +220,7 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
 			"Message": "Group obtained successfully",
-			"Group": group[0],
+			"Group":   group,
 		})
 		if err != nil {
 			log.Printf("[%s] [GetGroup] %s", r.RemoteAddr, err.Error())
@@ -267,33 +255,27 @@ func DeleteGroup(db *sql.DB) http.HandlerFunc {
 
 		datas.UserId = decryptAuthorId
 
-		groupDatas, err := utils.SelectFromDb("Groups", db, map[string]any{"Id": datas.GroupId})
+		groupDatas, err := model.SelectFromDb("Groups", db, map[string]any{"Id": datas.GroupId})
 		if err != nil {
 			nw.Error("Internal error: Problem during database query")
 			log.Printf("[%s] [DeleteGroup] %v", r.RemoteAddr, err)
 			return
 		}
 
-		group, err := utils.ParseGroupData(groupDatas)
+		group, err := groupDatas.ParseGroupData()
 		if err != nil {
 			nw.Error("Internal Error: There is a probleme during the parse of the structure : " + err.Error())
 			log.Printf("[%s] [DeleteGroup] %s", r.RemoteAddr, err.Error())
 			return
 		}
 
-		if len(group) != 1 {
-			nw.Error("Internal Error: There is no group with this id")
-			log.Printf("[%s] [DeleteGroup] There is no group with this id", r.RemoteAddr)
-			return
-		}
-
-		if group[0].LeaderId != datas.UserId {
+		if group.LeaderId != datas.UserId {
 			nw.Error("You can't delete this group")
 			log.Printf("[%s] [DeleteGroup] You can't delete this group", r.RemoteAddr)
 			return
 		}
 
-		if err = utils.RemoveFromDB("Groups", db, map[string]any{"Id": datas.GroupId}); err != nil {
+		if err = model.RemoveFromDB("Groups", db, map[string]any{"Id": datas.GroupId}); err != nil {
 			nw.Error("Error during the remove of the db")
 			log.Printf("[%s] [DeleteGroup] Error during the remove in the db: %v", r.RemoteAddr, err)
 			return

@@ -1,14 +1,7 @@
 package model
 
 import (
-	"encoding/json"
 	"net/http"
-	"strings"
-	"time"
-)
-
-const (
-	SecretKey = "tYrEQins27rw0ehqkKfJE0Ofxyd6r8QISFtpomcIILFUfRacmDuBa3nS9NXTpZfV99E1AEaU"
 )
 
 type Auth struct {
@@ -50,6 +43,8 @@ type Post struct {
 	DislikeCount int    `json:"DislikeCount"`
 }
 
+type Posts []Post
+
 type Comment struct {
 	Id           string `json:"Id"`
 	AuthorId     string `json:"AuthorId"`
@@ -61,11 +56,15 @@ type Comment struct {
 	Register     `json:",inline"`
 }
 
+type Comments []Comment
+
 type Follower struct {
 	Id         string `json:"Id"`
 	UserId     string `json:"UserId"`
 	FollowerId string `json:"FollowerId"`
 }
+
+type Followers []Follower
 
 type Group struct {
 	Id             string `json:"Id"`
@@ -76,32 +75,9 @@ type Group struct {
 	CreationDate   string `json:"CreationDate"`
 }
 
-func (group *Group) SplitMembers() {
-	group.SplitMemberIds = strings.Split(group.MemberIds, " | ")
-}
-
-func (group *Group) JoinMembers() {
-	group.MemberIds = strings.Join(group.SplitMemberIds, " | ")
-}
-
 type ResponseWriter struct {
 	http.ResponseWriter
 }
 
-/*
-This function takes 1 argument:
-  - a string who contain a description of the error
+type UserData []map[string]any
 
-The purpose of this function is to Return an error of the application who have make a request to the server.
-
-The function return a string to the user but have no return for the server
-*/
-func (w *ResponseWriter) Error(err string) {
-	time.Sleep(2 * time.Second)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
-		"Error":   http.StatusText(http.StatusUnauthorized),
-		"Message": err,
-	})
-}

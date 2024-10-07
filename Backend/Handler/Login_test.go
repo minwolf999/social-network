@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	model "social-network/Model"
-	utils "social-network/Utils"
 	"testing"
 
 	"golang.org/x/crypto/bcrypt"
@@ -14,26 +13,14 @@ import (
 
 func TestLogin(t *testing.T) {
 	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := utils.OpenDb("sqlite3", ":memory:")
+	db, err := model.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
 		return
 	}
 	defer db.Close()
 
-	// Create a table for testing
-	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS Auth (
-			Id VARCHAR(36) NOT NULL UNIQUE PRIMARY KEY,
-			Email VARCHAR(100) NOT NULL UNIQUE,
-			Password VARCHAR(50) NOT NULL,
-			ConnectionAttempt INTEGER
-		);
-	`)
-	if err != nil {
-		t.Fatalf("Erreur lors de la création de la table : %v", err)
-		return
-	}
+	CreateTables(db)
 
 	// Crée une structure Register de test
 	login := model.Auth{
@@ -47,7 +34,7 @@ func TestLogin(t *testing.T) {
 		return
 	}
 
-	if err = utils.InsertIntoDb("Auth", db, "0", login.Email, string(cryptedPassword), 0); err != nil {
+	if err = model.InsertIntoDb("Auth", db, "0", login.Email, string(cryptedPassword), 0); err != nil {
 		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
 		return
 	}
@@ -93,4 +80,3 @@ func TestLogin(t *testing.T) {
 		return
 	}
 }
-

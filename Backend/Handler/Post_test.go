@@ -9,30 +9,31 @@ import (
 	"net/http/httptest"
 
 	model "social-network/Model"
-	utils "social-network/Utils"
 
 	"testing"
 )
 
 func TestCreatePost(t *testing.T) {
 	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := utils.OpenDb("sqlite3", ":memory:")
+	db, err := model.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
 		return
 	}
 	defer db.Close()
 
+	CreateTables(db)
+
 	rr, err := TryRegister(t, db, model.Register{
-			Auth: model.Auth{
-				Email:           "unemail1@gmail.com",
-				Password:        "MonMotDePasse123!",
-				ConfirmPassword: "MonMotDePasse123!",
-			},
-			FirstName: "Jean",
-			LastName:  "Dujardin",
-			BirthDate: "1990-01-01",
-		})
+		Auth: model.Auth{
+			Email:           "unemail1@gmail.com",
+			Password:        "MonMotDePasse123!",
+			ConfirmPassword: "MonMotDePasse123!",
+		},
+		FirstName: "Jean",
+		LastName:  "Dujardin",
+		BirthDate: "1990-01-01",
+	})
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -74,27 +75,11 @@ func TestCreatePost(t *testing.T) {
 }
 
 func TryCreatePost(t *testing.T, db *sql.DB, authorId string) (*httptest.ResponseRecorder, error) {
-	// Create a table for testing
-	_, err := db.Exec(`
-		CREATE TABLE IF NOT EXISTS Post (
-			Id VARCHAR(36) NOT NULL UNIQUE,
-			AuthorId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id"),
-			Text VARCHAR(1000) NOT NULL,
-			Image VARCHAR(100),
-			CreationDate VARCHAR(20) NOT NULL,
-			IsGroup VARCHAR(36) REFERENCES "Groups"("Id"),
-			LikeCount INTEGER,
-			DislikeCount INTEGER
-		);
-	`)
-	if err != nil {
-		return nil, err
-	}
-
 	post := model.Post{
-		AuthorId: authorId,
-		Text:     "Test",
+		AuthorId:     authorId,
+		Text:         "Test",
 		CreationDate: "1970-01-01",
+		Status:       "public",
 	}
 
 	body, err := json.Marshal(post)
@@ -125,12 +110,14 @@ func TryCreatePost(t *testing.T, db *sql.DB, authorId string) (*httptest.Respons
 
 func TestGetPost(t *testing.T) {
 	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := utils.OpenDb("sqlite3", ":memory:")
+	db, err := model.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
 		return
 	}
 	defer db.Close()
+
+	CreateTables(db)
 
 	rr, err := TryRegister(t, db, model.Register{
 		Auth: model.Auth{
@@ -183,10 +170,11 @@ func TestGetPost(t *testing.T) {
 	}
 
 	post := model.Post{
-		Id:       "Test",
-		AuthorId: JWT,
-		Text:     "Test",
+		Id:           "Test",
+		AuthorId:     JWT,
+		Text:         "Test",
 		CreationDate: "1970-01-01",
+		Status: "public",
 	}
 
 	body, err := json.Marshal(post)
@@ -229,4 +217,3 @@ func TestGetPost(t *testing.T) {
 		return
 	}
 }
-

@@ -37,8 +37,11 @@ func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		var userInfo model.Register
+		userInfo.Id = uid
+
 		if request.NewName != "" {
-			if err := ChangeUserName(db, request.NewName, uid); err != nil {
+			if err := ChangeUserName(db, request.NewName, userInfo); err != nil {
 				nw.Error("Error changing username")
 				log.Printf("[%s] [ChangeUserData] Error changing username: %v", r.RemoteAddr, err)
 				return
@@ -46,7 +49,7 @@ func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
 		}
 
 		if request.NewPass != "" {
-			if err := ChangePass(db, request.NewPass, uid); err != nil {
+			if err := ChangePass(db, request.NewPass, userInfo); err != nil {
 				nw.Error("Error changing password")
 				log.Printf("[%s] [ChangeUserData] Error changing password: %v", r.RemoteAddr, err)
 				return
@@ -64,13 +67,8 @@ func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func ChangeUserName(db *sql.DB, name, uid string) error {
-	actualname, err := utils.SelectFromDb("UserInfo", db, map[string]any{"Id": uid})
-	if err != nil {
-		return err
-	}
-
-	userdata, err := utils.ParseRegisterData(actualname[0])
+func ChangeUserName(db *sql.DB, name string, userdata model.Register) error {
+	err := userdata.SelectFromDbById(db)
 	if err != nil {
 		return err
 	}
@@ -78,22 +76,17 @@ func ChangeUserName(db *sql.DB, name, uid string) error {
 	if userdata.Username == name {
 		return errors.New("new username and current username are the same")
 	} else {
-		return utils.UpdateDb("UserInfo", db, map[string]any{"Username": name}, map[string]any{"Id": uid})
+		return model.UpdateDb("UserInfo", db, map[string]any{"Username": name}, map[string]any{"Id": userdata.Id})
 	}
 }
 
-func ChangePass(db *sql.DB, newpass, uid string) error {
-	actualpass, err := utils.SelectFromDb("Auth", db, map[string]any{"Id": uid})
+func ChangePass(db *sql.DB, newpass string, userData model.Register) error {
+	err := userData.SelectFromDbById(db)
 	if err != nil {
 		return err
 	}
 
-	userdata, err := utils.ParseAuthData(actualpass[0])
-	if err != nil {
-		return err
-	}
-
-	if err = bcrypt.CompareHashAndPassword([]byte(userdata.Password), []byte(newpass)); err == nil {
+	if err = bcrypt.CompareHashAndPassword([]byte(userData.Password), []byte(newpass)); err == nil {
 		return errors.New("new password and current password are the same")
 	} else {
 		hashedPass, err := bcrypt.GenerateFromPassword([]byte(newpass), bcrypt.DefaultCost)
@@ -101,20 +94,7 @@ func ChangePass(db *sql.DB, newpass, uid string) error {
 			return err
 		}
 
-		return utils.UpdateDb("Auth", db, map[string]any{"Password": string(hashedPass)}, map[string]any{"Id": uid})
+		return model.UpdateDb("Auth", db, map[string]any{"Password": string(hashedPass)}, map[string]any{"Id": userData.Id})
 	}
 }
 
-func ParseUserDataInfos(userData map[string]any) (model.Register, error) {
-	// We marshal the map to get it in []byte
-	serializedData, err := json.Marshal(userData)
-	if err != nil {
-		return model.Register{}, errors.New("internal error: conversion problem")
-	}
-
-	// We Unmarshal in the good structure
-	var registerResult model.Register
-	err = json.Unmarshal(serializedData, &registerResult)
-
-	return registerResult, err
-}

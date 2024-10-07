@@ -2,10 +2,9 @@ package utils
 
 import (
 	"encoding/base64"
+	model "social-network/Model"
 	"strings"
 	"testing"
-
-	model "social-network/Model"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -20,7 +19,7 @@ func TestGenerateJWT(t *testing.T) {
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(splitJWT[2]), []byte(model.SecretKey)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(splitJWT[2]), []byte(SecretKey)); err != nil {
 		t.Errorf("Invalid secret key: %v", err)
 		return
 	}
@@ -39,7 +38,7 @@ func TestGenerateJWT(t *testing.T) {
 
 func TestDecryptJWT(t *testing.T) {
 	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := OpenDb("sqlite3", ":memory:")
+	db, err := model.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
 		return
@@ -84,10 +83,9 @@ func TestDecryptJWT(t *testing.T) {
 	}
 }
 
-
 func TestIfExistsInDB(t *testing.T) {
 	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := OpenDb("sqlite3", ":memory:")
+	db, err := model.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
 		return
@@ -126,7 +124,7 @@ func TestIfExistsInDB(t *testing.T) {
 
 func TestIfNotExistsInDB(t *testing.T) {
 	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := OpenDb("sqlite3", ":memory:")
+	db, err := model.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
 		return

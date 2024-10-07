@@ -8,18 +8,19 @@ import (
 	"net/http"
 	"net/http/httptest"
 	model "social-network/Model"
-	utils "social-network/Utils"
 	"testing"
 )
 
 func TestCreateComment(t *testing.T) {
 	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := utils.OpenDb("sqlite3", ":memory:")
+	db, err := model.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
 		return
 	}
 	defer db.Close()
+
+	CreateTables(db)
 
 	rr, err := TryRegister(t, db, model.Register{
 		Auth: model.Auth{
@@ -94,24 +95,6 @@ func TestCreateComment(t *testing.T) {
 }
 
 func TryCreateComment(t *testing.T, db *sql.DB, authorId, postId string) (*httptest.ResponseRecorder, error) {
-	// Create a table for testing
-	_, err := db.Exec(`
-		CREATE TABLE IF NOT EXISTS Comment (
-			Id VARCHAR(36) NOT NULL UNIQUE,
-			AuthorId VARCHAR(36) NOT NULL REFERENCES "UserInfo"("Id"),
-			Text VARCHAR(1000) NOT NULL,
-			CreationDate VARCHAR(20) NOT NULL,
-		
-			PostId VARCHAR(36) REFERENCES "Post"("Id"),
-		
-			LikeCount INTEGER,
-			DislikeCount INTEGER
-		);
-	`)
-	if err != nil {
-		return nil, err
-	}
-
 	post := model.Comment{
 		PostId:       postId,
 		AuthorId:     authorId,
@@ -148,12 +131,14 @@ func TryCreateComment(t *testing.T, db *sql.DB, authorId, postId string) (*httpt
 
 func TestGetComment(t *testing.T) {
 	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := utils.OpenDb("sqlite3", ":memory:")
+	db, err := model.OpenDb("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
 		return
 	}
 	defer db.Close()
+
+	CreateTables(db)
 
 	rr, err := TryRegister(t, db, model.Register{
 		Auth: model.Auth{

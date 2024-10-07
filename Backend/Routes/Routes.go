@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	handler "social-network/Handler"
-	utils "social-network/Utils"
+	model "social-network/Model"
 )
 
 /*
@@ -17,7 +17,7 @@ The purpose of this function is to create all the server endpoints and define th
 The function have no return
 */
 func Routes(mux *http.ServeMux) {
-	db, err := utils.OpenDb("sqlite3", "./Database/Database.sqlite")
+	db, err := model.OpenDb("sqlite3", "./Database/Database.sqlite")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -30,7 +30,7 @@ func Routes(mux *http.ServeMux) {
 
 	// Cookie route
 	mux.Handle("/verificationSessionId", handler.VerificationSessionId(db))
-	
+
 	// UserDatas routes
 	mux.Handle("/getUser", handler.GetUser(db))
 
