@@ -46,7 +46,7 @@ func CreateComment(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We check if the id given for the parent post fit with a real post id in the db
-		if err := post.SelectFromDbById(db); err != nil {
+		if err := post.SelectFromDb(db, map[string]any{"Id": post.Id}); err != nil {
 			nw.Error("Internal error: Problem during database query: " + err.Error())
 			log.Printf("[%s] [CreateComment] %s", r.RemoteAddr, err.Error())
 			return
@@ -110,10 +110,10 @@ func GetComment(db *sql.DB) http.HandlerFunc {
 		var comments model.Comments
 		// We check if there is a precise Comment to get and make the request
 		if comment.PostId != "" {
-			err = comment.SelectFromDbById(db)
+			err = comment.SelectFromDb(db, map[string]any{"Id": comment.Id})
 			comments[0] = comment
 		} else {
-			err = comments.SelectAllFromDb(db)
+			err = comments.SelectFromDb(db, map[string]any{})
 		}
 		if err != nil {
 			nw.Error("Error during the select in the db")

@@ -254,18 +254,12 @@ func DeleteGroup(db *sql.DB) http.HandlerFunc {
 		}
 
 		datas.UserId = decryptAuthorId
+		var group = model.Group{Id: datas.GroupId}
 
-		groupDatas, err := model.SelectFromDb("Groups", db, map[string]any{"Id": datas.GroupId})
+		err = group.SelectFromDb(db, map[string]any{"Id": group.Id})
 		if err != nil {
-			nw.Error("Internal error: Problem during database query")
-			log.Printf("[%s] [DeleteGroup] %v", r.RemoteAddr, err)
-			return
-		}
-
-		group, err := groupDatas.ParseGroupData()
-		if err != nil {
-			nw.Error("Internal Error: There is a probleme during the parse of the structure : " + err.Error())
-			log.Printf("[%s] [DeleteGroup] %s", r.RemoteAddr, err.Error())
+			nw.Error("Error during the select in the db")
+			log.Printf("[%s] [DeleteGroup] Error during the select or the parse: %v", r.RemoteAddr, err)
 			return
 		}
 

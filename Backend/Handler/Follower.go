@@ -173,7 +173,7 @@ func GetFollowed(db *sql.DB) http.HandlerFunc {
 
 		// var follows model.Followers
 		// follows[0].UserId = follower.UserId
-		if err := follows.SelectFromDbByUserId(db); err != nil {
+		if err := follows.SelectFromDb(db, map[string]any{"UserId": follows[0].UserId}); err != nil {
 			nw.Error("Internal Error: There is a probleme during the selecte in the DB: " + err.Error())
 			log.Printf("[%s] [GetFollower] %s", r.RemoteAddr, err.Error())
 			return
@@ -230,7 +230,7 @@ func GetFollower(db *sql.DB) http.HandlerFunc {
 
 		// var follows model.Followers
 		// follows[0].FollowerId = follower.UserId
-		if err := follows.SelectFromDbByFollowerId(db); err != nil {
+		if err := follows.SelectFromDb(db, map[string]any{"FollowerId": follows[0].FollowerId}); err != nil {
 			nw.Error("Internal Error: There is a probleme during the selecte in the DB: " + err.Error())
 			log.Printf("[%s] [GetFollower] %s", r.RemoteAddr, err.Error())
 			return

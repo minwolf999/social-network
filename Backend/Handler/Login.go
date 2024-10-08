@@ -36,7 +36,7 @@ func Login(db *sql.DB) http.HandlerFunc {
 		}
 
 		// We get the row in the db where the email is equal to the email send
-		if err := loginData.SelectFromDbByEmail(db); err != nil {
+		if err := loginData.SelectFromDb(db, map[string]any{"Email": loginData.Email}); err != nil {
 			nw.Error("Internal error: Problem during database query: " + err.Error())
 			log.Printf("[%s] [Login] %s", r.RemoteAddr, err.Error())
 			return

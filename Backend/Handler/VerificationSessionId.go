@@ -36,7 +36,7 @@ func VerificationSessionId(db *sql.DB) http.HandlerFunc {
 		auth.Id = decryptId
 
 		// We get the People who have this id in the db
-		if err = auth.SelectFromDbById(db); err != nil {
+		if err = auth.SelectFromDb(db, map[string]any{"Id": auth.Id}); err != nil {
 			nw.Error("Internal error: Problem during database query: " + err.Error())
 			log.Printf("[%s] [VerificationSessionId] %s", r.RemoteAddr, err.Error())
 			return

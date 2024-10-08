@@ -96,10 +96,10 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 		// We check if there is a precise Post to get and make the request
 		var posts model.Posts
 		if post.Id != "" {
-			err = post.SelectFromDbById(db)
+			err = post.SelectFromDb(db, map[string]any{"Id": post.Id})
 			posts[0] = post
 		} else {
-			err = posts.SelectAllFromDb(db)
+			err = posts.SelectFromDb(db, map[string]any{})
 		}
 		if err != nil {
 			nw.Error("Error during the select in the db")

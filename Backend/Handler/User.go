@@ -61,5 +61,5 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 }
 
 func displayInfos(db *sql.DB, userData model.Register) (error) {
-	return userData.SelectFromDbById(db)
+	return userData.SelectFromDb(db, map[string]any{"Id": userData.Id})
 }

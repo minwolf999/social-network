@@ -68,7 +68,7 @@ func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
 }
 
 func ChangeUserName(db *sql.DB, name string, userdata model.Register) error {
-	err := userdata.SelectFromDbById(db)
+	err := userdata.SelectFromDb(db, map[string]any{"Id": userdata.Id})
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func ChangeUserName(db *sql.DB, name string, userdata model.Register) error {
 }
 
 func ChangePass(db *sql.DB, newpass string, userData model.Register) error {
-	err := userData.SelectFromDbById(db)
+	err := userData.SelectFromDb(db, map[string]any{"Id": userData.Id})
 	if err != nil {
 		return err
 	}

@@ -87,16 +87,12 @@ func (userData *UserData) ParseCommentsData() ([]Comment, error) {
 }
 
 func (userData *UserData) ParseCommentData() (Comment, error) {
-	// We marshal the map to get it in []byte
-	serializedData, err := json.Marshal(userData)
-	if err != nil {
-		return Comment{}, errors.New("internal error: conversion problem")
+	comments, err := userData.ParseCommentsData()
+	if len(comments) == 0 {
+		return Comment{}, errors.New("there is no data")
 	}
 
-	// We Unmarshal in the good structure
-	var postResult Comment
-	err = json.Unmarshal(serializedData, &postResult)
-	return postResult, err
+	return comments[0], err
 }
 
 /*
@@ -133,20 +129,12 @@ func (userData *UserData) ParsePostsData() ([]Post, error) {
 }
 
 func (userData *UserData) ParsePostData() (Post, error) {
-	var post Post
-
-	// We marshal the map to get it in []byte
-	serializedData, err := json.Marshal((*userData)[0])
-	if err != nil {
-		return Post{}, errors.New("internal error: conversion problem")
+	posts, err := userData.ParsePostsData()
+	if len(posts) == 0 {
+		return Post{}, errors.New("there is no data")
 	}
 
-	// We Unmarshal in the good structure
-	if err = json.Unmarshal(serializedData, &post); err != nil {
-		return Post{}, err
-	}
-
-	return post, nil
+	return posts[0], err
 }
 
 func (userData *UserData) ParseFollowersData() ([]Follower, error) {
@@ -177,10 +165,10 @@ func (userData *UserData) ParseGroupData() (Group, error) {
 	}
 
 	// We Unmarshal in the good structure
-	var authResult Group
-	err = json.Unmarshal(serializedData, &authResult)
+	var groupResult []Group
+	err = json.Unmarshal(serializedData, &groupResult)
 
-	return Group{}, err
+	return groupResult[0], err
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -198,26 +186,8 @@ func (auth *Auth) InsertIntoDb(db *sql.DB) error {
 	return InsertIntoDb("Auth", db, auth.Id, auth.Email, auth.Password, auth.ConnectionAttempt)
 }
 
-func (auth *Auth) SelectFromDbById(db *sql.DB) error {
-	if auth.Id == "" {
-		return errors.New("no Id in the struct")
-	}
-
-	userData, err := SelectFromDb("Auth", db, map[string]any{"Id": auth.Id})
-	if err != nil {
-		return err
-	}
-
-	*auth, err = userData.ParseAuthData()
-	return err
-}
-
-func (auth *Auth) SelectFromDbByEmail(db *sql.DB) error {
-	if auth.Email == "" {
-		return errors.New("no Id in the struct")
-	}
-
-	userData, err := SelectFromDb("Auth", db, map[string]any{"Email": auth.Email})
+func (auth *Auth) SelectFromDb(db *sql.DB, where map[string]any) error {
+	userData, err := SelectFromDb("Auth", db, where)
 	if err != nil {
 		return err
 	}
@@ -241,12 +211,8 @@ func (register *Register) InsertIntoDb(db *sql.DB) error {
 	return InsertIntoDb("UserInfo", db, register.Auth.Id, register.Auth.Email, register.FirstName, register.LastName, register.BirthDate, register.ProfilePicture, register.Username, register.AboutMe)
 }
 
-func (register *Register) SelectFromDbById(db *sql.DB) error {
-	if register.Id == "" {
-		return errors.New("no Id in the struct")
-	}
-
-	userData, err := SelectFromDb("UserInfo", db, map[string]any{"Id": register.Id})
+func (register *Register) SelectFromDb(db *sql.DB, where map[string]any) error {
+	userData, err := SelectFromDb("UserInfo", db, where)
 	if err != nil {
 		return err
 	}
@@ -276,12 +242,8 @@ func (post *Post) InsertIntoDb(db *sql.DB) error {
 	return InsertIntoDb("Post", db, post.Id, post.AuthorId, post.Text, post.Image, post.CreationDate, post.Status, isGroup, 0, 0)
 }
 
-func (post *Post) SelectFromDbById(db *sql.DB) error {
-	if post.Id == "" {
-		return errors.New("no Id in the struct")
-	}
-
-	userData, err := SelectFromDb("Post", db, map[string]any{"Id": post.Id})
+func (post *Post) SelectFromDb(db *sql.DB, where map[string]any) error {
+	userData, err := SelectFromDb("Post", db, where)
 	if err != nil {
 		return err
 	}
@@ -291,14 +253,14 @@ func (post *Post) SelectFromDbById(db *sql.DB) error {
 	return err
 }
 
-func (posts *Posts) SelectAllFromDb(db *sql.DB) error {
-	userData, err := SelectFromDb("Post", db, map[string]any{})
+func (post *Posts) SelectFromDb(db *sql.DB, where map[string]any) error {
+	userData, err := SelectFromDb("Post", db, where)
 	if err != nil {
 		return err
 	}
 
 	// We marshal the map to get it in []byte
-	*posts, err = userData.ParsePostsData()
+	*post, err = userData.ParsePostsData()
 	return err
 }
 
@@ -317,12 +279,12 @@ func (comment *Comment) InsertIntoDb(db *sql.DB) error {
 	return InsertIntoDb("Comment", db, comment.Id, comment.AuthorId, comment.Text, comment.CreationDate, comment.PostId, 0, 0)
 }
 
-func (comment *Comment) SelectFromDbById(db *sql.DB) error {
+func (comment *Comment) SelectFromDbById(db *sql.DB, where map[string]any) error {
 	if comment.Id == "" {
 		return errors.New("no Id in the struct")
 	}
 
-	userData, err := SelectFromDb("Comment", db, map[string]any{"Id": comment.Id})
+	userData, err := SelectFromDb("Comment", db, where)
 	if err != nil {
 		return err
 	}
@@ -332,8 +294,8 @@ func (comment *Comment) SelectFromDbById(db *sql.DB) error {
 	return err
 }
 
-func (comments *Comments) SelectAllFromDb(db *sql.DB) error {
-	userData, err := SelectFromDb("Post", db, map[string]any{})
+func (comments *Comments) SelectFromDb(db *sql.DB, where map[string]any) error {
+	userData, err := SelectFromDb("Post", db, where)
 	if err != nil {
 		return err
 	}
@@ -377,31 +339,16 @@ func (follower *Follower) IsFollowedBy(db *sql.DB) (bool, error) {
 	return len(res) == 1, nil
 }
 
-func (followers *Followers) SelectFromDbByUserId(db *sql.DB) error {
+func (followers *Followers) SelectFromDb(db *sql.DB, where map[string]any) error {
 	if (*followers)[0].UserId == "" {
 		return errors.New("no Id in the struct")
 	}
 
-	userData, err := SelectFromDb("Follower", db, map[string]any{"UserId": (*followers)[0].UserId})
+	userData, err := SelectFromDb("Follower", db, where)
 	if err != nil {
 		return err
 	}
 
-	*followers, err = userData.ParseFollowersData()
-	return err
-}
-
-func (followers *Followers) SelectFromDbByFollowerId(db *sql.DB) error {
-	if (*followers)[0].FollowerId == "" {
-		return errors.New("no Id in the struct")
-	}
-
-	userData, err := SelectFromDb("Follower", db, map[string]any{"FollowerId": (*followers)[0].FollowerId})
-	if err != nil {
-		return err
-	}
-
-	// We marshal the map to get it in []byte
 	*followers, err = userData.ParseFollowersData()
 	return err
 }
@@ -421,12 +368,8 @@ func (group *Group) InsertIntoDb(db *sql.DB) error {
 	return InsertIntoDb("Groups", db, group.Id, group.LeaderId, group.MemberIds, group.GroupName, group.CreationDate)
 }
 
-func (group *Group) SelectFromDbById(db *sql.DB) error {
-	if group.Id == "" {
-		return errors.New("no Id in the struct")
-	}
-
-	userData, err := SelectFromDb("Groups", db, map[string]any{"Id": group.Id})
+func (group *Group) SelectFromDb(db *sql.DB, where map[string]any) error {
+	userData, err := SelectFromDb("Groups", db, where)
 	if err != nil {
 		return err
 	}
