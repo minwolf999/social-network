@@ -60,6 +60,10 @@ func (userData *UserData) ParseAuthData() (Auth, error) {
 }
 
 func (userData *UserData) ParseRegisterData() (Register, error) {
+	if len(*userData) == 0 {
+		return Register{}, errors.New("there is no datas")
+	}
+
 	// We marshal the map to get it in []byte
 	serializedData, err := json.Marshal(userData)
 	if err != nil {
