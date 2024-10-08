@@ -75,9 +75,13 @@ func handleLikeLogic(db *sql.DB, table, postID, userID string) error {
 }
 
 func hasUserLikedPost(db *sql.DB, table, postID, userID string) (bool, error) {
-	query := "SELECT COUNT(*) FROM ? WHERE PostID = ? AND UserID = ?"
+	stmt, err := db.Prepare(fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE PostID = ? AND UserID = ?", table))
+	if err != nil {
+		return false, err
+	}
+	
 	var count int
-	err := db.QueryRow(query, table, postID, userID).Scan(&count)
+	err = stmt.QueryRow(postID, userID).Scan(&count)
 	if err != nil {
 		return false, err
 	}
@@ -85,7 +89,12 @@ func hasUserLikedPost(db *sql.DB, table, postID, userID string) (bool, error) {
 }
 
 func addLike(db *sql.DB, table, postID, userID string) error {
-	_, err := db.Exec("INSERT INTO ? (PostID, UserID) VALUES (?, ?)", table, postID, userID)
+	stmt, err := db.Prepare(fmt.Sprintf("INSERT INTO %s (PostID, UserID) VALUES (?, ?)", table))
+	if err != nil {
+		return err
+	}
+	
+	_, err = stmt.Exec(postID, userID)
 	if err != nil {
 		return err
 	}
@@ -101,7 +110,12 @@ func addLike(db *sql.DB, table, postID, userID string) error {
 }
 
 func removeLike(db *sql.DB, table, postID, userID string) error {
-	result, err := db.Exec("DELETE FROM ? WHERE PostID = ? AND UserID = ?", table, postID, userID)
+	stmt, err := db.Prepare(fmt.Sprintf("DELETE FROM %s WHERE PostID = ? AND UserID = ?", table))
+	if err != nil {
+		return err
+	}
+
+	result, err := stmt.Exec(postID, userID)
 	if err != nil {
 		return err
 	}
@@ -124,6 +138,11 @@ func removeLike(db *sql.DB, table, postID, userID string) error {
 }
 
 func updateLikeCount(db *sql.DB, table, postID string, delta int) error {
-	_, err := db.Exec("UPDATE ? SET LikeCount = LikeCount + ? WHERE ID = ?", table, delta, postID)
+	stmt, err := db.Prepare(fmt.Sprintf("UPDATE %s SET LikeCount = LikeCount + ? WHERE ID = ?", table))
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(delta, postID)
 	return err
 }
