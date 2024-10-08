@@ -263,7 +263,7 @@ func (post *Post) InsertIntoDb(db *sql.DB) error {
 }
 
 func (post *Post) SelectFromDb(db *sql.DB, where map[string]any) error {
-	userData, err := SelectFromDb("Post", db, where)
+	userData, err := SelectFromDb("PostDetail", db, where)
 	if err != nil {
 		return err
 	}
@@ -282,7 +282,7 @@ func (post *Post) DeleteFromDb(db *sql.DB, where map[string]any) error {
 }
 
 func (post *Posts) SelectFromDb(db *sql.DB, where map[string]any) error {
-	userData, err := SelectFromDb("Post", db, where)
+	userData, err := SelectFromDb("PostDetail", db, where)
 	if err != nil {
 		return err
 	}
@@ -312,7 +312,7 @@ func (comment *Comment) SelectFromDb(db *sql.DB, where map[string]any) error {
 		return errors.New("no Id in the struct")
 	}
 
-	userData, err := SelectFromDb("Comment", db, where)
+	userData, err := SelectFromDb("CommentDetail", db, where)
 	if err != nil {
 		return err
 	}
@@ -331,7 +331,7 @@ func (comment *Comment) DeleteFromDb(db *sql.DB, where map[string]any) error {
 }
 
 func (comments *Comments) SelectFromDb(db *sql.DB, where map[string]any) error {
-	userData, err := SelectFromDb("Post", db, where)
+	userData, err := SelectFromDb("CommentDetail", db, where)
 	if err != nil {
 		return err
 	}
