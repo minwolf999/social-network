@@ -118,7 +118,7 @@ func RemoveFollower(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if err = model.RemoveFromDB("Follower", db, map[string]any{"UserId": follower.UserId, "FollowerId": follower.FollowerId}); err != nil {
+		if err = follower.DeleteFromDb(db, map[string]any{"UserId": follower.UserId, "FollowerId": follower.FollowerId}); err != nil {
 			nw.Error("Internal Error: There is a probleme during the delete in the DB: " + err.Error())
 			log.Printf("[%s] [RemoveFollower] %s", r.RemoteAddr, err.Error())
 			return

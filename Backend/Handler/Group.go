@@ -269,7 +269,8 @@ func DeleteGroup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if err = model.RemoveFromDB("Groups", db, map[string]any{"Id": datas.GroupId}); err != nil {
+		
+		if err = group.DeleteFromDb(db, map[string]any{"Id": group.Id}); err != nil {
 			nw.Error("Error during the remove of the db")
 			log.Printf("[%s] [DeleteGroup] Error during the remove in the db: %v", r.RemoteAddr, err)
 			return

@@ -196,6 +196,10 @@ func (auth *Auth) SelectFromDb(db *sql.DB, where map[string]any) error {
 	return err
 }
 
+func (auth *Auth) DeleteFromDb(db *sql.DB, where map[string]any) error {
+	return RemoveFromDB("Auth", db, where)
+}
+
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
 //
@@ -219,6 +223,10 @@ func (register *Register) SelectFromDb(db *sql.DB, where map[string]any) error {
 
 	*register, err = userData.ParseRegisterData()
 	return err
+}
+
+func (register *Register) DeleteFromDb(db *sql.DB, where map[string]any) error {
+	return RemoveFromDB("UserInfo", db, where)
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -253,6 +261,10 @@ func (post *Post) SelectFromDb(db *sql.DB, where map[string]any) error {
 	return err
 }
 
+func (post *Post) DeleteFromDb(db *sql.DB, where map[string]any) error {
+	return RemoveFromDB("Post", db, where)
+}
+
 func (post *Posts) SelectFromDb(db *sql.DB, where map[string]any) error {
 	userData, err := SelectFromDb("Post", db, where)
 	if err != nil {
@@ -279,7 +291,7 @@ func (comment *Comment) InsertIntoDb(db *sql.DB) error {
 	return InsertIntoDb("Comment", db, comment.Id, comment.AuthorId, comment.Text, comment.CreationDate, comment.PostId, 0, 0)
 }
 
-func (comment *Comment) SelectFromDbById(db *sql.DB, where map[string]any) error {
+func (comment *Comment) SelectFromDb(db *sql.DB, where map[string]any) error {
 	if comment.Id == "" {
 		return errors.New("no Id in the struct")
 	}
@@ -292,6 +304,10 @@ func (comment *Comment) SelectFromDbById(db *sql.DB, where map[string]any) error
 	// We marshal the map to get it in []byte
 	*comment, err = userData.ParseCommentData()
 	return err
+}
+
+func (comment *Comment) DeleteFromDb(db *sql.DB, where map[string]any) error {
+	return RemoveFromDB("Comment", db, where)
 }
 
 func (comments *Comments) SelectFromDb(db *sql.DB, where map[string]any) error {
@@ -353,6 +369,10 @@ func (followers *Followers) SelectFromDb(db *sql.DB, where map[string]any) error
 	return err
 }
 
+func (follower *Follower) DeleteFromDb(db *sql.DB, where map[string]any) error {
+	return RemoveFromDB("Follower", db, where)
+}
+
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
 //
@@ -376,6 +396,10 @@ func (group *Group) SelectFromDb(db *sql.DB, where map[string]any) error {
 
 	*group, err = userData.ParseGroupData()
 	return err
+}
+
+func (group *Group) DeleteFromDb(db *sql.DB, where map[string]any) error {
+	return RemoveFromDB("Group", db, where)
 }
 
 func (group *Group) SplitMembers() {
