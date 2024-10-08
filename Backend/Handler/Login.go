@@ -67,7 +67,7 @@ func Login(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [Login] %s", r.RemoteAddr, err.Error())
 
 			loginData.ConnectionAttempt++
-			if err = model.UpdateDb("Auth", db, map[string]any{"ConnectionAttempt": loginData.ConnectionAttempt}, map[string]any{"Id": loginData.Id}); err != nil {
+			if err = loginData.UpdateDb(db, map[string]any{"ConnectionAttempt": loginData.ConnectionAttempt}, map[string]any{"Id": loginData.Id}); err != nil {
 				log.Printf("Error during the update in the Db: %v", err)
 			}
 
@@ -75,7 +75,7 @@ func Login(db *sql.DB) http.HandlerFunc {
 		}
 
 		loginData.ConnectionAttempt = 0
-		if err := model.UpdateDb("Auth", db, map[string]any{"ConnectionAttempt": loginData.ConnectionAttempt}, map[string]any{"Id": loginData.Id}); err != nil {
+		if err := loginData.UpdateDb(db, map[string]any{"ConnectionAttempt": loginData.ConnectionAttempt}, map[string]any{"Id": loginData.Id}); err != nil {
 			log.Printf("Error during the update in the Db: %v", err)
 		}
 

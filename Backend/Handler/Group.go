@@ -158,7 +158,7 @@ func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
 
 		DetailGroup.JoinMembers()
 
-		if err = model.UpdateDb("Groups", db, map[string]any{"MemberIds": DetailGroup.MemberIds}, map[string]any{"Id": DetailGroup.Id}); err != nil {
+		if err = DetailGroup.UpdateDb(db, map[string]any{"MemberIds": DetailGroup.MemberIds}, map[string]any{"Id": DetailGroup.Id}); err != nil {
 			nw.Error("Internal error: Problem during database update")
 			log.Printf("[%s] [JoinAndLeaveGroup] %v", r.RemoteAddr, err)
 			return

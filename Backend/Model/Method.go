@@ -196,6 +196,10 @@ func (auth *Auth) SelectFromDb(db *sql.DB, where map[string]any) error {
 	return err
 }
 
+func (auth *Auth) UpdateDb(db *sql.DB, updateData, where map[string]any) error {
+	return UpdateDb("Auth", db, updateData, where)
+}
+
 func (auth *Auth) DeleteFromDb(db *sql.DB, where map[string]any) error {
 	return RemoveFromDB("Auth", db, where)
 }
@@ -223,6 +227,10 @@ func (register *Register) SelectFromDb(db *sql.DB, where map[string]any) error {
 
 	*register, err = userData.ParseRegisterData()
 	return err
+}
+
+func (register *Register) UpdateDb(db *sql.DB, updateData, where map[string]any) error {
+	return UpdateDb("UserInfo", db, updateData, where)
 }
 
 func (register *Register) DeleteFromDb(db *sql.DB, where map[string]any) error {
@@ -259,6 +267,10 @@ func (post *Post) SelectFromDb(db *sql.DB, where map[string]any) error {
 	// We marshal the map to get it in []byte
 	*post, err = userData.ParsePostData()
 	return err
+}
+
+func (post *Post) UpdateDb(db *sql.DB, updateData, where map[string]any) error {
+	return UpdateDb("Post", db, updateData, where)
 }
 
 func (post *Post) DeleteFromDb(db *sql.DB, where map[string]any) error {
@@ -304,6 +316,10 @@ func (comment *Comment) SelectFromDb(db *sql.DB, where map[string]any) error {
 	// We marshal the map to get it in []byte
 	*comment, err = userData.ParseCommentData()
 	return err
+}
+
+func (comment *Comment) UpdateDb(db *sql.DB, updateData, where map[string]any) error {
+	return UpdateDb("Comment", db, updateData, where)
 }
 
 func (comment *Comment) DeleteFromDb(db *sql.DB, where map[string]any) error {
@@ -369,6 +385,10 @@ func (followers *Followers) SelectFromDb(db *sql.DB, where map[string]any) error
 	return err
 }
 
+func (follower *Follower) UpdateDb(db *sql.DB, updateData, where map[string]any) error {
+	return UpdateDb("Follower", db, updateData, where)
+}
+
 func (follower *Follower) DeleteFromDb(db *sql.DB, where map[string]any) error {
 	return RemoveFromDB("Follower", db, where)
 }
@@ -396,6 +416,10 @@ func (group *Group) SelectFromDb(db *sql.DB, where map[string]any) error {
 
 	*group, err = userData.ParseGroupData()
 	return err
+}
+
+func (group *Group) UpdateDb(db *sql.DB, updateData, where map[string]any) error {
+	return UpdateDb("Group", db, updateData, where)
 }
 
 func (group *Group) DeleteFromDb(db *sql.DB, where map[string]any) error {

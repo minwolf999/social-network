@@ -38,9 +38,9 @@ func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
 		}
 
 		var userInfo model.Register
-		userInfo.Id = uid
 
 		if request.NewName != "" {
+			userInfo.Id = uid
 			if err := ChangeUserName(db, request.NewName, userInfo); err != nil {
 				nw.Error("Error changing username")
 				log.Printf("[%s] [ChangeUserData] Error changing username: %v", r.RemoteAddr, err)
@@ -49,7 +49,8 @@ func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
 		}
 
 		if request.NewPass != "" {
-			if err := ChangePass(db, request.NewPass, userInfo); err != nil {
+			userInfo.Auth.Id = uid
+			if err := ChangePass(db, request.NewPass, userInfo.Auth); err != nil {
 				nw.Error("Error changing password")
 				log.Printf("[%s] [ChangeUserData] Error changing password: %v", r.RemoteAddr, err)
 				return
@@ -76,11 +77,11 @@ func ChangeUserName(db *sql.DB, name string, userdata model.Register) error {
 	if userdata.Username == name {
 		return errors.New("new username and current username are the same")
 	} else {
-		return model.UpdateDb("UserInfo", db, map[string]any{"Username": name}, map[string]any{"Id": userdata.Id})
+		return userdata.UpdateDb(db, map[string]any{"Username": name}, map[string]any{"Id": userdata.Id})
 	}
 }
 
-func ChangePass(db *sql.DB, newpass string, userData model.Register) error {
+func ChangePass(db *sql.DB, newpass string, userData model.Auth) error {
 	err := userData.SelectFromDb(db, map[string]any{"Id": userData.Id})
 	if err != nil {
 		return err
@@ -94,7 +95,7 @@ func ChangePass(db *sql.DB, newpass string, userData model.Register) error {
 			return err
 		}
 
-		return model.UpdateDb("Auth", db, map[string]any{"Password": string(hashedPass)}, map[string]any{"Id": userData.Id})
+		return userData.UpdateDb(db, map[string]any{"Password": string(hashedPass)}, map[string]any{"Id": userData.Id})
 	}
 }
 
