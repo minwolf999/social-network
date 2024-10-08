@@ -372,10 +372,6 @@ func (follower *Follower) IsFollowedBy(db *sql.DB) (bool, error) {
 }
 
 func (followers *Followers) SelectFromDb(db *sql.DB, where map[string]any) error {
-	if (*followers)[0].UserId == "" {
-		return errors.New("no Id in the struct")
-	}
-
 	userData, err := SelectFromDb("Follower", db, where)
 	if err != nil {
 		return err
