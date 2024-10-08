@@ -419,11 +419,11 @@ func (group *Group) SelectFromDb(db *sql.DB, where map[string]any) error {
 }
 
 func (group *Group) UpdateDb(db *sql.DB, updateData, where map[string]any) error {
-	return UpdateDb("Group", db, updateData, where)
+	return UpdateDb("Groups", db, updateData, where)
 }
 
 func (group *Group) DeleteFromDb(db *sql.DB, where map[string]any) error {
-	return RemoveFromDB("Group", db, where)
+	return RemoveFromDB("Groups", db, where)
 }
 
 func (group *Group) SplitMembers() {

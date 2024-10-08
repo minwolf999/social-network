@@ -71,6 +71,7 @@ func CreateGroup(db *sql.DB) http.HandlerFunc {
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
 			"Message": "Group created successfully",
+			"GroupId": group.Id,
 		})
 		if err != nil {
 			log.Printf("[%s] [CreateGroup] %s", r.RemoteAddr, err.Error())
@@ -159,7 +160,7 @@ func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
 		DetailGroup.JoinMembers()
 
 		if err = DetailGroup.UpdateDb(db, map[string]any{"MemberIds": DetailGroup.MemberIds}, map[string]any{"Id": DetailGroup.Id}); err != nil {
-			nw.Error("Internal error: Problem during database update")
+			nw.Error("Internal error: Problem during database update : " + err.Error())
 			log.Printf("[%s] [JoinAndLeaveGroup] %v", r.RemoteAddr, err)
 			return
 		}
@@ -202,17 +203,11 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 
 		datas.UserId = decryptAuthorId
 
-		groupDatas, err := model.SelectFromDb("Groups", db, map[string]any{"Id": datas.GroupId})
+		var group = model.Group{Id: datas.GroupId}
+		err = group.SelectFromDb(db, map[string]any{"Id": datas.GroupId})
 		if err != nil {
 			nw.Error("Internal error: Problem during database query")
 			log.Printf("[%s] [GetGroup] %v", r.RemoteAddr, err)
-			return
-		}
-
-		group, err := groupDatas.ParseGroupData()
-		if err != nil {
-			nw.Error("Internal Error: There is a probleme during the parse of the structure : " + err.Error())
-			log.Printf("[%s] [GetGroup] %s", r.RemoteAddr, err.Error())
 			return
 		}
 
@@ -269,7 +264,6 @@ func DeleteGroup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		
 		if err = group.DeleteFromDb(db, map[string]any{"Id": group.Id}); err != nil {
 			nw.Error("Error during the remove of the db")
 			log.Printf("[%s] [DeleteGroup] Error during the remove in the db: %v", r.RemoteAddr, err)
