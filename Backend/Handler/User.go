@@ -42,7 +42,7 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 		var userData model.Register
 		userData.Id = uid
 
-		if err = displayInfos(db, userData); err != nil {
+		if err = userData.SelectFromDb(db, map[string]any{"Id": userData.Id}); err != nil {
 			nw.Error("Error when get infos")
 			log.Printf("[%s] [Settings] %s", r.RemoteAddr, err.Error())
 			return
@@ -60,6 +60,3 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func displayInfos(db *sql.DB, userData model.Register) (error) {
-	return userData.SelectFromDb(db, map[string]any{"Id": userData.Id})
-}
