@@ -22,8 +22,6 @@ func Routes(mux *http.ServeMux) {
 		fmt.Println(err)
 	}
 
-	mux.Handle("/", handler.Redirect())
-
 	// Log routes
 	mux.Handle("/login", handler.Login(db))
 	mux.Handle("/register", handler.Register(db))
