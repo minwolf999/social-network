@@ -105,7 +105,6 @@ func CreateGroup(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-
 /*
 This function takes 1 argument:
   - a pointer to an SQL database object
@@ -124,9 +123,9 @@ func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
 		// Struct to hold the data from the request body.
 		var datas struct {
 			// ID of the user joining or leaving the group.
-			UserId      string `json:"UserId"`
+			UserId string `json:"UserId"`
 			// ID of the group.
-			GroupId     string `json:"GroupId"`
+			GroupId string `json:"GroupId"`
 			// Action to either join or leave the group.
 			JoinOrLeave string `json:"JoinOrLeave"`
 		}
@@ -149,21 +148,20 @@ func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
 		// Assign the decrypted UserId back to the datas struct.
 		datas.UserId = decryptAuthorId
 
-		// Query the database for the group using the provided GroupId.
-		groupDatas, err := model.SelectFromDb("Groups", db, map[string]any{"Id": datas.GroupId})
-		if err != nil {
+		var user model.Register
+		if err = user.SelectFromDb(db, map[string]any{"Id": datas.UserId}); err != nil {
 			// Return error if there is a problem during the database query.
 			nw.Error("Internal error: Problem during database query")
 			log.Printf("[%s] [JoinAndLeaveGroup] %v", r.RemoteAddr, err)
 			return
 		}
 
-		// Parse the group data retrieved from the database.
-		group, err := groupDatas.ParseGroupData()
-		if err != nil {
-			// Return error if there is a problem parsing the group data.
-			nw.Error("Internal Error: There is a problem during the parse of the structure : " + err.Error())
-			log.Printf("[%s] [JoinAndLeaveGroup] %s", r.RemoteAddr, err.Error())
+		var group model.Group
+		// Query the database for the group using the provided GroupId.
+		if err = group.SelectFromDb(db, map[string]any{"Id": datas.GroupId}); err != nil {
+			// Return error if there is a problem during the database query.
+			nw.Error("Internal error: Problem during database query")
+			log.Printf("[%s] [JoinAndLeaveGroup] %v", r.RemoteAddr, err)
 			return
 		}
 
@@ -182,6 +180,7 @@ func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
 		DetailGroup := group
 
 		// Split the members into a manageable format.
+		user.SplitGroups()
 		DetailGroup.SplitMembers()
 
 		if datas.JoinOrLeave == "join" {
@@ -193,20 +192,36 @@ func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
 				return
 			}
 
+			user.SplitGroupsJoined = append(user.SplitGroupsJoined, datas.GroupId)
+
 			// Add the UserId to the group’s member list.
 			DetailGroup.SplitMemberIds = append(DetailGroup.SplitMemberIds, datas.UserId)
 		} else {
 			// If the action is to leave, remove the UserId from the member list.
-			for i := range DetailGroup.SplitMemberIds {
-				if DetailGroup.SplitMemberIds[i] == datas.UserId {
-					// Remove the user from the list of members.
-					if i < len(DetailGroup.SplitMemberIds)-1 {
-						DetailGroup.SplitMemberIds = append(DetailGroup.SplitMemberIds[:i], DetailGroup.SplitMemberIds[i+1:]...)
-					} else {
-						DetailGroup.SplitMemberIds = DetailGroup.SplitMemberIds[:i]
-					}
-					break
-				}
+			// for i := range DetailGroup.SplitMemberIds {
+			// 	if DetailGroup.SplitMemberIds[i] == datas.UserId {
+			// 		// Remove the user from the list of members.
+			// 		if i < len(DetailGroup.SplitMemberIds)-1 {
+			// 			DetailGroup.SplitMemberIds = append(DetailGroup.SplitMemberIds[:i], DetailGroup.SplitMemberIds[i+1:]...)
+			// 		} else {
+			// 			DetailGroup.SplitMemberIds = DetailGroup.SplitMemberIds[:i]
+			// 		}
+			// 		break
+			// 	}
+			// }
+
+			index := slices.Index(DetailGroup.SplitMemberIds, datas.UserId)
+			if index < len(DetailGroup.SplitMemberIds)-1 {
+				DetailGroup.SplitMemberIds = append(DetailGroup.SplitMemberIds[:index], DetailGroup.SplitMemberIds[index+1:]...)
+			} else {
+				DetailGroup.SplitMemberIds = DetailGroup.SplitMemberIds[:index]
+			}
+
+			index = slices.Index(user.SplitGroupsJoined, datas.GroupId)
+			if index < len(user.SplitGroupsJoined)-1 {
+				user.SplitGroupsJoined = append(user.SplitGroupsJoined[:index], user.SplitGroupsJoined[index+1:]...)
+			} else {
+				user.SplitGroupsJoined = user.SplitGroupsJoined[:index]
 			}
 
 			// Update the LeaderId to the first member's ID after a user leaves.
@@ -214,7 +229,15 @@ func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Update the member list format.
+		user.JoinGroups()
 		DetailGroup.JoinMembers()
+
+		if err = user.UpdateDb(db, map[string]any{"GroupsJoined": user.GroupsJoined}, map[string]any{"Id": user.Id}); err != nil {
+			// Return error if there is a problem during database update.
+			nw.Error("Internal error: Problem during database update : " + err.Error())
+			log.Printf("[%s] [JoinAndLeaveGroup] %v", r.RemoteAddr, err)
+			return
+		}
 
 		// Update the group's member list in the database.
 		if err = DetailGroup.UpdateDb(db, map[string]any{"MemberIds": DetailGroup.MemberIds}, map[string]any{"Id": DetailGroup.Id}); err != nil {
@@ -239,7 +262,6 @@ func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-
 /*
 This function takes 1 argument:
   - a pointer to an SQL database object
@@ -258,7 +280,7 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 		// Struct to hold the data from the request body.
 		var datas struct {
 			// ID of the user making the request.
-			UserId  string `json:"UserId"`
+			UserId string `json:"UserId"`
 			// ID of the group to retrieve.
 			GroupId string `json:"GroupId"`
 		}
@@ -299,7 +321,7 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 			// Success message for retrieving the group.
 			"Message": "Group obtained successfully",
 			// The retrieved group data.
-			"Group":   group,
+			"Group": group,
 		})
 		if err != nil {
 			// Log any error that occurs while encoding the response.
@@ -307,7 +329,6 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 		}
 	}
 }
-
 
 /*
 This function takes 1 argument:
@@ -327,7 +348,7 @@ func DeleteGroup(db *sql.DB) http.HandlerFunc {
 		// Struct to hold the data from the request body.
 		var datas struct {
 			// ID of the user making the request.
-			UserId  string `json:"UserId"`
+			UserId string `json:"UserId"`
 			// ID of the group to be deleted.
 			GroupId string `json:"GroupId"`
 		}
@@ -392,4 +413,3 @@ func DeleteGroup(db *sql.DB) http.HandlerFunc {
 		}
 	}
 }
-

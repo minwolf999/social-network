@@ -384,7 +384,7 @@ func (register *Register) InsertIntoDb(db *sql.DB) error {
 	}
 
 	// We call InsertIntoDb to insert the registration data into the "UserInfo" table in the database
-	return InsertIntoDb("UserInfo", db, register.Auth.Id, register.Auth.Email, register.FirstName, register.LastName, register.BirthDate, register.ProfilePicture, register.Username, register.AboutMe)
+	return InsertIntoDb("UserInfo", db, register.Auth.Id, register.Auth.Email, register.FirstName, register.LastName, register.BirthDate, register.ProfilePicture, register.Username, register.AboutMe, register.GroupsJoined)
 }
 
 /*
@@ -444,6 +444,31 @@ The function returns 1 value:
 func (register *Register) DeleteFromDb(db *sql.DB, where map[string]any) error {
 	// We call RemoveFromDB to delete the record(s) from the "UserInfo" table based on the specified conditions
 	return RemoveFromDB("UserInfo", db, where)
+}
+
+/*
+This function takes no arguments and is a method of the Register struct.
+
+The purpose of this function is to split the MemberIds string into a slice of individual member IDs, using " | " as the delimiter.
+
+This function updates the SplitGroupsJoined field of the Register struct with the resulting slice.
+*/
+func (register *Register) SplitGroups() {
+	// We split the GroupsJoined string into a slice of strings using " | " as the delimiter
+	register.SplitGroupsJoined = strings.Split(register.GroupsJoined, " | ")
+}
+
+
+/*
+This function takes no arguments and is a method of the Register struct.
+
+The purpose of this function is to join the SplitGroupsJoined slice into a single string, using " | " as the separator.
+
+This function updates the GroupsJoined field of the Register struct with the resulting string.
+*/
+func (register *Register) JoinGroups() {
+	// We join the SplitMemberIds slice into a single string using " | " as the separator
+	register.GroupsJoined = strings.Join(register.SplitGroupsJoined, " | ")
 }
 
 // ----------------------------------------------------------------------------------------------

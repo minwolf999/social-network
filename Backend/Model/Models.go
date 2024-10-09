@@ -27,6 +27,9 @@ type Register struct {
 	Username       string `json:"Username"`
 	AboutMe        string `json:"AboutMe"`
 	Gender         string `json:"Gender"`
+
+	GroupsJoined      string `json:"GroupsJoined"`
+	SplitGroupsJoined []string
 }
 
 type User struct {
@@ -84,4 +87,3 @@ type ResponseWriter struct {
 }
 
 type UserData []map[string]any
-

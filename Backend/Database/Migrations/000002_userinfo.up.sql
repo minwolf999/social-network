@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS UserInfo (
 	ProfilePicture TEXT,
 	Username VARCHAR(50),
 	AboutMe VARCHAR(280),
+	GroupsJoined TEXT,
 
 	CONSTRAINT fk_id FOREIGN KEY (Id) REFERENCES "Auth"("Id") ON DELETE CASCADE
 );
