@@ -58,6 +58,9 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/getGroup", handler.GetGroup(db))
 	mux.Handle("/deleteGroup", handler.DeleteGroup(db))
 
+	// Event routes
+	mux.Handle("/createEvent", handler.CreateEvent(db))
+
 	// Websocket route
 	mux.Handle("/websocket", handler.Websocket(db))
 }

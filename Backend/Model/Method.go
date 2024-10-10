@@ -270,6 +270,43 @@ func (userData *UserData) ParseGroupData() (Group, error) {
 	return groupResult[0], err
 }
 
+func (userData *UserData) ParseEventsData() (Events, error) {
+	var postResult Events
+
+	for _, v := range *userData {
+		var post Event
+
+		// We marshal the map to get it in []byte
+		serializedData, err := json.Marshal(v)
+		if err != nil {
+			return nil, errors.New("internal error: conversion problem")
+		}
+
+		// We Unmarshal in the good structure
+		if err = json.Unmarshal(serializedData, &post); err != nil {
+			return nil, err
+		}
+
+		postResult = append(postResult, post)
+	}
+
+	return postResult, nil
+}
+
+func (userData *UserData) ParseEventData() (Event, error) {
+	// We call ParsePostsData to get all posts
+	events, err := userData.ParseEventsData()
+
+	// We check if there are no posts in the result
+	if len(events) == 0 {
+		// Return an error if the data is empty
+		return Event{}, errors.New("there is no data")
+	}
+
+	// Return the first post and any potential error
+	return events[0], err
+}
+
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
 //
@@ -458,7 +495,6 @@ func (register *Register) SplitGroups() {
 	register.SplitGroupsJoined = strings.Split(register.GroupsJoined, " | ")
 }
 
-
 /*
 This function takes no arguments and is a method of the Register struct.
 
@@ -623,7 +659,6 @@ func (comment *Comment) InsertIntoDb(db *sql.DB) error {
 	return InsertIntoDb("Comment", db, comment.Id, comment.AuthorId, comment.Text, comment.CreationDate, comment.PostId, 0, 0)
 }
 
-
 /*
 This function takes 2 arguments:
   - a pointer to a Comment object, which will be populated with the comment data retrieved from the database.
@@ -656,7 +691,6 @@ func (comment *Comment) SelectFromDb(db *sql.DB, where map[string]any) error {
 	return err
 }
 
-
 /*
 This function takes 3 arguments:
   - a pointer to a Comment object, which represents the comment data to be updated.
@@ -674,7 +708,6 @@ func (comment *Comment) UpdateDb(db *sql.DB, updateData, where map[string]any) e
 	return UpdateDb("Comment", db, updateData, where)
 }
 
-
 /*
 This function takes 2 arguments:
   - a pointer to a Comment object, which represents the comment data to be deleted.
@@ -690,7 +723,6 @@ func (comment *Comment) DeleteFromDb(db *sql.DB, where map[string]any) error {
 	// We call RemoveFromDB to delete the record(s) from the "Comment" table based on the specified conditions
 	return RemoveFromDB("Comment", db, where)
 }
-
 
 /*
 This function takes 2 arguments:
@@ -717,7 +749,6 @@ func (comments *Comments) SelectFromDb(db *sql.DB, where map[string]any) error {
 	// Return any error encountered during parsing
 	return err
 }
-
 
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
@@ -747,7 +778,6 @@ func (follower *Follower) InsertIntoDb(db *sql.DB) error {
 	// We call InsertIntoDb to insert the follower data into the "Follower" table in the database
 	return InsertIntoDb("Follower", db, follower.Id, follower.UserId, follower.FollowerId)
 }
-
 
 /*
 This function takes 1 argument:
@@ -785,7 +815,6 @@ func (follower *Follower) IsFollowedBy(db *sql.DB) (bool, error) {
 	return len(res) == 1, nil
 }
 
-
 /*
 This function takes 2 arguments:
   - a pointer to a Followers object, which will be populated with the follower data retrieved from the database.
@@ -812,7 +841,6 @@ func (followers *Followers) SelectFromDb(db *sql.DB, where map[string]any) error
 	return err
 }
 
-
 /*
 This function takes 3 arguments:
   - a pointer to a Follower object, which represents the follower data to be updated.
@@ -830,7 +858,6 @@ func (follower *Follower) UpdateDb(db *sql.DB, updateData, where map[string]any)
 	return UpdateDb("Follower", db, updateData, where)
 }
 
-
 /*
 This function takes 2 arguments:
   - a pointer to a Follower object, which represents the follower data to be deleted.
@@ -846,7 +873,6 @@ func (follower *Follower) DeleteFromDb(db *sql.DB, where map[string]any) error {
 	// We call RemoveFromDB to delete the record(s) from the "Follower" table based on the specified conditions
 	return RemoveFromDB("Follower", db, where)
 }
-
 
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
@@ -877,7 +903,6 @@ func (group *Group) InsertIntoDb(db *sql.DB) error {
 	return InsertIntoDb("Groups", db, group.Id, group.LeaderId, group.MemberIds, group.GroupName, group.CreationDate)
 }
 
-
 /*
 This function takes 2 arguments:
   - a pointer to a Group object, which will be populated with the group data retrieved from the database.
@@ -904,7 +929,6 @@ func (group *Group) SelectFromDb(db *sql.DB, where map[string]any) error {
 	return err
 }
 
-
 /*
 This function takes 3 arguments:
   - a pointer to a Group object, which contains the group data to be updated.
@@ -922,7 +946,6 @@ func (group *Group) UpdateDb(db *sql.DB, updateData, where map[string]any) error
 	return UpdateDb("Groups", db, updateData, where)
 }
 
-
 /*
 This function takes 2 arguments:
   - a pointer to a Group object, which represents the group data to be deleted.
@@ -939,7 +962,6 @@ func (group *Group) DeleteFromDb(db *sql.DB, where map[string]any) error {
 	return RemoveFromDB("Groups", db, where)
 }
 
-
 /*
 This function takes no arguments and is a method of the Group struct.
 
@@ -951,7 +973,6 @@ func (group *Group) SplitMembers() {
 	// We split the MemberIds string into a slice of strings using " | " as the delimiter
 	group.SplitMemberIds = strings.Split(group.MemberIds, " | ")
 }
-
 
 /*
 This function takes no arguments and is a method of the Group struct.
@@ -965,3 +986,57 @@ func (group *Group) JoinMembers() {
 	group.MemberIds = strings.Join(group.SplitMemberIds, " | ")
 }
 
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+//
+//	DB Method for Event struct
+//
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+
+/*
+This function takes 1 argument:
+  - a pointer to a Event object, which contains the group data to be inserted into the database.
+  - a pointer to an sql.DB object, representing the database connection.
+
+The purpose of this function is to insert the group data into the "Event" table in the database.
+
+The function returns 1 value:
+  - an error if any of the required fields are empty or if the insertion into the database fails
+*/
+func (event *Event) InsertIntoDb(db *sql.DB) error {
+	// We check if any of the required fields are empty
+	if event.Id == "" || event.OrganisatorId == "" || event.GroupId == "" || event.Title == "" || event.Description == "" || event.DateOfTheEvent == "" {
+		// Return an error if any field is empty
+		return errors.New("empty field")
+	}
+
+	// We call InsertIntoDb to insert the group data into the "Event" table in the database
+	return InsertIntoDb("Event", db, event.Id, event.GroupId, event.OrganisatorId, event.Title, event.Description, event.DateOfTheEvent, event.Image)
+}
+
+/*
+This function takes 2 arguments:
+  - a pointer to a Event object, which will be populated with the event data retrieved from the database.
+  - a pointer to an sql.DB object, representing the database connection.
+  - a map[string]any containing the conditions (WHERE clause) for selecting the data from the "Event" table.
+
+The purpose of this function is to retrieve group data from the database based on the given conditions.
+
+The function returns 1 value:
+  - an error if the data retrieval or parsing fails
+*/
+func (event *Event) SelectFromDb(db *sql.DB, where map[string]any) error {
+	// We call SelectFromDb to retrieve data from the "Groups" table based on the given conditions
+	userData, err := SelectFromDb("Event", db, where)
+	if err != nil {
+		// Return an error if the data retrieval fails
+		return err
+	}
+
+	// We parse the retrieved data into the Group structure and assign it to the group object
+	*event, err = userData.ParseEventData()
+
+	// Return any error encountered during parsing
+	return err
+}

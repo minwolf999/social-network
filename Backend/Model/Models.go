@@ -82,6 +82,18 @@ type Group struct {
 	CreationDate   string `json:"CreationDate"`
 }
 
+type Event struct {
+	Id             string `json:"Id"`
+	GroupId        string `json:"GroupId"`
+	OrganisatorId  string `json:"OrganisatorId"`
+	Title          string `json:"Title"`
+	Description    string `json:"Description"`
+	DateOfTheEvent string `json:"DateOfTheEvent"`
+	Image          string `json:"Image"`
+}
+
+type Events []Event
+
 type ResponseWriter struct {
 	http.ResponseWriter
 }
