@@ -1,6 +1,6 @@
 PRAGMA foreign_keys = ON;
 
-CREATE VIEW CommentDetail AS
+CREATE VIEW IF NOT EXISTS CommentDetail AS
   SELECT 
     c.Id,
 	c.Text,

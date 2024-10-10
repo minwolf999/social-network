@@ -1,6 +1,6 @@
 PRAGMA foreign_keys = ON;
 
-CREATE VIEW PostDetail AS
+CREATE VIEW IF NOT EXISTS PostDetail AS
   SELECT 
     p.Id,
 	p.Text,
