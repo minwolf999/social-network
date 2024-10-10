@@ -48,8 +48,8 @@ func CreateEvent(db *sql.DB) http.HandlerFunc {
 
 		var group model.Group
 		if err = group.SelectFromDb(db, map[string]any{"Id": event.GroupId}); err != nil || group.Id == "" {
-			nw.Error("There is an error during the select in the db")
-			log.Printf("[%s] [CreateEvent] There is an error during the select in the db : %s", r.RemoteAddr, err)
+			nw.Error("The groupId given correspond to no group")
+			log.Printf("[%s] [CreateEvent] The groupId given correspond to no group : %s", r.RemoteAddr, err)
 			return
 		}
 
