@@ -80,12 +80,12 @@ func LoadData(db *sql.DB) error {
 		user.Auth.Password = string(cryptedPassword)
 
 		// We insert the values in the tables
-		if err := InsertIntoDb("Auth", db, user.Auth.Id, user.Auth.Email, user.Auth.Password, user.Auth.ConnectionAttempt); err != nil {
+		if err := user.Auth.InsertIntoDb(db); err != nil {
 			fmt.Println(err)
 			i--
 			continue
 		}
-		if err := InsertIntoDb("UserInfo", db, user.Auth.Id, user.Auth.Email, user.FirstName, user.LastName, user.BirthDate, user.ProfilePicture, user.Username, user.AboutMe); err != nil {
+		if err := user.InsertIntoDb(db); err != nil {
 			fmt.Println(err)
 			i--
 			continue
@@ -106,7 +106,7 @@ func LoadData(db *sql.DB) error {
 
 		post.Text = fmt.Sprintf("%s %s %s %s.", subjects[rand.Intn(len(subjects))], verbs[rand.Intn(len(verbs))], objects[rand.Intn(len(objects))], adverbs[rand.Intn(len(adverbs))])
 
-		if err := InsertIntoDb("Post", db, post.Id, post.AuthorId, post.Text, post.Image, post.CreationDate, sql.NullString{Valid: false}, 0, 0); err != nil {
+		if err := post.InsertIntoDb(db); err != nil {
 			fmt.Println(err)
 			i--
 			continue
@@ -129,7 +129,7 @@ func LoadData(db *sql.DB) error {
 
 		comment.Text = fmt.Sprintf("%s %s %s %s.", subjects[rand.Intn(len(subjects))], verbs[rand.Intn(len(verbs))], objects[rand.Intn(len(objects))], adverbs[rand.Intn(len(adverbs))])
 
-		if err := InsertIntoDb("Comment", db, comment.Id, comment.AuthorId, comment.Text, comment.CreationDate, comment.PostId, comment.LikeCount, comment.DislikeCount); err != nil {
+		if err := comment.InsertIntoDb(db); err != nil {
 			fmt.Println(err)
 			i--
 			continue
