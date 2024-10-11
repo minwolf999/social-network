@@ -2,9 +2,14 @@ package model
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"math/rand"
 	"strings"
 
+	"github.com/gofrs/uuid"
+	"golang.org/x/crypto/bcrypt"
+	
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -37,7 +42,7 @@ This function takes 1 argument:
 
 The function return an error
 */
-/*func LoadData(db *sql.DB) error {
+func LoadData(db *sql.DB) error {
 	// We set a list of first and last name
 	firstNameList := []string{"Alice", "Bob", "Charlie", "David", "Eva", "Frank", "Grace", "Hannah", "Ivy", "Jack", "Karen", "Leo", "Mia", "Noah", "Olivia", "Paul", "Quinn", "Ruby", "Sam", "Tina", "Uma", "Victor", "Wendy", "Xander", "Yara", "Zane", "Adrian", "Bella", "Carl", "Diana", "Ethan", "Fiona", "George", "Helen", "Isaac", "Julia", "Kevin", "Lara", "Michael", "Nina", "Oscar", "Penny", "Quentin", "Rachel", "Steve", "Tara", "Uriel", "Violet", "Walter", "Xenia", "Yves", "Zelda", "Arthur", "Bianca", "Colin", "Derek", "Emma", "Felix", "Gina", "Harry", "Iris", "James", "Kara", "Louis", "Maria", "Nathan", "Owen", "Pam", "Ron", "Sophie", "Tom", "Ursula", "Vincent", "Will", "Ximena", "Yvonne", "Zach", "Angela", "Bruno", "Claire", "Damien", "Elise", "Freddy", "Gloria", "Henry", "Isabelle", "Julien", "Kurt", "Liam", "Nadine", "Olga", "Peter", "Quincy", "Rosie", "Simon", "Tracy", "Ulrich", "Victoria", "Wayne", "Xia", "Yasmine", "Zeke"}
 	lastNameList := []string{"Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores", "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell", "Carter", "Roberts", "Gomez", "Phillips", "Evans", "Turner", "Diaz", "Parker", "Cruz", "Edwards", "Collins", "Reyes", "Stewart", "Morris", "Morales", "Murphy", "Cook", "Rogers", "Gutierrez", "Ortiz", "Morgan", "Cooper", "Peterson", "Bailey", "Reed", "Kelly", "Howard", "Ramos", "Kim", "Cox", "Ward", "Richardson", "Watson", "Brooks", "Chavez", "Wood", "James", "Bennett", "Gray", "Mendoza", "Ruiz", "Hughes", "Price", "Alvarez", "Castillo", "Sanders", "Patel", "Myers", "Long", "Ross", "Foster", "Jimenez", "Powell", "Jenkins", "Perry", "Russell", "Sullivan", "Bell", "Coleman", "Butler", "Henderson", "Barnes"}
@@ -62,10 +67,17 @@ The function return an error
 		year := rand.Intn(2024-1980) + 1980
 		user.BirthDate = fmt.Sprintf("%d-%d-%d", year, mounth, day)
 
-		// We create an UUID and hash the password
-		if err := handler.CreateUuidAndCrypt(&user); err != nil {
-			return err
+		uid, err := uuid.NewV7()
+		if err != nil {
+			return errors.New("there is a probleme with the generation of the uuid")
 		}
+		user.Auth.Id = uid.String()
+
+		cryptedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Auth.Password), 12)
+		if err != nil {
+			return errors.New("there is a probleme with bcrypt")
+		}
+		user.Auth.Password = string(cryptedPassword)
 
 		// We insert the values in the tables
 		if err := InsertIntoDb("Auth", db, user.Auth.Id, user.Auth.Email, user.Auth.Password, user.Auth.ConnectionAttempt); err != nil {
@@ -81,7 +93,7 @@ The function return an error
 
 		var post Post
 		post.AuthorId = user.Auth.Id
-		uid, err := uuid.NewV7()
+		uid, err = uuid.NewV7()
 		if err != nil {
 			return errors.New("there is a probleme with the generation of the uuid")
 		}
@@ -125,7 +137,7 @@ The function return an error
 	}
 
 	return nil
-}*/
+}
 
 /*
 This function takes a minimum of 2 arguments:

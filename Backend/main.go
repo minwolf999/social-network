@@ -38,12 +38,12 @@ func init() {
 		}
 		defer db.Close()
 
-		// start := time.Now()
-		// if err = model.LoadData(db); err != nil {
-		// 	fmt.Println(err)
-		// }
-		// end := time.Now()
-		// fmt.Println(end.Sub(start))
+		start := time.Now()
+		if err = model.LoadData(db); err != nil {
+			fmt.Println(err)
+		}
+		end := time.Now()
+		fmt.Println(end.Sub(start))
 	}
 }
 

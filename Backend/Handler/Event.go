@@ -88,3 +88,9 @@ func CreateEvent(db *sql.DB) http.HandlerFunc {
 		}
 	}
 }
+
+func JoinOrDeclineEvent(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		
+	}
+}

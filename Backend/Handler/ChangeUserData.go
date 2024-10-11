@@ -150,5 +150,3 @@ func ChangePass(db *sql.DB, newpass string, userData model.Auth) error {
 		return userData.UpdateDb(db, map[string]any{"Password": string(hashedPass)}, map[string]any{"Id": userData.Id}) // Update password in database
 	}
 }
-
-
