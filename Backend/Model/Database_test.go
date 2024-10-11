@@ -49,9 +49,10 @@ func CreateTables(db *sql.DB) {
 			FirstName VARCHAR(50) NOT NULL, 
 			LastName VARCHAR(50) NOT NULL,
 			BirthDate VARCHAR(20) NOT NULL,
-			ProfilePicture VARCHAR(400000),
+			ProfilePicture TEXT,
 			Username VARCHAR(50),
 			AboutMe VARCHAR(280),
+			GroupsJoined TEXT,
 		
 			CONSTRAINT fk_id FOREIGN KEY (Id) REFERENCES "Auth"("Id") ON DELETE CASCADE
 		);
@@ -141,6 +142,37 @@ func CreateTables(db *sql.DB) {
 			PRIMARY KEY (Id),
 		
 			CONSTRAINT fk_leaderid FOREIGN KEY (LeaderId) REFERENCES "UserInfo"("Id")	
+		);
+
+		CREATE TABLE IF NOT EXISTS Event (
+			Id VARCHAR(36),
+			GroupId VARCHAR(36),
+			OrganisatorId VARCHAR(36),
+			Title VARCHAR(200),
+			Description VARCHAR(1000),
+			DateOfTheEvent VARCHAR(20),
+			Image TEXT,
+
+			PRIMARY KEY (Id),
+
+			CONSTRAINT fk_groupid FOREIGN KEY (GroupId) REFERENCES "Groups"("Id") ON DELETE CASCADE,
+			CONSTRAINT fk_organisatorid FOREIGN KEY (OrganisatorId) REFERENCES "UserInfo"("Id")
+		);
+
+		CREATE TABLE IF NOT EXISTS JoinEvent (
+			EventId VARCHAR(36),
+			UserId VARCHAR(36),
+
+			CONSTRAINT fk_eventid FOREIGN KEY (EventId) REFERENCES "Event"("Id") ON DELETE CASCADE,
+			CONSTRAINT fk_userid FOREIGN KEY (UserId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE
+		);
+
+		CREATE TABLE IF NOT EXISTS DeclineEvent (
+			EventId VARCHAR(36),
+			UserId VARCHAR(36),
+		
+			CONSTRAINT fk_eventid FOREIGN KEY (EventId) REFERENCES "Event"("Id") ON DELETE CASCADE,
+			CONSTRAINT fk_userid FOREIGN KEY (UserId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE
 		);
 		
 		CREATE VIEW PostDetail AS

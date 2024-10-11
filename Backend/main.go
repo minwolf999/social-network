@@ -10,22 +10,21 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
-	"golang.org/x/crypto/bcrypt"
-
 	middleware "social-network/Middleware"
 	model "social-network/Model"
 	routes "social-network/Routes"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func init() {
-	tmp, err := bcrypt.GenerateFromPassword([]byte(model.SecretKey), 15)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// tmp, err := bcrypt.GenerateFromPassword([]byte(model.SecretKey), 15)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
-	model.SecretKey = string(tmp)
+	// model.SecretKey = string(tmp)
 
 	args := os.Args
 	if len(args) != 2 {
