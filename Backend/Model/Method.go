@@ -1040,3 +1040,94 @@ func (event *Event) SelectFromDb(db *sql.DB, where map[string]any) error {
 	// Return any error encountered during parsing
 	return err
 }
+
+/*
+This function takes 3 arguments:
+  - a pointer to a Event object, which contains the group data to be updated.
+  - a pointer to an sql.DB object, representing the database connection.
+  - a map[string]any containing the updateData, which holds the values to be updated.
+  - a map[string]any containing the where clause, which specifies the conditions for selecting the record(s) to update.
+
+The purpose of this function is to update the group data in the "Event" table based on the provided conditions.
+
+The function returns 1 value:
+  - an error if the update operation fails
+*/
+func (event *Event) UpdateDb(db *sql.DB, updateData, where map[string]any) error {
+	// We call UpdateDb to update the "Groups" table with the provided data and conditions
+	return UpdateDb("Event", db, updateData, where)
+}
+
+/*
+This function takes 2 arguments:
+  - a pointer to a Event object, which represents the group data to be deleted.
+  - a pointer to an sql.DB object, representing the database connection.
+  - a map[string]any containing the where clause, which specifies the conditions for selecting the record(s) to delete.
+
+The purpose of this function is to delete group data from the "Event" table based on the provided conditions.
+
+The function returns 1 value:
+  - an error if the delete operation fails
+*/
+func (event *Event) DeleteFromDb(db *sql.DB, where map[string]any) error {
+	// We call RemoveFromDB to delete the record(s) from the "Groups" table based on the specified conditions
+	return RemoveFromDB("Event", db, where)
+}
+
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+//
+//	DB Method for JoinEvent struct
+//
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+
+/*
+This function takes 1 argument:
+  - a pointer to a Event object, which contains the group data to be inserted into the database.
+  - a pointer to an sql.DB object, representing the database connection.
+
+The purpose of this function is to insert the group data into the "Event" table in the database.
+
+The function returns 1 value:
+  - an error if any of the required fields are empty or if the insertion into the database fails
+*/
+func (joinEvent *JoinEvent) InsertIntoDb(db *sql.DB) error {
+	// We check if any of the required fields are empty
+	if joinEvent.UserId == "" || joinEvent.EventId == "" {
+		// Return an error if any field is empty
+		return errors.New("empty field")
+	}
+
+	// We call InsertIntoDb to insert the group data into the "Event" table in the database
+	return InsertIntoDb("JoinEvent", db, joinEvent.EventId, joinEvent.UserId)
+}
+
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+//
+//	DB Method for DeclineEvent struct
+//
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+
+/*
+This function takes 1 argument:
+  - a pointer to a Event object, which contains the group data to be inserted into the database.
+  - a pointer to an sql.DB object, representing the database connection.
+
+The purpose of this function is to insert the group data into the "Event" table in the database.
+
+The function returns 1 value:
+  - an error if any of the required fields are empty or if the insertion into the database fails
+*/
+func (declineEvent *DeclineEvent) InsertIntoDb(db *sql.DB) error {
+	// We check if any of the required fields are empty
+	if declineEvent.UserId == "" || declineEvent.EventId == "" {
+		// Return an error if any field is empty
+		return errors.New("empty field")
+	}
+
+	// We call InsertIntoDb to insert the group data into the "Event" table in the database
+	return InsertIntoDb("JoinEvent", db, declineEvent.EventId, declineEvent.UserId)
+}

@@ -106,3 +106,11 @@ func TestCreateEvent(t *testing.T) {
 		return
 	}
 }
+
+func TestJoinEvent(t *testing.T) {
+
+}
+
+func TestDeclineEvent(t *testing.T) {
+	
+}

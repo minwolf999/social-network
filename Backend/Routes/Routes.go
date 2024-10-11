@@ -60,6 +60,9 @@ func Routes(mux *http.ServeMux) {
 
 	// Event routes
 	mux.Handle("/createEvent", handler.CreateEvent(db))
+	mux.Handle("/joinEvent", handler.JoinEvent(db))
+	mux.Handle("/declineEvent", handler.DeclineEvent(db))
+
 
 	// Websocket route
 	mux.Handle("/websocket", handler.Websocket(db))

@@ -94,6 +94,16 @@ type Event struct {
 
 type Events []Event
 
+type JoinEvent struct {
+	UserId        string `json:"UserId"`
+	EventId       string `json:"EventId"`
+}
+
+type DeclineEvent struct {
+	UserId        string `json:"UserId"`
+	EventId       string `json:"EventId"`
+}
+
 type ResponseWriter struct {
 	http.ResponseWriter
 }
