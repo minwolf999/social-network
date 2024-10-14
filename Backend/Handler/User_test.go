@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	model "social-network/Model"
+	utils "social-network/Utils"
 	"testing"
 )
 
@@ -20,8 +21,9 @@ func TestGetUser(t *testing.T) {
 
 	CreateTables(db)
 
-	rr, err := TryRegister(t, db, model.Register{
+	userData := model.Register{
 		Auth: model.Auth{
+			Id:              "userid",
 			Email:           "unemail@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -29,31 +31,20 @@ func TestGetUser(t *testing.T) {
 		FirstName: "Jean",
 		LastName:  "Dujardin",
 		BirthDate: "1990-01-01",
-	})
-	if err != nil {
+	}
+
+	if err = userData.Auth.InsertIntoDb(db); err != nil {
 		t.Fatal(err)
 		return
 	}
 
-	expected := "Register successfully"
-	// Check the response body is what we expect.
-	bodyValue := make(map[string]any)
-
-	if err := json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
-		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
+	if err = userData.InsertIntoDb(db); err != nil {
+		t.Fatal(err)
 		return
 	}
-	if bodyValue["Success"] != true {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
-		return
-	}
-
-	// ----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-	JWT := bodyValue["sessionId"]
 
 	var user = map[string]any{
-		"SessionId": JWT,
+		"SessionId": utils.GenerateJWT(userData.Id),
 	}
 
 	body, err := json.Marshal(user)
@@ -71,7 +62,7 @@ func TestGetUser(t *testing.T) {
 	}
 
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-	rr = httptest.NewRecorder()
+	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(GetUser(db))
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
@@ -84,8 +75,8 @@ func TestGetUser(t *testing.T) {
 	}
 
 	// Check the response body is what we expect.
-	expected = "Sending Infos"
-	bodyValue = make(map[string]any)
+	expected := "Sending Infos"
+	bodyValue := make(map[string]any)
 
 	if err = json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
 		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)

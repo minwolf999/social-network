@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 
 	model "social-network/Model"
+	utils "social-network/Utils"
 
 	"testing"
 )
@@ -24,8 +25,9 @@ func TestCreatePost(t *testing.T) {
 
 	CreateTables(db)
 
-	rr, err := TryRegister(t, db, model.Register{
+	userData := model.Register{
 		Auth: model.Auth{
+			Id: "userid",
 			Email:           "unemail1@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -33,35 +35,27 @@ func TestCreatePost(t *testing.T) {
 		FirstName: "Jean",
 		LastName:  "Dujardin",
 		BirthDate: "1990-01-01",
-	})
+	}
+
+	if err = userData.Auth.InsertIntoDb(db); err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	if err = userData.InsertIntoDb(db); err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	rr, err := TryCreatePost(t, db, utils.GenerateJWT(userData.Id))
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
 
 	// Check the response body is what we expect.
-	expected := "Register successfully"
+	expected := "Post created successfully"
 	bodyValue := make(map[string]any)
-
-	if err := json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
-		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
-		return
-	}
-
-	if bodyValue["Success"] != true {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
-		return
-	}
-
-	rr, err = TryCreatePost(t, db, fmt.Sprint(bodyValue["sessionId"]))
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-
-	// Check the response body is what we expect.
-	expected = "Post created successfully"
-	bodyValue = make(map[string]any)
 
 	if err = json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
 		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
@@ -119,8 +113,9 @@ func TestGetPost(t *testing.T) {
 
 	CreateTables(db)
 
-	rr, err := TryRegister(t, db, model.Register{
+	userData := model.Register{
 		Auth: model.Auth{
+			Id: "userid",
 			Email:           "unemail2@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -128,54 +123,32 @@ func TestGetPost(t *testing.T) {
 		FirstName: "Jean",
 		LastName:  "Dujardin",
 		BirthDate: "1990-01-01",
-	})
-	if err != nil {
+	}
+
+	if err = userData.Auth.InsertIntoDb(db); err != nil {
 		t.Fatal(err)
 		return
 	}
 
-	// Check the response body is what we expect.
-	expected := "Register successfully"
-	bodyValue := make(map[string]any)
-
-	if err := json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
-		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
-		return
-	}
-
-	if bodyValue["Success"] != true {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
-		return
-	}
-
-	JWT := fmt.Sprint(bodyValue["sessionId"])
-	rr, err = TryCreatePost(t, db, JWT)
-	if err != nil {
+	if err = userData.InsertIntoDb(db); err != nil {
 		t.Fatal(err)
-		return
-	}
-
-	// Check the response body is what we expect.
-	expected = "Post created successfully"
-	bodyValue = make(map[string]any)
-
-	if err = json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
-		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
-		return
-	}
-
-	if bodyValue["Success"] != true {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
 		return
 	}
 
 	post := model.Post{
-		Id:           "Test",
-		AuthorId:     JWT,
+		Id: "postid",
+		AuthorId:     userData.Id,
 		Text:         "Test",
 		CreationDate: "1970-01-01",
-		Status: "public",
+		Status:       "public",
 	}
+
+	if err = post.InsertIntoDb(db); err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	post.AuthorId = utils.GenerateJWT(post.AuthorId)
 
 	body, err := json.Marshal(post)
 	if err != nil {
@@ -192,7 +165,7 @@ func TestGetPost(t *testing.T) {
 	}
 
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-	rr = httptest.NewRecorder()
+	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(CreatePost(db))
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
@@ -204,8 +177,8 @@ func TestGetPost(t *testing.T) {
 		return
 	}
 
-	expected = "Get posts successfuly"
-	bodyValue = make(map[string]any)
+	expected := "Get posts successfuly"
+	bodyValue := make(map[string]any)
 
 	if err := json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
 		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)

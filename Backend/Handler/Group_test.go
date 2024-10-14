@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	model "social-network/Model"
+	utils "social-network/Utils"
 	"testing"
 )
 
@@ -20,8 +21,9 @@ func TestCreateGroup(t *testing.T) {
 
 	CreateTables(db)
 
-	rr, err := TryRegister(t, db, model.Register{
+	userData := model.Register{
 		Auth: model.Auth{
+			Id:              "userid",
 			Email:           "unemail@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -29,26 +31,19 @@ func TestCreateGroup(t *testing.T) {
 		FirstName: "Jean",
 		LastName:  "Dujardin",
 		BirthDate: "1990-01-01",
-	})
-	if err != nil {
+	}
+
+	if err = userData.Auth.InsertIntoDb(db); err != nil {
 		t.Fatal(err)
 		return
 	}
 
-	expected := "Register successfully"
-	// Check the response body is what we expect.
-	bodyValue := make(map[string]any)
-
-	if err := json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
-		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
-		return
-	}
-	if bodyValue["Success"] != true {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
+	if err = userData.InsertIntoDb(db); err != nil {
+		t.Fatal(err)
 		return
 	}
 
-	JWT := bodyValue["sessionId"]
+	JWT := utils.GenerateJWT(userData.Id)
 
 	var user = map[string]any{
 		"LeaderId":     JWT,
@@ -71,7 +66,7 @@ func TestCreateGroup(t *testing.T) {
 	}
 
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-	rr = httptest.NewRecorder()
+	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(CreateGroup(db))
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
@@ -84,8 +79,8 @@ func TestCreateGroup(t *testing.T) {
 	}
 
 	// Check the response body is what we expect.
-	expected = "Group created successfully"
-	bodyValue = make(map[string]any)
+	expected := "Group created successfully"
+	bodyValue := make(map[string]any)
 
 	if err = json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
 		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
@@ -109,8 +104,9 @@ func TestJoinAndLeaveGroup(t *testing.T) {
 
 	CreateTables(db)
 
-	rr, err := TryRegister(t, db, model.Register{
+	userData1 := model.Register{
 		Auth: model.Auth{
+			Id:              "userid1",
 			Email:           "unemail@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -118,78 +114,34 @@ func TestJoinAndLeaveGroup(t *testing.T) {
 		FirstName: "Jean",
 		LastName:  "Dujardin",
 		BirthDate: "1990-01-01",
-	})
-	if err != nil {
+	}
+
+	if err = userData1.Auth.InsertIntoDb(db); err != nil {
 		t.Fatal(err)
 		return
 	}
 
-	expected := "Register successfully"
-	// Check the response body is what we expect.
-	bodyValue := make(map[string]any)
-
-	if err := json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
-		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
-		return
-	}
-	if bodyValue["Success"] != true {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
-		return
-	}
-
-	JWT := bodyValue["sessionId"]
-
-	var user = map[string]any{
-		"LeaderId":     JWT,
-		"GroupName":    "test",
-		"CreationDate": "now",
-	}
-
-	body, err := json.Marshal(user)
-	if err != nil {
-		t.Fatalf("Erreur lors de la sérialisation du corps de la requête : %v", err)
-		return
-	}
-
-	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
-	// pass 'nil' as the third parameter.
-	req, err := http.NewRequest("POST", "/createGroup", bytes.NewBuffer(body))
-	if err != nil {
+	if err = userData1.InsertIntoDb(db); err != nil {
 		t.Fatal(err)
 		return
 	}
 
-	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-	rr = httptest.NewRecorder()
-	handler := http.HandlerFunc(CreateGroup(db))
+	var group = model.Group{
+		Id:           "groupid",
+		LeaderId:     userData1.Id,
+		MemberIds:    userData1.Id,
+		GroupName:    "test",
+		CreationDate: "now",
+	}
 
-	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-	// directly and pass in our Request and ResponseRecorder.
-	handler.ServeHTTP(rr, req)
-	// Check the status code is what we expect.
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	if err = group.InsertIntoDb(db); err != nil {
+		t.Fatal(err)
 		return
 	}
 
-	// Check the response body is what we expect.
-	expected = "Group created successfully"
-	bodyValue = make(map[string]any)
-
-	if err = json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
-		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
-		return
-	}
-
-	if bodyValue["Success"] != true {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
-		return
-	}
-
-	GroupId := bodyValue["GroupId"]
-
-	rr, err = TryRegister(t, db, model.Register{
+	userData2 := model.Register{
 		Auth: model.Auth{
+			Id:              "userid2",
 			Email:           "unemail1@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -197,34 +149,25 @@ func TestJoinAndLeaveGroup(t *testing.T) {
 		FirstName: "Jean",
 		LastName:  "Dujardin",
 		BirthDate: "1990-01-01",
-	})
-	if err != nil {
+	}
+
+	if err = userData2.Auth.InsertIntoDb(db); err != nil {
 		t.Fatal(err)
 		return
 	}
 
-	expected = "Register successfully"
-	// Check the response body is what we expect.
-	bodyValue = make(map[string]any)
-
-	if err := json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
-		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
-		return
-	}
-	if bodyValue["Success"] != true {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
+	if err = userData2.InsertIntoDb(db); err != nil {
+		t.Fatal(err)
 		return
 	}
 
-	JWT = bodyValue["sessionId"]
-
-	user = map[string]any{
+	joinOrLeave := map[string]any{
 		"JoinOrLeave": "join",
-		"GroupId":     GroupId,
-		"UserId":      JWT,
+		"GroupId":     group.Id,
+		"UserId":      utils.GenerateJWT(userData2.Id),
 	}
 
-	body, err = json.Marshal(user)
+	body, err := json.Marshal(joinOrLeave)
 	if err != nil {
 		t.Fatalf("Erreur lors de la sérialisation du corps de la requête : %v", err)
 		return
@@ -232,15 +175,15 @@ func TestJoinAndLeaveGroup(t *testing.T) {
 
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
-	req, err = http.NewRequest("POST", "/joinOrLeaveGroup", bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", "/joinOrLeaveGroup", bytes.NewBuffer(body))
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
 
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-	rr = httptest.NewRecorder()
-	handler = http.HandlerFunc(JoinAndLeaveGroup(db))
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(JoinAndLeaveGroup(db))
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 	// directly and pass in our Request and ResponseRecorder.
@@ -252,8 +195,8 @@ func TestJoinAndLeaveGroup(t *testing.T) {
 	}
 
 	// Check the response body is what we expect.
-	expected = "Group joined successfuly"
-	bodyValue = make(map[string]any)
+	expected := "Group joined successfuly"
+	bodyValue := make(map[string]any)
 
 	if err = json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
 		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
@@ -277,8 +220,9 @@ func TestGetGroup(t *testing.T) {
 
 	CreateTables(db)
 
-	rr, err := TryRegister(t, db, model.Register{
+	userData := model.Register{
 		Auth: model.Auth{
+			Id:              "userid",
 			Email:           "unemail@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -286,111 +230,66 @@ func TestGetGroup(t *testing.T) {
 		FirstName: "Jean",
 		LastName:  "Dujardin",
 		BirthDate: "1990-01-01",
-	})
+	}
+
+	if err = userData.Auth.InsertIntoDb(db); err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	if err = userData.InsertIntoDb(db); err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	var group = model.Group{
+		Id:           "groupid",
+		LeaderId:     userData.Id,
+		MemberIds:    userData.Id,
+		GroupName:    "test",
+		CreationDate: "now",
+	}
+
+	if err = group.InsertIntoDb(db); err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	getGroup := map[string]any{
+		"UserId":  utils.GenerateJWT(userData.Id),
+		"groupId": group.Id,
+	}
+
+	body, err := json.Marshal(getGroup)
+	if err != nil {
+		t.Fatalf("Erreur lors de la sérialisation du corps de la requête : %v", err)
+		return
+	}
+
+	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
+	// pass 'nil' as the third parameter.
+	req, err := http.NewRequest("POST", "/getGroup", bytes.NewBuffer(body))
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
 
-	expected := "Register successfully"
+	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(GetGroup(db))
+
+	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+	// directly and pass in our Request and ResponseRecorder.
+	handler.ServeHTTP(rr, req)
+	// Check the status code is what we expect.
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+		return
+	}
+
 	// Check the response body is what we expect.
+	expected := "Group obtained successfully"
 	bodyValue := make(map[string]any)
-
-	if err := json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
-		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
-		return
-	}
-	if bodyValue["Success"] != true {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
-		return
-	}
-
-	JWT := bodyValue["sessionId"]
-
-	var user = map[string]any{
-		"LeaderId":     JWT,
-		"GroupName":    "test",
-		"CreationDate": "now",
-	}
-
-	body, err := json.Marshal(user)
-	if err != nil {
-		t.Fatalf("Erreur lors de la sérialisation du corps de la requête : %v", err)
-		return
-	}
-
-	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
-	// pass 'nil' as the third parameter.
-	req, err := http.NewRequest("POST", "/createGroup", bytes.NewBuffer(body))
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-
-	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-	rr = httptest.NewRecorder()
-	handler := http.HandlerFunc(CreateGroup(db))
-
-	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-	// directly and pass in our Request and ResponseRecorder.
-	handler.ServeHTTP(rr, req)
-	// Check the status code is what we expect.
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-		return
-	}
-
-	// Check the response body is what we expect.
-	expected = "Group created successfully"
-	bodyValue = make(map[string]any)
-
-	if err = json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
-		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
-		return
-	}
-
-	if bodyValue["Success"] != true {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
-		return
-	}
-
-	GroupId := bodyValue["GroupId"]
-
-	user = map[string]any{
-		"UserId":  JWT,
-		"groupId": GroupId,
-	}
-
-	body, err = json.Marshal(user)
-	if err != nil {
-		t.Fatalf("Erreur lors de la sérialisation du corps de la requête : %v", err)
-		return
-	}
-
-	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
-	// pass 'nil' as the third parameter.
-	req, err = http.NewRequest("POST", "/getGroup", bytes.NewBuffer(body))
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-
-	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-	rr = httptest.NewRecorder()
-	handler = http.HandlerFunc(GetGroup(db))
-
-	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-	// directly and pass in our Request and ResponseRecorder.
-	handler.ServeHTTP(rr, req)
-	// Check the status code is what we expect.
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-		return
-	}
-
-	// Check the response body is what we expect.
-	expected = "Group obtained successfully"
-	bodyValue = make(map[string]any)
 
 	if err = json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
 		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
@@ -414,8 +313,9 @@ func TestDeleteGroup(t *testing.T) {
 
 	CreateTables(db)
 
-	rr, err := TryRegister(t, db, model.Register{
+	userData := model.Register{
 		Auth: model.Auth{
+			Id:              "userid",
 			Email:           "unemail@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -423,31 +323,36 @@ func TestDeleteGroup(t *testing.T) {
 		FirstName: "Jean",
 		LastName:  "Dujardin",
 		BirthDate: "1990-01-01",
-	})
-	if err != nil {
+	}
+
+	if err = userData.Auth.InsertIntoDb(db); err != nil {
 		t.Fatal(err)
 		return
 	}
 
-	expected := "Register successfully"
-	// Check the response body is what we expect.
-	bodyValue := make(map[string]any)
-
-	if err := json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
-		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
-		return
-	}
-	if bodyValue["Success"] != true {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
+	if err = userData.InsertIntoDb(db); err != nil {
+		t.Fatal(err)
 		return
 	}
 
-	JWT := bodyValue["sessionId"]
+	JWT := utils.GenerateJWT(userData.Id)
 
-	var user = map[string]any{
-		"LeaderId":     JWT,
-		"GroupName":    "test",
-		"CreationDate": "now",
+	var group = model.Group{
+		Id:           "groupid",
+		LeaderId:     userData.Id,
+		MemberIds:    userData.Id,
+		GroupName:    "test",
+		CreationDate: "now",
+	}
+
+	if err = group.InsertIntoDb(db); err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	user := map[string]any{
+		"UserId":  JWT,
+		"groupId": group.Id,
 	}
 
 	body, err := json.Marshal(user)
@@ -458,15 +363,15 @@ func TestDeleteGroup(t *testing.T) {
 
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
-	req, err := http.NewRequest("POST", "/createGroup", bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", "/deleteGroup", bytes.NewBuffer(body))
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
 
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-	rr = httptest.NewRecorder()
-	handler := http.HandlerFunc(CreateGroup(db))
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(DeleteGroup(db))
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 	// directly and pass in our Request and ResponseRecorder.
@@ -478,56 +383,8 @@ func TestDeleteGroup(t *testing.T) {
 	}
 
 	// Check the response body is what we expect.
-	expected = "Group created successfully"
-	bodyValue = make(map[string]any)
-
-	if err = json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
-		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)
-		return
-	}
-
-	if bodyValue["Success"] != true {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
-		return
-	}
-
-	GroupId := bodyValue["GroupId"]
-
-	user = map[string]any{
-		"UserId":  JWT,
-		"groupId": GroupId,
-	}
-
-	body, err = json.Marshal(user)
-	if err != nil {
-		t.Fatalf("Erreur lors de la sérialisation du corps de la requête : %v", err)
-		return
-	}
-
-	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
-	// pass 'nil' as the third parameter.
-	req, err = http.NewRequest("POST", "/deleteGroup", bytes.NewBuffer(body))
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-
-	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-	rr = httptest.NewRecorder()
-	handler = http.HandlerFunc(DeleteGroup(db))
-
-	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-	// directly and pass in our Request and ResponseRecorder.
-	handler.ServeHTTP(rr, req)
-	// Check the status code is what we expect.
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-		return
-	}
-
-	// Check the response body is what we expect.
-	expected = "Group obtained successfully"
-	bodyValue = make(map[string]any)
+	expected := "Group obtained successfully"
+	bodyValue := make(map[string]any)
 
 	if err = json.Unmarshal(rr.Body.Bytes(), &bodyValue); err != nil {
 		t.Fatalf("Erreur lors de la réception de la réponse de la requête : %v", err)

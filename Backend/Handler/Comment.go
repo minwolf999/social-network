@@ -124,7 +124,7 @@ func GetComment(db *sql.DB) http.HandlerFunc {
 		// Check if a specific post ID is provided
 		if comment.PostId != "" {
 			err = comment.SelectFromDb(db, map[string]any{"Id": comment.Id}) // Retrieve a specific comment
-			comments[0] = comment // Add the comment to the comments slice
+			comments = append(comments, comment) // Add the comment to the comments slice
 		} else {
 			// If no post ID is provided, retrieve all comments
 			err = comments.SelectFromDb(db, map[string]any{})

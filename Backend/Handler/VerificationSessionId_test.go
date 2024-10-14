@@ -9,8 +9,6 @@ import (
 
 	model "social-network/Model"
 	utils "social-network/Utils"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 func TestVerificationSessionId(t *testing.T) {
@@ -31,13 +29,7 @@ func TestVerificationSessionId(t *testing.T) {
 		Password: "MonMotDePasse123!",
 	}
 
-	cryptedPassword, err := bcrypt.GenerateFromPassword([]byte(login.Password), 12)
-	if err != nil {
-		t.Fatalf("Erreur lors du cryptage du mot de passe : %v", err)
-		return
-	}
-
-	if err = model.InsertIntoDb("Auth", db, login.Id, login.Email, string(cryptedPassword), 0); err != nil {
+	if err = login.InsertIntoDb(db); err != nil {
 		t.Fatalf("Erreur lors de l'insertion des données : %v", err)
 		return
 	}
