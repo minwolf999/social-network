@@ -115,19 +115,19 @@ func JoinEvent(db *sql.DB) http.HandlerFunc {
 		// Set the decrypted User ID
 		joinEvent.UserId = decryptAuthorId
 
-		if err = utils.IfNotExistsInDB("Event", db, map[string]any{"Id": joinEvent.EventId}); err != nil {
+		if err = utils.IfExistsInDB("Event", db, map[string]any{"Id": joinEvent.EventId}); err != nil {
 			nw.Error("Invalid event id")
 			log.Printf("[%s] [JoinEvent] Invalid event id : %v", r.RemoteAddr, err)
 			return
 		}
 
-		if err = utils.IfExistsInDB("JoinEvent", db, map[string]any{"EventId": joinEvent.EventId, "UserId": joinEvent.UserId}); err != nil {
+		if err = utils.IfNotExistsInDB("JoinEvent", db, map[string]any{"EventId": joinEvent.EventId, "UserId": joinEvent.UserId}); err != nil {
 			nw.Error("Event already joined")
 			log.Printf("[%s] [JoinEvent] Event already joined : %v", r.RemoteAddr, err)
 			return
 		}
 
-		if err = utils.IfExistsInDB("DeclineEvent", db, map[string]any{"EventId": joinEvent.EventId, "UserId": joinEvent.UserId}); err != nil {
+		if err = utils.IfNotExistsInDB("DeclineEvent", db, map[string]any{"EventId": joinEvent.EventId, "UserId": joinEvent.UserId}); err != nil {
 			var declineEvent = model.DeclineEvent(joinEvent)
 
 			if err = declineEvent.DeleteFromDb(db, map[string]any{"EventId": declineEvent.EventId, "UserId": declineEvent.UserId}); err != nil {
@@ -180,13 +180,13 @@ func DeclineEvent(db *sql.DB) http.HandlerFunc {
 		// Set the decrypted User ID
 		declineEvent.UserId = decryptAuthorId
 
-		if err = utils.IfNotExistsInDB("Event", db, map[string]any{"Id": declineEvent.EventId}); err != nil {
+		if err = utils.IfExistsInDB("Event", db, map[string]any{"Id": declineEvent.EventId}); err != nil {
 			nw.Error("Invalid event id")
 			log.Printf("[%s] [DeclineEvent] Invalid event id : %v", r.RemoteAddr, err)
 			return
 		}
 
-		if err = utils.IfExistsInDB("JoinEvent", db, map[string]any{"EventId": declineEvent.EventId, "UserId": declineEvent.UserId}); err != nil {
+		if err = utils.IfNotExistsInDB("JoinEvent", db, map[string]any{"EventId": declineEvent.EventId, "UserId": declineEvent.UserId}); err != nil {
 			var joinEvent = model.JoinEvent(declineEvent)
 
 			if err = declineEvent.DeleteFromDb(db, map[string]any{"EventId": joinEvent.EventId, "UserId": joinEvent.UserId}); err != nil {
@@ -195,7 +195,7 @@ func DeclineEvent(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
-		if err = utils.IfExistsInDB("DeclineEvent", db, map[string]any{"EventId": declineEvent.EventId, "UserId": declineEvent.UserId}); err != nil {
+		if err = utils.IfNotExistsInDB("DeclineEvent", db, map[string]any{"EventId": declineEvent.EventId, "UserId": declineEvent.UserId}); err != nil {
 			nw.Error("Event already declined")
 			log.Printf("[%s] [DeclineEvent] Event already declined : %v", r.RemoteAddr, err)
 			return
@@ -219,7 +219,7 @@ func DeclineEvent(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func GetJoineEvent(db *sql.DB) http.HandlerFunc {
+func GetJoinEvent(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nw := model.ResponseWriter{
 			ResponseWriter: w,
@@ -245,7 +245,7 @@ func GetJoineEvent(db *sql.DB) http.HandlerFunc {
 		// Set the decrypted User ID
 		joinEvent.UserId = decryptAuthorId
 
-		if err = utils.IfNotExistsInDB("Event", db, map[string]any{"Id": joinEvent.EventId}); err != nil {
+		if err = utils.IfExistsInDB("Event", db, map[string]any{"Id": joinEvent.EventId}); err != nil {
 			nw.Error("The event Id given didn't exist")
 			log.Printf("[%s] [GetJoinedEvent] The event Id given didn't exist : %v", r.RemoteAddr, err)
 			return
@@ -297,7 +297,7 @@ func GetDeclineEvent(db *sql.DB) http.HandlerFunc {
 		// Set the decrypted User ID
 		declineEvent.UserId = decryptAuthorId
 
-		if err = utils.IfNotExistsInDB("Event", db, map[string]any{"Id": declineEvent.EventId}); err != nil {
+		if err = utils.IfExistsInDB("Event", db, map[string]any{"Id": declineEvent.EventId}); err != nil {
 			nw.Error("The event Id given didn't exist")
 			log.Printf("[%s] [GetJoinedEvent] The event Id given didn't exist : %v", r.RemoteAddr, err)
 			return
