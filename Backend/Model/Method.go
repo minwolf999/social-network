@@ -103,7 +103,7 @@ The function returns 2 values:
   - an array of Comment objects
   - an error if something goes wrong during the parsing
 */
-func (userData *UserData) ParseCommentsData() ([]Comment, error) {
+func (userData *UserData) ParseCommentsData() (Comments, error) {
 	// We marshal the userData to convert it to JSON format ([]byte)
 	serializedData, err := json.Marshal(userData)
 	if err != nil {
@@ -112,7 +112,7 @@ func (userData *UserData) ParseCommentsData() ([]Comment, error) {
 	}
 
 	// We declare a variable to hold the unmarshaled comment data
-	var postResult []Comment
+	var postResult Comments
 
 	// We unmarshal the JSON data into the postResult slice
 	err = json.Unmarshal(serializedData, &postResult)
@@ -155,8 +155,8 @@ The function return 2 values:
   - an variable of type array of Post
   - an error
 */
-func (userData *UserData) ParsePostsData() ([]Post, error) {
-	var postResult []Post
+func (userData *UserData) ParsePostsData() (Posts, error) {
+	var postResult Posts
 
 	for _, v := range *userData {
 		var post Post
@@ -212,9 +212,9 @@ The function returns 2 values:
   - an array of Follower objects
   - an error if something goes wrong during the parsing
 */
-func (userData *UserData) ParseFollowersData() ([]Follower, error) {
+func (userData *UserData) ParseFollowersData() (Followers, error) {
 	// We declare a slice to hold the parsed follower data
-	var res []Follower
+	var res Followers
 
 	// We iterate over each element in the userData
 	for _, v := range *userData {
@@ -270,13 +270,23 @@ func (userData *UserData) ParseGroupData() (Group, error) {
 	return groupResult[0], err
 }
 
+/*
+The purpose of this function is to parse the event data into a structured array of Events objects.
+
+The function returns 2 values:
+  - an array of Event objects
+  - an error if something goes wrong during the parsing
+*/
 func (userData *UserData) ParseEventsData() (Events, error) {
+	// We declare a slice to hold the parsed Events data
 	var postResult Events
 
+	// We iterate over each element in the userData
 	for _, v := range *userData {
+		// We declare a temporary variable to hold the unmarshaled events data
 		var post Event
 
-		// We marshal the map to get it in []byte
+		// We marshal the individual element to convert it to JSON format ([]byte)
 		serializedData, err := json.Marshal(v)
 		if err != nil {
 			return nil, errors.New("internal error: conversion problem")
@@ -287,12 +297,21 @@ func (userData *UserData) ParseEventsData() (Events, error) {
 			return nil, err
 		}
 
+		// Append the parsed Event data to the result slice
 		postResult = append(postResult, post)
 	}
 
+	// Return the result and any error encountered
 	return postResult, nil
 }
 
+/*
+The purpose of this function is to parse the event data into a structured array of Events objects.
+
+The function returns 2 values:
+  - an array of Event objects
+  - an error if something goes wrong during the parsing
+*/
 func (userData *UserData) ParseEventData() (Event, error) {
 	// We call ParsePostsData to get all posts
 	events, err := userData.ParseEventsData()
@@ -307,10 +326,20 @@ func (userData *UserData) ParseEventData() (Event, error) {
 	return events[0], err
 }
 
+/*
+The purpose of this function is to parse the event data into a structured array of JoinEvent objects.
+
+The function returns 2 values:
+  - an array of JoinEvent objects
+  - an error if something goes wrong during the parsing
+*/
 func (userData *UserData) ParseJoinEventsData() (JoinEvents, error) {
+	// We declare a slice to hold the parsed JoinEvents data
 	var postResult JoinEvents
 
+	// We iterate over each element in the userData
 	for _, v := range *userData {
+		// We declare a temporary variable to hold the unmarshaled joinEvent data
 		var post JoinEvent
 
 		// We marshal the map to get it in []byte
@@ -324,16 +353,20 @@ func (userData *UserData) ParseJoinEventsData() (JoinEvents, error) {
 			return nil, err
 		}
 
+		// Append the parsed JoinEvent data to the result slice
 		postResult = append(postResult, post)
 	}
 
+	// Return the result and any error encountered
 	return postResult, nil
 }
 
 func (userData *UserData) ParseDeclineEventsData() (DeclineEvents, error) {
 	var postResult DeclineEvents
 
+	// We iterate over each element in the userData
 	for _, v := range *userData {
+		// We declare a temporary variable to hold the unmarshaled declineEvent data
 		var post DeclineEvent
 
 		// We marshal the map to get it in []byte
@@ -347,9 +380,11 @@ func (userData *UserData) ParseDeclineEventsData() (DeclineEvents, error) {
 			return nil, err
 		}
 
+		// Append the parsed DeclineEvent data to the result slice
 		postResult = append(postResult, post)
 	}
 
+	// Return the result and any error encountered
 	return postResult, nil
 }
 
@@ -1067,7 +1102,7 @@ This function takes 2 arguments:
   - a pointer to an sql.DB object, representing the database connection.
   - a map[string]any containing the conditions (WHERE clause) for selecting the data from the "Event" table.
 
-The purpose of this function is to retrieve group data from the database based on the given conditions.
+The purpose of this function is to retrieve event data from the database based on the given conditions.
 
 The function returns 1 value:
   - an error if the data retrieval or parsing fails
@@ -1116,7 +1151,7 @@ The function returns 1 value:
   - an error if the delete operation fails
 */
 func (event *Event) DeleteFromDb(db *sql.DB, where map[string]any) error {
-	// We call RemoveFromDB to delete the record(s) from the "Groups" table based on the specified conditions
+	// We call RemoveFromDB to delete the record(s) from the "Event" table based on the specified conditions
 	return RemoveFromDB("Event", db, where)
 }
 
@@ -1145,7 +1180,7 @@ func (joinEvent *JoinEvent) InsertIntoDb(db *sql.DB) error {
 		return errors.New("empty field")
 	}
 
-	// We call InsertIntoDb to insert the group data into the "Event" table in the database
+	// We call InsertIntoDb to insert the group data into the "JoinEvent" table in the database
 	return InsertIntoDb("JoinEvent", db, joinEvent.EventId, joinEvent.UserId)
 }
 
@@ -1176,7 +1211,7 @@ func (joinEvent *JoinEvents) SelectFromDb(db *sql.DB, where map[string]any) erro
 }
 
 func (joinEvent *JoinEvent) DeleteFromDb(db *sql.DB, where map[string]any) error {
-	// We call RemoveFromDB to delete the record(s) from the "Groups" table based on the specified conditions
+	// We call RemoveFromDB to delete the record(s) from the "JoinEvent" table based on the specified conditions
 	return RemoveFromDB("DeclineEvent", db, where)
 }
 
@@ -1205,15 +1240,15 @@ func (declineEvent *DeclineEvent) InsertIntoDb(db *sql.DB) error {
 		return errors.New("empty field")
 	}
 
-	// We call InsertIntoDb to insert the group data into the "Event" table in the database
+	// We call InsertIntoDb to insert the group data into the "DeclineEvent" table in the database
 	return InsertIntoDb("DeclineEvent", db, declineEvent.EventId, declineEvent.UserId)
 }
 
 /*
 This function takes 2 arguments:
-  - a pointer to a JoinEvents object, which will be populated with the comment data retrieved from the database.
+  - a pointer to a DeclineEvents object, which will be populated with the comment data retrieved from the database.
   - a pointer to an sql.DB object, representing the database connection.
-  - a map[string]any, which contains the conditions (WHERE clause) for selecting the data from the "JoinEvents" table.
+  - a map[string]any, which contains the conditions (WHERE clause) for selecting the data from the "DeclineEvents" table.
 
 The purpose of this function is to retrieve multiple comment data entries from the database based on the given conditions.
 
@@ -1236,6 +1271,6 @@ func (declineEvent *DeclineEvents) SelectFromDb(db *sql.DB, where map[string]any
 }
 
 func (declineEvent *DeclineEvent) DeleteFromDb(db *sql.DB, where map[string]any) error {
-	// We call RemoveFromDB to delete the record(s) from the "Groups" table based on the specified conditions
+	// We call RemoveFromDB to delete the record(s) from the "DeclineEvents" table based on the specified conditions
 	return RemoveFromDB("DeclineEvent", db, where)
 }
