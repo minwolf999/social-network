@@ -101,7 +101,7 @@ func JoinEvent(db *sql.DB) http.HandlerFunc {
 		if err := json.NewDecoder(r.Body).Decode(&joinEvent); err != nil {
 			// Send error if decoding fails
 			nw.Error("Invalid request body")
-			log.Printf("[%s] [JoinOrDeclineEvent] Invalid request body: %v", r.RemoteAddr, err)
+			log.Printf("[%s] [JoinEvent] Invalid request body: %v", r.RemoteAddr, err)
 			return
 		}
 
@@ -109,7 +109,7 @@ func JoinEvent(db *sql.DB) http.HandlerFunc {
 		decryptAuthorId, err := utils.DecryptJWT(joinEvent.UserId, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
-			log.Printf("[%s] [JoinOrDeclineEvent] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [JoinEvent] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
 			return
 		}
 		// Set the decrypted User ID
@@ -117,25 +117,28 @@ func JoinEvent(db *sql.DB) http.HandlerFunc {
 
 		if err = utils.IfNotExistsInDB("Event", db, map[string]any{"Id": joinEvent.EventId}); err != nil {
 			nw.Error("Invalid event id")
-			log.Printf("[%s] [JoinOrDeclineEvent] Invalid event id : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [JoinEvent] Invalid event id : %v", r.RemoteAddr, err)
 			return
 		}
 
 		if err = utils.IfExistsInDB("JoinEvent", db, map[string]any{"EventId": joinEvent.EventId, "UserId": joinEvent.UserId}); err != nil {
 			nw.Error("Event already joined")
-			log.Printf("[%s] [JoinOrDeclineEvent] Event already joined : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [JoinEvent] Event already joined : %v", r.RemoteAddr, err)
 			return
 		}
 
 		if err = utils.IfExistsInDB("DeclineEvent", db, map[string]any{"EventId": joinEvent.EventId, "UserId": joinEvent.UserId}); err != nil {
-			nw.Error("Event already declined")
-			log.Printf("[%s] [JoinOrDeclineEvent] Event already declined : %v", r.RemoteAddr, err)
-			return
+			var declineEvent = model.DeclineEvent(joinEvent)
+
+			if err = declineEvent.DeleteFromDb(db, map[string]any{"EventId": declineEvent.EventId, "UserId": declineEvent.UserId}); err != nil {
+				nw.Error("Error during the remove of the previous decline")
+				log.Printf("[%s] [JoinEvent] Error during the remove of the previous decline: %v", r.RemoteAddr, err)
+			}
 		}
 
 		if err = joinEvent.InsertIntoDb(db); err != nil {
 			nw.Error("Impossible to insert in the db")
-			log.Printf("[%s] [JoinOrDeclineEvent] Impossible to insert in the db : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [JoinEvent] Impossible to insert in the db : %v", r.RemoteAddr, err)
 			return
 		}
 
@@ -158,46 +161,49 @@ func DeclineEvent(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Initialize a Comment object to hold the decoded request body
-		var joinEvent model.DeclineEvent
+		var declineEvent model.DeclineEvent
 		// Decode the JSON request body into the comment object
-		if err := json.NewDecoder(r.Body).Decode(&joinEvent); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&declineEvent); err != nil {
 			// Send error if decoding fails
 			nw.Error("Invalid request body")
-			log.Printf("[%s] [JoinOrDeclineEvent] Invalid request body: %v", r.RemoteAddr, err)
+			log.Printf("[%s] [DeclineEvent] Invalid request body: %v", r.RemoteAddr, err)
 			return
 		}
 
 		// Decrypt the OrganisatorId from the JWT to get the actual Organisator ID
-		decryptAuthorId, err := utils.DecryptJWT(joinEvent.UserId, db)
+		decryptAuthorId, err := utils.DecryptJWT(declineEvent.UserId, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
-			log.Printf("[%s] [JoinOrDeclineEvent] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [DeclineEvent] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
 			return
 		}
 		// Set the decrypted User ID
-		joinEvent.UserId = decryptAuthorId
+		declineEvent.UserId = decryptAuthorId
 
-		if err = utils.IfNotExistsInDB("Event", db, map[string]any{"Id": joinEvent.EventId}); err != nil {
+		if err = utils.IfNotExistsInDB("Event", db, map[string]any{"Id": declineEvent.EventId}); err != nil {
 			nw.Error("Invalid event id")
-			log.Printf("[%s] [JoinOrDeclineEvent] Invalid event id : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [DeclineEvent] Invalid event id : %v", r.RemoteAddr, err)
 			return
 		}
 
-		if err = utils.IfExistsInDB("JoinEvent", db, map[string]any{"EventId": joinEvent.EventId, "UserId": joinEvent.UserId}); err != nil {
-			nw.Error("Event already joined")
-			log.Printf("[%s] [JoinOrDeclineEvent] Event already joined : %v", r.RemoteAddr, err)
-			return
+		if err = utils.IfExistsInDB("JoinEvent", db, map[string]any{"EventId": declineEvent.EventId, "UserId": declineEvent.UserId}); err != nil {
+			var joinEvent = model.JoinEvent(declineEvent)
+
+			if err = declineEvent.DeleteFromDb(db, map[string]any{"EventId": joinEvent.EventId, "UserId": joinEvent.UserId}); err != nil {
+				nw.Error("Error during the remove of the previous decline")
+				log.Printf("[%s] [DeclineEvent] Error during the remove of the previous decline: %v", r.RemoteAddr, err)
+			}
 		}
 
-		if err = utils.IfExistsInDB("DeclineEvent", db, map[string]any{"EventId": joinEvent.EventId, "UserId": joinEvent.UserId}); err != nil {
+		if err = utils.IfExistsInDB("DeclineEvent", db, map[string]any{"EventId": declineEvent.EventId, "UserId": declineEvent.UserId}); err != nil {
 			nw.Error("Event already declined")
-			log.Printf("[%s] [JoinOrDeclineEvent] Event already declined : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [DeclineEvent] Event already declined : %v", r.RemoteAddr, err)
 			return
 		}
 
-		if err = joinEvent.InsertIntoDb(db); err != nil {
+		if err = declineEvent.InsertIntoDb(db); err != nil {
 			nw.Error("Impossible to insert in the db")
-			log.Printf("[%s] [JoinOrDeclineEvent] Impossible to insert in the db : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [DeclineEvent] Impossible to insert in the db : %v", r.RemoteAddr, err)
 			return
 		}
 

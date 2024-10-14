@@ -1103,6 +1103,11 @@ func (joinEvent *JoinEvent) InsertIntoDb(db *sql.DB) error {
 	return InsertIntoDb("JoinEvent", db, joinEvent.EventId, joinEvent.UserId)
 }
 
+func (joinEvent *JoinEvent) DeleteFromDb(db *sql.DB, where map[string]any) error {
+	// We call RemoveFromDB to delete the record(s) from the "Groups" table based on the specified conditions
+	return RemoveFromDB("Event", db, where)
+}
+
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
 //
@@ -1130,4 +1135,9 @@ func (declineEvent *DeclineEvent) InsertIntoDb(db *sql.DB) error {
 
 	// We call InsertIntoDb to insert the group data into the "Event" table in the database
 	return InsertIntoDb("JoinEvent", db, declineEvent.EventId, declineEvent.UserId)
+}
+
+func (declineEvent *DeclineEvent) DeleteFromDb(db *sql.DB, where map[string]any) error {
+	// We call RemoveFromDB to delete the record(s) from the "Groups" table based on the specified conditions
+	return RemoveFromDB("Event", db, where)
 }
