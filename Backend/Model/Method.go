@@ -307,6 +307,52 @@ func (userData *UserData) ParseEventData() (Event, error) {
 	return events[0], err
 }
 
+func (userData *UserData) ParseJoinEventsData() (JoinEvents, error) {
+	var postResult JoinEvents
+
+	for _, v := range *userData {
+		var post JoinEvent
+
+		// We marshal the map to get it in []byte
+		serializedData, err := json.Marshal(v)
+		if err != nil {
+			return nil, errors.New("internal error: conversion problem")
+		}
+
+		// We Unmarshal in the good structure
+		if err = json.Unmarshal(serializedData, &post); err != nil {
+			return nil, err
+		}
+
+		postResult = append(postResult, post)
+	}
+
+	return postResult, nil
+}
+
+func (userData *UserData) ParseDeclineEventsData() (DeclineEvents, error) {
+	var postResult DeclineEvents
+
+	for _, v := range *userData {
+		var post DeclineEvent
+
+		// We marshal the map to get it in []byte
+		serializedData, err := json.Marshal(v)
+		if err != nil {
+			return nil, errors.New("internal error: conversion problem")
+		}
+
+		// We Unmarshal in the good structure
+		if err = json.Unmarshal(serializedData, &post); err != nil {
+			return nil, err
+		}
+
+		postResult = append(postResult, post)
+	}
+
+	return postResult, nil
+}
+
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
 //
@@ -1103,9 +1149,35 @@ func (joinEvent *JoinEvent) InsertIntoDb(db *sql.DB) error {
 	return InsertIntoDb("JoinEvent", db, joinEvent.EventId, joinEvent.UserId)
 }
 
+/*
+This function takes 2 arguments:
+  - a pointer to a JoinEvents object, which will be populated with the comment data retrieved from the database.
+  - a pointer to an sql.DB object, representing the database connection.
+  - a map[string]any, which contains the conditions (WHERE clause) for selecting the data from the "JoinEvents" table.
+
+The purpose of this function is to retrieve multiple comment data entries from the database based on the given conditions.
+
+The function returns 1 value:
+  - an error if the data retrieval or parsing fails
+*/
+func (joinEvent *JoinEvents) SelectFromDb(db *sql.DB, where map[string]any) error {
+	// We call SelectFromDb to retrieve data from the "CommentDetail" table based on the given conditions
+	userData, err := SelectFromDb("JoinEvent", db, where)
+	if err != nil {
+		// Return an error if the data retrieval fails
+		return err
+	}
+
+	// We parse the retrieved data into the Comments structure and assign it to the comments object
+	*joinEvent, err = userData.ParseJoinEventsData()
+
+	// Return any error encountered during parsing
+	return err
+}
+
 func (joinEvent *JoinEvent) DeleteFromDb(db *sql.DB, where map[string]any) error {
 	// We call RemoveFromDB to delete the record(s) from the "Groups" table based on the specified conditions
-	return RemoveFromDB("Event", db, where)
+	return RemoveFromDB("DeclineEvent", db, where)
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1134,10 +1206,36 @@ func (declineEvent *DeclineEvent) InsertIntoDb(db *sql.DB) error {
 	}
 
 	// We call InsertIntoDb to insert the group data into the "Event" table in the database
-	return InsertIntoDb("JoinEvent", db, declineEvent.EventId, declineEvent.UserId)
+	return InsertIntoDb("DeclineEvent", db, declineEvent.EventId, declineEvent.UserId)
+}
+
+/*
+This function takes 2 arguments:
+  - a pointer to a JoinEvents object, which will be populated with the comment data retrieved from the database.
+  - a pointer to an sql.DB object, representing the database connection.
+  - a map[string]any, which contains the conditions (WHERE clause) for selecting the data from the "JoinEvents" table.
+
+The purpose of this function is to retrieve multiple comment data entries from the database based on the given conditions.
+
+The function returns 1 value:
+  - an error if the data retrieval or parsing fails
+*/
+func (declineEvent *DeclineEvents) SelectFromDb(db *sql.DB, where map[string]any) error {
+	// We call SelectFromDb to retrieve data from the "CommentDetail" table based on the given conditions
+	userData, err := SelectFromDb("DeclineEvent", db, where)
+	if err != nil {
+		// Return an error if the data retrieval fails
+		return err
+	}
+
+	// We parse the retrieved data into the Comments structure and assign it to the comments object
+	*declineEvent, err = userData.ParseDeclineEventsData()
+
+	// Return any error encountered during parsing
+	return err
 }
 
 func (declineEvent *DeclineEvent) DeleteFromDb(db *sql.DB, where map[string]any) error {
 	// We call RemoveFromDB to delete the record(s) from the "Groups" table based on the specified conditions
-	return RemoveFromDB("Event", db, where)
+	return RemoveFromDB("DeclineEvent", db, where)
 }

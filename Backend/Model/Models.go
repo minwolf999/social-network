@@ -98,11 +98,13 @@ type JoinEvent struct {
 	UserId        string `json:"UserId"`
 	EventId       string `json:"EventId"`
 }
+type JoinEvents []JoinEvent
 
 type DeclineEvent struct {
 	UserId        string `json:"UserId"`
 	EventId       string `json:"EventId"`
 }
+type DeclineEvents []DeclineEvent
 
 type ResponseWriter struct {
 	http.ResponseWriter
