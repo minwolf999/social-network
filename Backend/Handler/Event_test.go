@@ -114,3 +114,11 @@ func TestJoinEvent(t *testing.T) {
 func TestDeclineEvent(t *testing.T) {
 	
 }
+
+func TestGetJoineEvent(t *testing.T) {
+
+}
+
+func TestGetDeclineEvent(t *testing.T) {
+
+}

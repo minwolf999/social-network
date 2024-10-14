@@ -49,7 +49,6 @@ type Post struct {
 	LikeCount    int    `json:"LikeCount"`
 	DislikeCount int    `json:"DislikeCount"`
 }
-
 type Posts []Post
 
 type Comment struct {
@@ -62,7 +61,6 @@ type Comment struct {
 	DislikeCount int    `json:"DislikeCount"`
 	Register     `json:",inline"`
 }
-
 type Comments []Comment
 
 type Follower struct {
@@ -70,7 +68,6 @@ type Follower struct {
 	UserId     string `json:"UserId"`
 	FollowerId string `json:"FollowerId"`
 }
-
 type Followers []Follower
 
 type Group struct {
@@ -91,7 +88,6 @@ type Event struct {
 	DateOfTheEvent string `json:"DateOfTheEvent"`
 	Image          string `json:"Image"`
 }
-
 type Events []Event
 
 type JoinEvent struct {
@@ -100,10 +96,7 @@ type JoinEvent struct {
 }
 type JoinEvents []JoinEvent
 
-type DeclineEvent struct {
-	UserId        string `json:"UserId"`
-	EventId       string `json:"EventId"`
-}
+type DeclineEvent JoinEvent
 type DeclineEvents []DeclineEvent
 
 type ResponseWriter struct {
