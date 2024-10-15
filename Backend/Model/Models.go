@@ -99,8 +99,11 @@ type EventDetail struct {
 	Description string `json:"Description"`
 	DateOfTheEvent string `json:"DateOfTheEvent"`
 
-	JoinUsers []string `json:"JoinUsers"`
-	DeclineUsers []string `json:"DeclineUsers"`
+	JoinUsers string `json:"JoinUsers"`
+	JoinUsersTab []string
+
+	DeclineUsers string `json:"DeclineUsers"`
+	DeclineUsersTab []string
 }
 
 type JoinEvent struct {

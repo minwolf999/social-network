@@ -1146,6 +1146,11 @@ func (event *Event) SelectFromDb(db *sql.DB, where map[string]any) ([]EventDetai
 	// We parse the retrieved data into the Group structure and assign it to the group object
 	eventDetail, err := userData.ParseEventDetailData()
 
+	for i := range eventDetail {
+		eventDetail[i].JoinUsersTab = strings.Split(eventDetail[i].JoinUsers, ", ")
+		eventDetail[i].DeclineUsersTab = strings.Split(eventDetail[i].DeclineUsers, ", ")
+	}
+
 	// Return any error encountered during parsing
 	return eventDetail, err
 }
