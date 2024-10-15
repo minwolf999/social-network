@@ -53,7 +53,7 @@ func LookMethod(next http.Handler) http.Handler {
 		}
 
 		// Check if the request is for a WebSocket upgrade
-		if r.Header.Get("Upgrade") == "websocket" {
+		if r.Header.Get("Upgrade") == "websocket" && r.URL.Path == "/websocket" {
 			next.ServeHTTP(w, r) // Call the next handler for WebSocket
 			return
 		}
@@ -69,4 +69,3 @@ func LookMethod(next http.Handler) http.Handler {
 		log.Printf("[%s] [LookMethod] Invalid method !", r.RemoteAddr)
 	})
 }
-
