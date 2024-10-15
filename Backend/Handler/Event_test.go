@@ -319,3 +319,6 @@ func TestDeclineEvent(t *testing.T) {
 	}
 }
 
+func TestGetEvent(t *testing.T) {
+	
+}
