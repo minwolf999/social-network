@@ -90,6 +90,19 @@ type Event struct {
 }
 type Events []Event
 
+type EventDetail struct {
+	Id string `json:"Id"`
+	GroupName string `json:"GroupName"`
+	Organisator string `json:"Organisator"`
+
+	Title string `json:"Title"`
+	Description string `json:"Description"`
+	DateOfTheEvent string `json:"DateOfTheEvent"`
+
+	JoinUsers []string `json:"JoinUsers"`
+	DeclineUsers []string `json:"DeclineUsers"`
+}
+
 type JoinEvent struct {
 	UserId        string `json:"UserId"`
 	EventId       string `json:"EventId"`

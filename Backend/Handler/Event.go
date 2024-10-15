@@ -219,42 +219,46 @@ func DeclineEvent(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func GetJoinEvent(db *sql.DB) http.HandlerFunc {
+func GetEvent(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nw := model.ResponseWriter{
 			ResponseWriter: w,
 		}
 
-		// Initialize a GetJoinedEvent object to hold the decoded request body
-		var joinEvent model.JoinEvent
+		// Initialize a DeclineEvent object to hold the decoded request body
+		var event struct {
+			UserId  string `json:"UserId"`
+			EventId string `json:"EventId"`
+		}
 		// Decode the JSON request body into the comment object
-		if err := json.NewDecoder(r.Body).Decode(&joinEvent); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
 			// Send error if decoding fails
 			nw.Error("Invalid request body")
-			log.Printf("[%s] [GetJoinedEvent] Invalid request body: %v", r.RemoteAddr, err)
+			log.Printf("[%s] [GetEvent] Invalid request body: %v", r.RemoteAddr, err)
 			return
 		}
 
 		// Decrypt the OrganisatorId from the JWT to get the actual Organisator ID
-		decryptAuthorId, err := utils.DecryptJWT(joinEvent.UserId, db)
+		decryptAuthorId, err := utils.DecryptJWT(event.UserId, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
-			log.Printf("[%s] [GetJoinedEvent] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [GetEvent] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
 			return
 		}
 		// Set the decrypted User ID
-		joinEvent.UserId = decryptAuthorId
+		event.UserId = decryptAuthorId
 
-		if err = utils.IfExistsInDB("Event", db, map[string]any{"Id": joinEvent.EventId}); err != nil {
+		if err = utils.IfExistsInDB("Event", db, map[string]any{"Id": event.EventId}); err != nil {
 			nw.Error("The event Id given didn't exist")
-			log.Printf("[%s] [GetJoinedEvent] The event Id given didn't exist : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [GetEvent] The event Id given didn't exist : %v", r.RemoteAddr, err)
 			return
 		}
 
-		var joinEvents = model.JoinEvents{joinEvent}
-		if err = joinEvents.SelectFromDb(db, map[string]any{"EventId": joinEvent.EventId}); err != nil {
-			nw.Error("Error during the select in the db")
-			log.Printf("[%s] [GetJoinedEvent] Error during the select in the db : %v", r.RemoteAddr, err)
+		var tmp model.Event
+		eventDetail, err := tmp.SelectFromDb(db, map[string]any{"Id": event.EventId})
+		if err != nil {
+			nw.Error("There is an error during the select")
+			log.Printf("[%s] [GetEvent] There is an error during the select : %v", r.RemoteAddr, err)
 			return
 		}
 
@@ -262,63 +266,11 @@ func GetJoinEvent(db *sql.DB) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
-			"Message": "Event joined get successfully",
-			"Value": joinEvents,
+			"Message": "Event detail get successfully",
+			"Value": eventDetail,
 		})
 		if err != nil {
-			log.Printf("[%s] [GetJoinedEvent] %s", r.RemoteAddr, err.Error())
-		}
-	}
-}
-
-func GetDeclineEvent(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		nw := model.ResponseWriter{
-			ResponseWriter: w,
-		}
-
-		// Initialize a GetJoinedEvent object to hold the decoded request body
-		var declineEvent model.DeclineEvent
-		// Decode the JSON request body into the comment object
-		if err := json.NewDecoder(r.Body).Decode(&declineEvent); err != nil {
-			// Send error if decoding fails
-			nw.Error("Invalid request body")
-			log.Printf("[%s] [GetJoinedEvent] Invalid request body: %v", r.RemoteAddr, err)
-			return
-		}
-
-		// Decrypt the OrganisatorId from the JWT to get the actual Organisator ID
-		decryptAuthorId, err := utils.DecryptJWT(declineEvent.UserId, db)
-		if err != nil {
-			nw.Error("Invalid JWT")
-			log.Printf("[%s] [GetJoinedEvent] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
-			return
-		}
-		// Set the decrypted User ID
-		declineEvent.UserId = decryptAuthorId
-
-		if err = utils.IfExistsInDB("Event", db, map[string]any{"Id": declineEvent.EventId}); err != nil {
-			nw.Error("The event Id given didn't exist")
-			log.Printf("[%s] [GetJoinedEvent] The event Id given didn't exist : %v", r.RemoteAddr, err)
-			return
-		}
-
-		var declineEvents = model.DeclineEvents{declineEvent}
-		if err = declineEvents.SelectFromDb(db, map[string]any{"EventId": declineEvent.EventId}); err != nil {
-			nw.Error("Error during the select in the db")
-			log.Printf("[%s] [GetJoinedEvent] Error during the select in the db : %v", r.RemoteAddr, err)
-			return
-		}
-
-		// Send a success response in JSON format
-		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(map[string]any{
-			"Success": true,
-			"Message": "Event joined get successfully",
-			"Value": declineEvents,
-		})
-		if err != nil {
-			log.Printf("[%s] [GetJoinedEvent] %s", r.RemoteAddr, err.Error())
+			log.Printf("[%s] [GetEvent] %s", r.RemoteAddr, err.Error())
 		}
 	}
 }

@@ -326,6 +326,34 @@ func (userData *UserData) ParseEventData() (Event, error) {
 	return events[0], err
 }
 
+func (userData *UserData) ParseEventDetailData() ([]EventDetail, error) {
+	// We declare a slice to hold the parsed Events data
+	var postResult []EventDetail
+
+	// We iterate over each element in the userData
+	for _, v := range *userData {
+		// We declare a temporary variable to hold the unmarshaled events data
+		var post EventDetail
+
+		// We marshal the individual element to convert it to JSON format ([]byte)
+		serializedData, err := json.Marshal(v)
+		if err != nil {
+			return nil, errors.New("internal error: conversion problem")
+		}
+
+		// We Unmarshal in the good structure
+		if err = json.Unmarshal(serializedData, &post); err != nil {
+			return nil, err
+		}
+
+		// Append the parsed Event data to the result slice
+		postResult = append(postResult, post)
+	}
+
+	// Return the result and any error encountered
+	return postResult, nil
+}
+
 /*
 The purpose of this function is to parse the event data into a structured array of JoinEvent objects.
 
@@ -1107,19 +1135,19 @@ The purpose of this function is to retrieve event data from the database based o
 The function returns 1 value:
   - an error if the data retrieval or parsing fails
 */
-func (event *Event) SelectFromDb(db *sql.DB, where map[string]any) error {
+func (event *Event) SelectFromDb(db *sql.DB, where map[string]any) ([]EventDetail, error) {
 	// We call SelectFromDb to retrieve data from the "Groups" table based on the given conditions
-	userData, err := SelectFromDb("Event", db, where)
+	userData, err := SelectFromDb("EventDetail", db, where)
 	if err != nil {
 		// Return an error if the data retrieval fails
-		return err
+		return nil, err
 	}
 
 	// We parse the retrieved data into the Group structure and assign it to the group object
-	*event, err = userData.ParseEventData()
+	eventDetail, err := userData.ParseEventDetailData()
 
 	// Return any error encountered during parsing
-	return err
+	return eventDetail, err
 }
 
 /*

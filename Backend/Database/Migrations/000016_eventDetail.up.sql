@@ -3,7 +3,7 @@ PRAGMA foreign_keys = ON;
 CREATE VIEW IF NOT EXISTS EventDetail AS
   SELECT 
     e.Id,
-    e.GroupId,
+    g.GroupName,
 
     CASE 
       WHEN u1.Username = '' THEN CONCAT(u1.FirstName, ' ', u1.LastName)
@@ -26,6 +26,7 @@ CREATE VIEW IF NOT EXISTS EventDetail AS
 
 
 FROM Event AS e
+INNER JOIN Groups AS g ON g.Id = e.GroupId
 INNER JOIN UserInfo AS u1 ON u1.Id = e.OrganisatorId
 
 INNER JOIN JoinEvent AS j ON j.EventId = e.Id
