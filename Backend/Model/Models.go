@@ -33,10 +33,7 @@ type Register struct {
 	SplitGroupsJoined []string
 }
 
-type User struct {
-	Auth     Auth
-	Register Register
-}
+type Users []Register
 
 type Post struct {
 	Id           string `json:"Id"`

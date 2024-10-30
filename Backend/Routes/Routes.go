@@ -31,6 +31,7 @@ func Routes(mux *http.ServeMux) {
 
 	// UserDatas routes
 	mux.Handle("/getUser", handler.GetUser(db))
+	mux.Handle("/getAllUsers", handler.GetAllUsers(db))
 
 	// Posts routes
 	mux.Handle("/createPost", handler.CreatePost(db))

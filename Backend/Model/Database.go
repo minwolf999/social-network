@@ -81,12 +81,10 @@ func LoadData(db *sql.DB) error {
 
 		// We insert the values in the tables
 		if err := user.Auth.InsertIntoDb(db); err != nil {
-			fmt.Println(err)
 			i--
 			continue
 		}
 		if err := user.InsertIntoDb(db); err != nil {
-			fmt.Println(err)
 			i--
 			continue
 		}
@@ -103,11 +101,11 @@ func LoadData(db *sql.DB) error {
 		mounth = rand.Intn(12-0) + 0
 		year = rand.Intn(2024-1980) + 1980
 		post.CreationDate = fmt.Sprintf("%d-%d-%d", year, mounth, day)
+		post.Status = "public"
 
 		post.Text = fmt.Sprintf("%s %s %s %s.", subjects[rand.Intn(len(subjects))], verbs[rand.Intn(len(verbs))], objects[rand.Intn(len(objects))], adverbs[rand.Intn(len(adverbs))])
 
 		if err := post.InsertIntoDb(db); err != nil {
-			fmt.Println(err)
 			i--
 			continue
 		}
@@ -130,7 +128,6 @@ func LoadData(db *sql.DB) error {
 		comment.Text = fmt.Sprintf("%s %s %s %s.", subjects[rand.Intn(len(subjects))], verbs[rand.Intn(len(verbs))], objects[rand.Intn(len(objects))], adverbs[rand.Intn(len(adverbs))])
 
 		if err := comment.InsertIntoDb(db); err != nil {
-			fmt.Println(err)
 			i--
 			continue
 		}

@@ -95,6 +95,33 @@ func (userData *UserData) ParseRegisterData() (Register, error) {
 
 /*
 This function takes 1 argument:
+  - a pointer to a UserData object, which contains Users data.
+
+The purpose of this function is to parse the users data into a structured array of Users objects.
+
+The function returns 2 values:
+  - an array of Users objects
+  - an error if something goes wrong during the parsing
+*/
+func (userData *UserData) ParseUsersData() (Users, error) {
+	// We marshal the userData to convert it to JSON format ([]byte)
+	serializedData, err := json.Marshal(userData)
+	if err != nil {
+		// Return an error if the marshaling fails
+		return nil, errors.New("internal error: conversion problem")
+	}
+
+	// We declare a variable to hold the unmarshaled comment data
+	var usersResult Users
+	// We unmarshal the JSON data into the postResult slice
+	err = json.Unmarshal(serializedData, &usersResult)
+
+	// Return the result and any error encountered
+	return usersResult, err
+}
+
+/*
+This function takes 1 argument:
   - a pointer to a UserData object, which contains comment data.
 
 The purpose of this function is to parse the comment data into a structured array of Comment objects.
@@ -616,6 +643,28 @@ This function updates the GroupsJoined field of the Register struct with the res
 func (register *Register) JoinGroups() {
 	// We join the SplitMemberIds slice into a single string using " | " as the separator
 	register.GroupsJoined = strings.Join(register.SplitGroupsJoined, " | ")
+}
+
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+//
+//	DB Method for Users struct
+//
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+
+func (users *Users) SelectFromDb(db *sql.DB, where map[string]any) error {
+	// We call SelectFromDb to retrieve data from the "UserInfo" table based on the given conditions
+	userData, err := SelectFromDb("UserInfo", db, where)
+	if err != nil {
+		// Return an error if the data retrieval fails
+		return err
+	}
+
+	*users, err = userData.ParseUsersData()
+
+	// Return any error encountered during parsing
+	return err
 }
 
 // ----------------------------------------------------------------------------------------------
