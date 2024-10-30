@@ -767,7 +767,7 @@ func (comment *Comment) InsertIntoDb(db *sql.DB) error {
 	}
 
 	// We call InsertIntoDb to insert the comment data into the "Comment" table in the database
-	return InsertIntoDb("Comment", db, comment.Id, comment.AuthorId, comment.Text, comment.CreationDate, comment.PostId, 0, 0)
+	return InsertIntoDb("Comment", db, comment.Id, comment.AuthorId, comment.Text, comment.Image, comment.CreationDate, comment.PostId, 0, 0)
 }
 
 /*

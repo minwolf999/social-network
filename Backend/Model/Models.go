@@ -22,7 +22,6 @@ type Register struct {
 	LastName  string `json:"LastName"`
 	BirthDate string `json:"BirthDate"`
 
-
 	ProfilePicture string `json:"ProfilePicture"`
 	Username       string `json:"Username"`
 	AboutMe        string `json:"AboutMe"`
@@ -57,10 +56,12 @@ type Comment struct {
 	Id           string `json:"Id"`
 	AuthorId     string `json:"AuthorId"`
 	Text         string `json:"Text"`
+	Image        string `json:"Image"`
 	CreationDate string `json:"CreationDate"`
 	PostId       string `json:"PostId"`
-	LikeCount    int    `json:"LikeCount"`
-	DislikeCount int    `json:"DislikeCount"`
+
+	LikeCount    int `json:"LikeCount"`
+	DislikeCount int `json:"DislikeCount"`
 	Register     `json:",inline"`
 }
 type Comments []Comment
