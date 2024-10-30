@@ -36,6 +36,7 @@ func CreateTables(db *sql.DB) {
 			ProfilePicture TEXT,
 			Username VARCHAR(50),
 			AboutMe VARCHAR(280),
+			Status VARCHAR(20),
 			GroupsJoined TEXT,
 		
 			CONSTRAINT fk_id FOREIGN KEY (Id) REFERENCES "Auth"("Id") ON DELETE CASCADE

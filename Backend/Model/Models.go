@@ -22,11 +22,13 @@ type Register struct {
 	LastName  string `json:"LastName"`
 	BirthDate string `json:"BirthDate"`
 
-	// OPTIONNAL
+
 	ProfilePicture string `json:"ProfilePicture"`
 	Username       string `json:"Username"`
 	AboutMe        string `json:"AboutMe"`
 	Gender         string `json:"Gender"`
+
+	Status string `json:"Status"`
 
 	GroupsJoined      string `json:"GroupsJoined"`
 	SplitGroupsJoined []string
@@ -91,24 +93,24 @@ type Event struct {
 type Events []Event
 
 type EventDetail struct {
-	Id string `json:"Id"`
-	GroupName string `json:"GroupName"`
+	Id          string `json:"Id"`
+	GroupName   string `json:"GroupName"`
 	Organisator string `json:"Organisator"`
 
-	Title string `json:"Title"`
-	Description string `json:"Description"`
+	Title          string `json:"Title"`
+	Description    string `json:"Description"`
 	DateOfTheEvent string `json:"DateOfTheEvent"`
 
-	JoinUsers string `json:"JoinUsers"`
+	JoinUsers    string `json:"JoinUsers"`
 	JoinUsersTab []string
 
-	DeclineUsers string `json:"DeclineUsers"`
+	DeclineUsers    string `json:"DeclineUsers"`
 	DeclineUsersTab []string
 }
 
 type JoinEvent struct {
-	UserId        string `json:"UserId"`
-	EventId       string `json:"EventId"`
+	UserId  string `json:"UserId"`
+	EventId string `json:"EventId"`
 }
 type JoinEvents []JoinEvent
 
