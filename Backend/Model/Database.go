@@ -52,14 +52,23 @@ func LoadData(db *sql.DB) error {
 	objects := []string{"la performance", "l'API", "le backend", "le frontend", "l'application web", "le système de fichiers", "la sécurité", "la base de données", "les requêtes HTTP", "la fonctionnalité asynchrone"}
 	adverbs := []string{"rapidement", "efficacement", "avec soin", "de manière innovante", "avec passion", "de façon concurrente", "sans erreur", "avec succès", "sans latence", "de manière fluide"}
 
+	previousUserId := ""
 	// We loop at least 100 times
 	for i := 0; i < 100; i++ {
+
+		// -----------------------------------------------------------------------------------------------------------------
+		// -----------------------------------------------------------------------------------------------------------------
+		// Add a User
+		// -----------------------------------------------------------------------------------------------------------------
+		// -----------------------------------------------------------------------------------------------------------------
+
 		// We create a variable of type Register and set the value inside (we get a random first and last name in the 2 lists)
 		var user Register
 		user.FirstName = firstNameList[rand.Intn(len(firstNameList))]
 		user.LastName = lastNameList[rand.Intn(len(lastNameList))]
 		user.Auth.Password = "Azerty&1234"
 		user.Auth.Email = fmt.Sprintf("%s.%s@gmail.com", user.FirstName, user.LastName)
+		user.Status = "public"
 
 		// We generate 3 random number for the birthDate
 		day := rand.Intn(31-0) + 0
@@ -89,6 +98,12 @@ func LoadData(db *sql.DB) error {
 			continue
 		}
 
+		// -----------------------------------------------------------------------------------------------------------------
+		// -----------------------------------------------------------------------------------------------------------------
+		// Add a Post
+		// -----------------------------------------------------------------------------------------------------------------
+		// -----------------------------------------------------------------------------------------------------------------
+
 		var post Post
 		post.AuthorId = user.Auth.Id
 		uid, err = uuid.NewV7()
@@ -109,6 +124,12 @@ func LoadData(db *sql.DB) error {
 			i--
 			continue
 		}
+
+		// -----------------------------------------------------------------------------------------------------------------
+		// -----------------------------------------------------------------------------------------------------------------
+		// Add a Comment to the previous post
+		// -----------------------------------------------------------------------------------------------------------------
+		// -----------------------------------------------------------------------------------------------------------------
 
 		var comment Comment
 		uid, err = uuid.NewV7()
@@ -131,6 +152,129 @@ func LoadData(db *sql.DB) error {
 			i--
 			continue
 		}
+
+
+		if (previousUserId != "") {
+			// -----------------------------------------------------------------------------------------------------------------
+			// -----------------------------------------------------------------------------------------------------------------
+			// Add a Follower
+			// -----------------------------------------------------------------------------------------------------------------
+			// -----------------------------------------------------------------------------------------------------------------
+	
+			var follower Follower
+			follower.FollowerId = previousUserId
+			follower.UserId = user.Auth.Id
+	
+			uid, err = uuid.NewV7()
+			if err != nil {
+				return errors.New("there is a probleme with the generation of the uuid")
+			}
+	
+			follower.Id = uid.String()
+	
+			if err = follower.InsertIntoDb(db); err != nil {
+				fmt.Println("follow error : " + err.Error())
+				fmt.Println(follower)
+				i--
+				continue
+			}
+	
+			// -----------------------------------------------------------------------------------------------------------------
+			// -----------------------------------------------------------------------------------------------------------------
+			// Add a Group
+			// -----------------------------------------------------------------------------------------------------------------
+			// -----------------------------------------------------------------------------------------------------------------
+	
+			var group Group
+			group.LeaderId = user.Auth.Id
+	
+			group.GroupName = fmt.Sprintf("%s %s %s %s.", subjects[rand.Intn(len(subjects))], verbs[rand.Intn(len(verbs))], objects[rand.Intn(len(objects))], adverbs[rand.Intn(len(adverbs))])
+			
+			day = rand.Intn(31-0) + 0
+			mounth = rand.Intn(12-0) + 0
+			year = rand.Intn(2024-1980) + 1980
+			group.CreationDate = fmt.Sprintf("%d-%d-%d", year, mounth, day)
+	
+			group.SplitMemberIds = append(group.SplitMemberIds, user.Auth.Id)
+			group.SplitMemberIds = append(group.SplitMemberIds, previousUserId)
+			group.JoinMembers()
+	
+			uid, err = uuid.NewV7()
+			if err != nil {
+				return errors.New("there is a probleme with the generation of the uuid")
+			}
+	
+			group.Id = uid.String()
+	
+			if err = group.InsertIntoDb(db); err != nil {
+				fmt.Println("group error : " + err.Error())
+				i--
+				continue
+			}
+	
+	
+			// -----------------------------------------------------------------------------------------------------------------
+			// -----------------------------------------------------------------------------------------------------------------
+			// Add a Event
+			// -----------------------------------------------------------------------------------------------------------------
+			// -----------------------------------------------------------------------------------------------------------------
+	
+			var event Event
+			event.GroupId = group.Id
+			event.OrganisatorId = user.Auth.Id
+	
+			event.Title = fmt.Sprintf("%s %s %s %s.", subjects[rand.Intn(len(subjects))], verbs[rand.Intn(len(verbs))], objects[rand.Intn(len(objects))], adverbs[rand.Intn(len(adverbs))])
+			event.Description = fmt.Sprintf("%s %s %s %s.", subjects[rand.Intn(len(subjects))], verbs[rand.Intn(len(verbs))], objects[rand.Intn(len(objects))], adverbs[rand.Intn(len(adverbs))])
+			
+			day = rand.Intn(31-0) + 0
+			mounth = rand.Intn(12-0) + 0
+			year = rand.Intn(2050-2024) + 2024
+			event.DateOfTheEvent = fmt.Sprintf("%d-%d-%d", year, mounth, day)
+	
+			uid, err = uuid.NewV7()
+			if err != nil {
+				return errors.New("there is a probleme with the generation of the uuid")
+			}
+	
+			event.Id = uid.String()
+	
+			if err = event.InsertIntoDb(db); err != nil {
+				fmt.Println("event error : " + err.Error())
+				i--
+				continue
+			}
+	
+			// -----------------------------------------------------------------------------------------------------------------
+			// -----------------------------------------------------------------------------------------------------------------
+			// Add a Group Post
+			// -----------------------------------------------------------------------------------------------------------------
+			// -----------------------------------------------------------------------------------------------------------------
+	
+			var groupPost Post
+			groupPost.AuthorId = user.Auth.Id
+			uid, err = uuid.NewV7()
+			if err != nil {
+				return errors.New("there is a probleme with the generation of the uuid")
+			}
+			groupPost.Id = uid.String()
+			groupPost.IsGroup = group.Id
+	
+			day = rand.Intn(31-0) + 0
+			mounth = rand.Intn(12-0) + 0
+			year = rand.Intn(2024-1980) + 1980
+			groupPost.CreationDate = fmt.Sprintf("%d-%d-%d", year, mounth, day)
+			groupPost.Status = "public"
+	
+			groupPost.Text = fmt.Sprintf("%s %s %s %s.", subjects[rand.Intn(len(subjects))], verbs[rand.Intn(len(verbs))], objects[rand.Intn(len(objects))], adverbs[rand.Intn(len(adverbs))])
+	
+			if err := groupPost.InsertIntoDb(db); err != nil {
+				fmt.Println("groupPost error : " + err.Error())
+				i--
+				continue
+			}
+		}
+
+		previousUserId = user.Auth.Id
 	}
 
 	return nil
