@@ -35,7 +35,7 @@ func GetAllUsers(db *sql.DB) http.HandlerFunc {
 
 		
 		// Decrypt the OrganisatorId from the JWT to get the actual Organisator ID
-		decryptAuthorId, err := utils.DecryptJWT(userJWT, db)
+		_, err := utils.DecryptJWT(userJWT, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
 			log.Printf("[%s] [GetAllUsers] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
@@ -45,16 +45,6 @@ func GetAllUsers(db *sql.DB) http.HandlerFunc {
 		var users model.Users
 		if err = users.SelectFromDb(db, map[string]any{}); err != nil {
 			fmt.Println(err)
-		}
-
-		for i := len(users)-1; i > 0; i-- {
-			if users[i].Auth.Id == decryptAuthorId {
-				if i < len(users) {
-					users = append(users[:i], users[i+1:]...)
-				} else {
-					users = users[:i]
-				}
-			}
 		}
 
 		// Set the response header to indicate JSON content and respond with success message.

@@ -288,13 +288,25 @@ func (userData *UserData) ParseGroupData() (Group, error) {
 	}
 
 	// We declare a variable to hold the unmarshaled group data
-	var groupResult []Group
+	var groupResult Groups
 
 	// We unmarshal the JSON data into the groupResult slice
 	err = json.Unmarshal(serializedData, &groupResult)
 
 	// Return the first group from the groupResult slice and any error encountered
 	return groupResult[0], err
+}
+
+func (userData *UserData) ParseGroupsData() (Groups, error) {
+	serializedData, err := json.Marshal(userData)
+	if err != nil {
+		return nil, err
+	}
+
+	var groups Groups
+
+	err = json.Unmarshal(serializedData, &groups)
+	return groups, err
 }
 
 /*
@@ -1144,6 +1156,28 @@ This function updates the MemberIds field of the Group struct with the resulting
 func (group *Group) JoinMembers() {
 	// We join the SplitMemberIds slice into a single string using " | " as the separator
 	group.MemberIds = strings.Join(group.SplitMemberIds, " | ")
+}
+
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+//
+//	DB Method for Groups struct
+//
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+
+func (groups *Groups) SelectFromDb(db *sql.DB, where map[string]any) error {
+		// We call SelectFromDb to retrieve data from the "UserInfo" table based on the given conditions
+		userData, err := SelectFromDb("Groups", db, where)
+		if err != nil {
+			// Return an error if the data retrieval fails
+			return err
+		}
+	
+		*groups, err = userData.ParseGroupsData()
+	
+		// Return any error encountered during parsing
+		return err
 }
 
 // ----------------------------------------------------------------------------------------------

@@ -330,6 +330,52 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+func GetAllGroups(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter {
+			ResponseWriter: w,
+		}
+
+		var userJWT string
+		// Decode the JSON request body into the comment object
+		if err := json.NewDecoder(r.Body).Decode(&userJWT); err != nil {
+			// Send error if decoding fails
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [GetAllGroups] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		
+		// Decrypt the OrganisatorId from the JWT to get the actual Organisator ID
+		_, err := utils.DecryptJWT(userJWT, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [GetAllGroups] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		
+		var groups model.Groups
+		if err = groups.SelectFromDb(db, map[string]any{}); err != nil {
+			nw.Error("Error during fetching the groups")
+			log.Printf("[%s] [GetAllGroups] Error during fetching the groups : %v", r.RemoteAddr, err)
+			return
+		}
+
+		// Set the response header to indicate JSON content and respond with success message.
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Groups getted successfully",
+
+			"Groups": groups,
+		})
+		if err != nil {
+			// Log any error that occurs while encoding the response.
+			log.Printf("[%s] [GetAllGroups] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
 /*
 This function takes 1 argument:
   - a pointer to an SQL database object
