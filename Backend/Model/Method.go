@@ -269,6 +269,18 @@ func (userData *UserData) ParseFollowersData() (Followers, error) {
 	return res, nil
 }
 
+func (userData *UserData) ParseFollowRequestsData() (FollowRequests, error) {
+	serializedData, err := json.Marshal(userData)
+	if err != nil {
+		return nil, err
+	}
+
+	var FollowRequests FollowRequests
+
+	err = json.Unmarshal(serializedData, &FollowRequests)
+	return FollowRequests, err
+}
+
 /*
 This function takes 1 argument:
   - a pointer to a UserData object, which contains group data.
@@ -1048,6 +1060,46 @@ func (follower *Follower) DeleteFromDb(db *sql.DB, where map[string]any) error {
 	return RemoveFromDB("Follower", db, where)
 }
 
+
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+//
+//	DB Method for FollowRequest struct
+//
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+
+
+func (follower *FollowRequest) InsertIntoDb(db *sql.DB) error {
+	// We check if any of the required fields (Id, UserId, FollowerId) are empty
+	if follower.UserId == "" || follower.FollowerId == "" {
+		// Return an error if any field is empty
+		return errors.New("empty field")
+	}
+
+	// We call InsertIntoDb to insert the follower data into the "Follower" table in the database
+	return InsertIntoDb("FollowingRequest", db, follower.UserId, follower.FollowerId)
+}
+
+func (follower *FollowRequests) SelectFromDb(db *sql.DB, where map[string]any) error {
+	// We call SelectFromDb to retrieve data from the "UserInfo" table based on the given conditions
+	userData, err := SelectFromDb("FollowingRequest", db, where)
+	if err != nil {
+		// Return an error if the data retrieval fails
+		return err
+	}
+
+	*follower, err = userData.ParseFollowRequestsData()
+
+	// Return any error encountered during parsing
+	return err
+}
+
+func (follower *FollowRequest) DeleteFromDb(db *sql.DB, where map[string]any) error {
+	// We call RemoveFromDB to delete the record(s) from the "Follower" table based on the specified conditions
+	return RemoveFromDB("FollowingRequest", db, where)
+}
+
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
 //
@@ -1169,17 +1221,17 @@ func (group *Group) JoinMembers() {
 // ----------------------------------------------------------------------------------------------
 
 func (groups *Groups) SelectFromDb(db *sql.DB, where map[string]any) error {
-		// We call SelectFromDb to retrieve data from the "UserInfo" table based on the given conditions
-		userData, err := SelectFromDb("Groups", db, where)
-		if err != nil {
-			// Return an error if the data retrieval fails
-			return err
-		}
-	
-		*groups, err = userData.ParseGroupsData()
-	
-		// Return any error encountered during parsing
+	// We call SelectFromDb to retrieve data from the "UserInfo" table based on the given conditions
+	userData, err := SelectFromDb("Groups", db, where)
+	if err != nil {
+		// Return an error if the data retrieval fails
 		return err
+	}
+
+	*groups, err = userData.ParseGroupsData()
+
+	// Return any error encountered during parsing
+	return err
 }
 
 // ----------------------------------------------------------------------------------------------

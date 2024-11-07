@@ -70,6 +70,12 @@ type Follower struct {
 }
 type Followers []Follower
 
+type FollowRequest struct {
+	UserId     string `json:"UserId"`
+	FollowerId string `json:"FollowerId"`
+}
+type FollowRequests []FollowRequest
+
 type Group struct {
 	Id             string `json:"Id"`
 	LeaderId       string `json:"LeaderId"`
