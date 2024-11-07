@@ -683,6 +683,12 @@ func InviteGroup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		if err = utils.IfNotExistsInDB("InviteGroupRequest", db, map[string]any{"GroupId": datas.GroupId, "ReceiverId": datas.ReceiverId}); err != nil {
+			nw.Error("This user has already receive an invitation")
+			log.Printf("[%s] [InviteGroup] This user has already receive an invitation %s : %v", r.RemoteAddr, datas.ReceiverId, err)
+			return
+		}
+
 		if err = datas.InsertIntoDb(db); err != nil {
 			nw.Error("There is an error during the store of the invitation")
 			log.Printf("[%s] [InviteGroup] There is an error during the store of the invitation : %v", r.RemoteAddr, err)
@@ -736,6 +742,56 @@ func GetInvitationGroup (db *sql.DB) http.HandlerFunc {
 		})
 		if err != nil {
 			log.Printf("[%s] [InviteGroup] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
+func DeclineInvitationGroup(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		var datas model.InviteGroupRequest
+		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [DeclineInvitationGroup] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		decryptUserId, err := utils.DecryptJWT(datas.ReceiverId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [DeclineInvitationGroup] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		datas.ReceiverId = decryptUserId
+
+		if err = utils.IfExistsInDB("Groups", db, map[string]any{"Id": datas.GroupId}); err != nil {
+			nw.Error("There is no group with this id")
+			log.Printf("[%s] [DeclineInvitationGroup] There is no group with this id : %v", r.RemoteAddr, err)
+			return
+		}
+
+		if err = utils.IfExistsInDB("InviteGroupRequest", db, map[string]any{"GroupId": datas.GroupId, "ReceiverId": datas.ReceiverId}); err != nil {
+			nw.Error("This user hasn't received any invitation for this group")
+			log.Printf("[%s] [DeclineInvitationGroup] This user hasn't received any invitation for this group %s : %v", r.RemoteAddr, datas.ReceiverId, err)
+			return
+		}
+
+		if err = model.RemoveFromDB("InviteGroupRequest", db, map[string]any{"GroupId": datas.GroupId, "ReceiverId": datas.ReceiverId}); err != nil {
+			nw.Error("There is an error during the delete of the invitation")
+			log.Printf("[%s] [DeclineInvitationGroup] There is an error during the delete of the invitation : %s", r.RemoteAddr, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Invitations successfully denied",
+		})
+		if err != nil {
+			log.Printf("[%s] [DeclineInvitationGroup] %s", r.RemoteAddr, err.Error())
 		}
 	}
 }
