@@ -374,7 +374,16 @@ func DeclineFollowedRequest(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if err := utils.IfNotExistsInDB("FollowingRequest", db, map[string]any{"UserId": followedRequest.UserId, "FollowerId": followedRequest.FollowerId}); err != nil {
+		// Decrypt the UserId from the JWT to get the actual user ID
+		decryptAuthorId, err := utils.DecryptJWT(followedRequest.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [DeclineFollowedRequest] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		followedRequest.UserId = decryptAuthorId
+
+		if err := utils.IfExistsInDB("FollowingRequest", db, map[string]any{"UserId": followedRequest.UserId, "FollowerId": followedRequest.FollowerId}); err != nil {
 			nw.Error("There is no request for following this user")
 			log.Printf("[%s] [DeclineFollowedRequest] There is no request for following this user : %s", r.RemoteAddr, err)
 			return
@@ -388,7 +397,7 @@ func DeclineFollowedRequest(db *sql.DB) http.HandlerFunc {
 
 		// Send the list of followers as a response in JSON format
 		w.Header().Set("Content-Type", "application/json")
-		err := json.NewEncoder(w).Encode(map[string]any{
+		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
 			"Message": "Request successfully denied",
 		})
@@ -413,7 +422,16 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if err := utils.IfNotExistsInDB("FollowingRequest", db, map[string]any{"UserId": followedRequest.UserId, "FollowerId": followedRequest.FollowerId}); err != nil {
+		// Decrypt the UserId from the JWT to get the actual user ID
+		decryptAuthorId, err := utils.DecryptJWT(followedRequest.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [DeclineFollowedRequest] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		followedRequest.UserId = decryptAuthorId
+		
+		if err := utils.IfExistsInDB("FollowingRequest", db, map[string]any{"UserId": followedRequest.UserId, "FollowerId": followedRequest.FollowerId}); err != nil {
 			nw.Error("There is no request for following this user")
 			log.Printf("[%s] [AcceptFollowedRequest] There is no request for following this user : %s", r.RemoteAddr, err)
 			return
