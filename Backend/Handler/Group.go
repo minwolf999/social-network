@@ -573,3 +573,81 @@ func DeclineJoinRequest(db *sql.DB) http.HandlerFunc {
 		}
 	}
 }
+
+
+func AcceptJoinRequest(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		var datas struct {
+			UserId  string `json:"UserId"`
+			GroupId string `json:"GroupId"`
+			JoinUserId  string `json:"Joiner"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [AcceptJoinRequest] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		decryptUserId, err := utils.DecryptJWT(datas.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [AcceptJoinRequest] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		datas.UserId = decryptUserId
+
+		if err = utils.IfExistsInDB("Groups", db, map[string]any{"Id": datas.GroupId}); err != nil {
+			nw.Error("There is no group with this id")
+			log.Printf("[%s] [GetJoinRequest] There is no group with this id : %v", r.RemoteAddr, err)
+			return
+		}
+
+		var group model.Group
+		if err = group.SelectFromDb(db, map[string]any{"Id": datas.GroupId, "LeaderId": datas.UserId}); err != nil {
+			nw.Error("There is an error during the fetch of the group data")
+			log.Printf("[%s] [GetJoinRequest] There is an error during the fetch of the group data : %v", r.RemoteAddr, err)
+			return
+		}
+
+		if group.GroupName == "" {
+			nw.Error("The current user isn't the leader of this goup")
+			log.Printf("[%s] [GetJoinRequest] The current user isn't the leader of this goup", r.RemoteAddr)
+			return
+		}
+
+		if err = utils.IfNotExistsInDB("JoinGroupRequest", db, map[string]any{"UserId": datas.JoinUserId, "GroupId": datas.GroupId}); err != nil {
+			nw.Error("There is no request to join the group")
+			log.Printf("[%s] [AcceptJoinRequest] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+
+		group.SplitMembers()
+		group.SplitMemberIds = append(group.SplitMemberIds, datas.JoinUserId)
+		group.JoinMembers()
+
+		if err = group.UpdateDb(db, map[string]any{"MemberIds": group.MemberIds}, map[string]any{"Id": group.Id}); err != nil {
+			nw.Error("There is an error during the update of the group data")
+			log.Printf("[%s] [AcceptJoinRequest] There is an error during the update of the group data : %s", r.RemoteAddr, err)
+			return
+		}
+
+		if err = model.RemoveFromDB("JoinGroupRequest", db, map[string]any{"UserId": datas.JoinUserId, "GroupId": datas.GroupId}); err != nil {
+			nw.Error("There is an error during the delete of the request")
+			log.Printf("[%s] [AcceptJoinRequest] There is an error during the delete of the request : %s", r.RemoteAddr, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Join request successfully accepted",
+		})
+		if err != nil {
+			log.Printf("[%s] [AcceptJoinRequest] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}

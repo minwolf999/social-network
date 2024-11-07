@@ -67,6 +67,7 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/joinGroup", handler.JoinGroup(db))
 	mux.Handle("/getJoinRequest", handler.GetJoinRequest(db))
 	mux.Handle("/declineJoinRequest", handler.DeclineJoinRequest(db))
+	mux.Handle("/acceptJoinrequest", handler.AcceptJoinRequest(db))
 
 	// Event routes
 	mux.Handle("/createEvent", handler.CreateEvent(db))
