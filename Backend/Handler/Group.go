@@ -424,7 +424,7 @@ func JoinGroup(db *sql.DB) http.HandlerFunc {
 			ResponseWriter: w,
 		}
 
-		var datas model.JoinGroup
+		var datas model.JoinGroupRequest
 
 		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
 			nw.Error("Invalid request body")
@@ -459,6 +459,58 @@ func JoinGroup(db *sql.DB) http.HandlerFunc {
 		})
 		if err != nil {
 			log.Printf("[%s] [JoinGroup] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
+func GetJoinRequest(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter {
+			ResponseWriter: w,
+		}
+
+		var datas model.JoinGroupRequest
+		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [GetJoinRequest] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		decryptUserId, err := utils.DecryptJWT(datas.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [GetJoinRequest] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		datas.UserId = decryptUserId
+
+		if err = utils.IfExistsInDB("Groups", db, map[string]any{"Id": datas.GroupId}); err != nil {
+			nw.Error("There is no group with this id")
+			log.Printf("[%s] [GetJoinRequest] There is no group with this id : %v", r.RemoteAddr, err)
+			return
+		}
+
+		if err = utils.IfExistsInDB("Groups", db, map[string]any{"Id": datas.GroupId, "LeaderId": datas.UserId}); err != nil {
+			nw.Error("The current user isn't the leader of this goup")
+			log.Printf("[%s] [GetJoinRequest] The current user isn't the leader of this goup : %v", r.RemoteAddr, err)
+			return
+		}
+
+		var requests model.JoinGroupRequests
+		if err = requests.SelectFromDb(db, map[string]any{}); err != nil {
+			nw.Error("There is an error during the fetching of the DB")
+			log.Printf("[%s] [GetJoinRequest] There is an error during the fetching of the DB : %v", r.RemoteAddr, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Group join request getted successfully",
+			"Value": requests,
+		})
+		if err != nil {
+			log.Printf("[%s] [GetJoinRequest] %s", r.RemoteAddr, err.Error())
 		}
 	}
 }

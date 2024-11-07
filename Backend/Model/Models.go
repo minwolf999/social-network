@@ -85,10 +85,11 @@ type Group struct {
 	CreationDate   string `json:"CreationDate"`
 }
 
-type JoinGroup struct {
+type JoinGroupRequest struct {
 	UserId string `json:"UserId"`
 	GroupId string `json:"GroupId"`
 }
+type JoinGroupRequests []JoinGroupRequest
 
 type Groups []Group
 

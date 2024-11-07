@@ -321,6 +321,18 @@ func (userData *UserData) ParseGroupsData() (Groups, error) {
 	return groups, err
 }
 
+func (userData *UserData) ParseJoinGroupRequestsData() (JoinGroupRequests, error) {
+	serializedData, err := json.Marshal(userData)
+	if err != nil {
+		return nil, err
+	}
+
+	var joinGroupRequests JoinGroupRequests
+	err = json.Unmarshal(serializedData, &joinGroupRequests)
+
+	return joinGroupRequests, err
+}
+
 /*
 The purpose of this function is to parse the event data into a structured array of Events objects.
 
@@ -1212,24 +1224,6 @@ func (group *Group) JoinMembers() {
 	group.MemberIds = strings.Join(group.SplitMemberIds, " | ")
 }
 
-func (joinGroup *JoinGroup) InsertIntoDb(db *sql.DB) error {
-	// We check if any of the required fields (Id, LeaderId, MemberIds, GroupName, CreationDate) are empty
-	if joinGroup.GroupId == "" || joinGroup.UserId == "" {
-		// Return an error if any field is empty
-		return errors.New("empty field")
-	}
-
-	// We call InsertIntoDb to insert the group data into the "Groups" table in the database
-	return InsertIntoDb("Groups", db, joinGroup.UserId, joinGroup.GroupId)
-}
-
-// ----------------------------------------------------------------------------------------------
-// ----------------------------------------------------------------------------------------------
-//
-//	DB Method for Groups struct
-//
-// ----------------------------------------------------------------------------------------------
-// ----------------------------------------------------------------------------------------------
 
 func (groups *Groups) SelectFromDb(db *sql.DB, where map[string]any) error {
 	// We call SelectFromDb to retrieve data from the "UserInfo" table based on the given conditions
@@ -1244,6 +1238,39 @@ func (groups *Groups) SelectFromDb(db *sql.DB, where map[string]any) error {
 	// Return any error encountered during parsing
 	return err
 }
+
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+//
+//	DB Method for JoinGroupRequest struct
+//
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+
+func (joinGroup *JoinGroupRequests) SelectFromDb(db *sql.DB, where map[string]any) error {
+	userData, err := SelectFromDb("Groups", db, where)
+	if err != nil {
+		// Return an error if the data retrieval fails
+		return err
+	}
+
+	*joinGroup, err = userData.ParseJoinGroupRequestsData()
+
+	// Return any error encountered during parsing
+	return err
+}
+
+func (joinGroup *JoinGroupRequest) InsertIntoDb(db *sql.DB) error {
+	// We check if any of the required fields (Id, LeaderId, MemberIds, GroupName, CreationDate) are empty
+	if joinGroup.GroupId == "" || joinGroup.UserId == "" {
+		// Return an error if any field is empty
+		return errors.New("empty field")
+	}
+
+	// We call InsertIntoDb to insert the group data into the "Groups" table in the database
+	return InsertIntoDb("Groups", db, joinGroup.UserId, joinGroup.GroupId)
+}
+
 
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
