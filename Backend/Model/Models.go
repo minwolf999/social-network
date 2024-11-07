@@ -96,6 +96,7 @@ type InviteGroupRequest struct {
 	GroupId string `json:"GroupId"`
 	ReceiverId string `json:"ReceiverId"`
 }
+type InviteGroupRequests []InviteGroupRequest
 
 type Groups []Group
 

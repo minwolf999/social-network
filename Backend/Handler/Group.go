@@ -699,3 +699,43 @@ func InviteGroup(db *sql.DB) http.HandlerFunc {
 		}
 	}
 }
+
+func GetInvitationGroup (db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		var userId string
+		if err := json.NewDecoder(r.Body).Decode(&userId); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [GetInvitationGroup] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		decryptUserId, err := utils.DecryptJWT(userId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [GetInvitationGroup] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		userId = decryptUserId
+
+		var invitations model.InviteGroupRequests
+		if err = invitations.SelectFromDb(db, map[string]any{"ReceiverId": userId}); err != nil {
+			nw.Error("Error during the fetching of the DB")
+			log.Printf("[%s] [GetInvitationGroup] Error during the fetching of the DB : %v", r.RemoteAddr, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Invitations successfully getted",
+			"Value": invitations,
+		})
+		if err != nil {
+			log.Printf("[%s] [InviteGroup] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}

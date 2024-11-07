@@ -333,6 +333,18 @@ func (userData *UserData) ParseJoinGroupRequestsData() (JoinGroupRequests, error
 	return joinGroupRequests, err
 }
 
+func (userData *UserData) ParseInviteGroupRequestsData() (InviteGroupRequests, error) {
+	serializedData, err := json.Marshal(userData)
+	if err != nil {
+		return nil, err
+	}
+
+	var inviteGroupRequests InviteGroupRequests
+	err = json.Unmarshal(serializedData, &inviteGroupRequests)
+
+	return inviteGroupRequests, err
+}
+
 /*
 The purpose of this function is to parse the event data into a structured array of Events objects.
 
@@ -1247,6 +1259,17 @@ func (groups *Groups) SelectFromDb(db *sql.DB, where map[string]any) error {
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
 
+func (joinGroup *JoinGroupRequest) InsertIntoDb(db *sql.DB) error {
+	// We check if any of the required fields (Id, LeaderId, MemberIds, GroupName, CreationDate) are empty
+	if joinGroup.GroupId == "" || joinGroup.UserId == "" {
+		// Return an error if any field is empty
+		return errors.New("empty field")
+	}
+
+	// We call InsertIntoDb to insert the group data into the "Groups" table in the database
+	return InsertIntoDb("JoinGroupRequest", db, joinGroup.UserId, joinGroup.GroupId)
+}
+
 func (joinGroup *JoinGroupRequests) SelectFromDb(db *sql.DB, where map[string]any) error {
 	userData, err := SelectFromDb("JoinGroupRequest", db, where)
 	if err != nil {
@@ -1259,18 +1282,6 @@ func (joinGroup *JoinGroupRequests) SelectFromDb(db *sql.DB, where map[string]an
 	// Return any error encountered during parsing
 	return err
 }
-
-func (joinGroup *JoinGroupRequest) InsertIntoDb(db *sql.DB) error {
-	// We check if any of the required fields (Id, LeaderId, MemberIds, GroupName, CreationDate) are empty
-	if joinGroup.GroupId == "" || joinGroup.UserId == "" {
-		// Return an error if any field is empty
-		return errors.New("empty field")
-	}
-
-	// We call InsertIntoDb to insert the group data into the "Groups" table in the database
-	return InsertIntoDb("JoinGroupRequest", db, joinGroup.UserId, joinGroup.GroupId)
-}
-
 
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
@@ -1288,6 +1299,16 @@ func (inviteGroupRequest *InviteGroupRequest) InsertIntoDb(db *sql.DB) error {
 	return InsertIntoDb("InviteGroupRequest", db, inviteGroupRequest.SenderId, inviteGroupRequest.GroupId, inviteGroupRequest.ReceiverId)
 }
 
+
+func (invitations *InviteGroupRequests) SelectFromDb(db *sql.DB, where map[string]any) error {
+	userData, err := SelectFromDb("InviteGroupRequest", db, where)
+	if err != nil {
+		return err
+	}
+
+	*invitations, err = userData.ParseInviteGroupRequestsData()
+	return err
+}
 
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
