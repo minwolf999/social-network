@@ -521,9 +521,9 @@ func DeclineJoinRequest(db *sql.DB) http.HandlerFunc {
 		}
 
 		var datas struct {
-			UserId  string `json:"UserId"`
-			GroupId string `json:"GroupId"`
-			JoinUserId  string `json:"Joiner"`
+			UserId     string `json:"UserId"`
+			GroupId    string `json:"GroupId"`
+			JoinUserId string `json:"Joiner"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
 			nw.Error("Invalid request body")
@@ -574,7 +574,6 @@ func DeclineJoinRequest(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-
 func AcceptJoinRequest(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nw := model.ResponseWriter{
@@ -582,9 +581,9 @@ func AcceptJoinRequest(db *sql.DB) http.HandlerFunc {
 		}
 
 		var datas struct {
-			UserId  string `json:"UserId"`
-			GroupId string `json:"GroupId"`
-			JoinUserId  string `json:"Joiner"`
+			UserId     string `json:"UserId"`
+			GroupId    string `json:"GroupId"`
+			JoinUserId string `json:"JoinUserId"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
 			nw.Error("Invalid request body")
@@ -619,7 +618,7 @@ func AcceptJoinRequest(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if err = utils.IfNotExistsInDB("JoinGroupRequest", db, map[string]any{"UserId": datas.JoinUserId, "GroupId": datas.GroupId}); err != nil {
+		if err = utils.IfExistsInDB("JoinGroupRequest", db, map[string]any{"UserId": datas.JoinUserId, "GroupId": datas.GroupId}); err != nil {
 			nw.Error("There is no request to join the group")
 			log.Printf("[%s] [AcceptJoinRequest] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
 			return
