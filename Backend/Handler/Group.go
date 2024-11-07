@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"slices"
-	"strings"
 
 	model "social-network/Model"
 	utils "social-network/Utils"
@@ -113,7 +112,7 @@ The purpose of this function is to handle user requests to join or leave a group
 
 The function returns an http.HandlerFunc that can be used as a handler for HTTP requests.
 */
-func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
+func LeaveGroup(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Create a custom response writer to handle errors and responses.
 		nw := model.ResponseWriter{
@@ -126,8 +125,6 @@ func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
 			UserId string `json:"UserId"`
 			// ID of the group.
 			GroupId string `json:"GroupId"`
-			// Action to either join or leave the group.
-			JoinOrLeave string `json:"JoinOrLeave"`
 		}
 		// Decode the JSON request body into the datas struct.
 		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
@@ -165,17 +162,6 @@ func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// Convert the JoinOrLeave action to lowercase for consistency.
-		datas.JoinOrLeave = strings.ToLower(datas.JoinOrLeave)
-
-		// Validate that the action is either "join" or "leave".
-		if datas.JoinOrLeave != "join" && datas.JoinOrLeave != "leave" {
-			// Return error if the action is not valid.
-			nw.Error("Internal Error: You can only join or leave a group")
-			log.Printf("[%s] [JoinAndLeaveGroup] You can only join or leave a group", r.RemoteAddr)
-			return
-		}
-
 		// Create a copy of the group data for modification.
 		DetailGroup := group
 
@@ -183,50 +169,22 @@ func JoinAndLeaveGroup(db *sql.DB) http.HandlerFunc {
 		user.SplitGroups()
 		DetailGroup.SplitMembers()
 
-		if datas.JoinOrLeave == "join" {
-			// Check if the user is already a member of the group.
-			if slices.Contains(DetailGroup.SplitMemberIds, datas.UserId) {
-				// Return error if the user is already in the group.
-				nw.Error("You are already in this group")
-				log.Printf("[%s] [JoinAndLeaveGroup] You are already in this group", r.RemoteAddr)
-				return
-			}
-
-			user.SplitGroupsJoined = append(user.SplitGroupsJoined, datas.GroupId)
-
-			// Add the UserId to the group’s member list.
-			DetailGroup.SplitMemberIds = append(DetailGroup.SplitMemberIds, datas.UserId)
+		index := slices.Index(DetailGroup.SplitMemberIds, datas.UserId)
+		if index < len(DetailGroup.SplitMemberIds)-1 {
+			DetailGroup.SplitMemberIds = append(DetailGroup.SplitMemberIds[:index], DetailGroup.SplitMemberIds[index+1:]...)
 		} else {
-			// If the action is to leave, remove the UserId from the member list.
-			// for i := range DetailGroup.SplitMemberIds {
-			// 	if DetailGroup.SplitMemberIds[i] == datas.UserId {
-			// 		// Remove the user from the list of members.
-			// 		if i < len(DetailGroup.SplitMemberIds)-1 {
-			// 			DetailGroup.SplitMemberIds = append(DetailGroup.SplitMemberIds[:i], DetailGroup.SplitMemberIds[i+1:]...)
-			// 		} else {
-			// 			DetailGroup.SplitMemberIds = DetailGroup.SplitMemberIds[:i]
-			// 		}
-			// 		break
-			// 	}
-			// }
-
-			index := slices.Index(DetailGroup.SplitMemberIds, datas.UserId)
-			if index < len(DetailGroup.SplitMemberIds)-1 {
-				DetailGroup.SplitMemberIds = append(DetailGroup.SplitMemberIds[:index], DetailGroup.SplitMemberIds[index+1:]...)
-			} else {
-				DetailGroup.SplitMemberIds = DetailGroup.SplitMemberIds[:index]
-			}
-
-			index = slices.Index(user.SplitGroupsJoined, datas.GroupId)
-			if index < len(user.SplitGroupsJoined)-1 {
-				user.SplitGroupsJoined = append(user.SplitGroupsJoined[:index], user.SplitGroupsJoined[index+1:]...)
-			} else {
-				user.SplitGroupsJoined = user.SplitGroupsJoined[:index]
-			}
-
-			// Update the LeaderId to the first member's ID after a user leaves.
-			DetailGroup.LeaderId = DetailGroup.SplitMemberIds[0]
+			DetailGroup.SplitMemberIds = DetailGroup.SplitMemberIds[:index]
 		}
+
+		index = slices.Index(user.SplitGroupsJoined, datas.GroupId)
+		if index < len(user.SplitGroupsJoined)-1 {
+			user.SplitGroupsJoined = append(user.SplitGroupsJoined[:index], user.SplitGroupsJoined[index+1:]...)
+		} else {
+			user.SplitGroupsJoined = user.SplitGroupsJoined[:index]
+		}
+
+		// Update the LeaderId to the first member's ID after a user leaves.
+		DetailGroup.LeaderId = DetailGroup.SplitMemberIds[0]
 
 		// Update the member list format.
 		user.JoinGroups()
@@ -332,7 +290,7 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 
 func GetAllGroups(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		nw := model.ResponseWriter {
+		nw := model.ResponseWriter{
 			ResponseWriter: w,
 		}
 
@@ -345,7 +303,6 @@ func GetAllGroups(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		
 		// Decrypt the OrganisatorId from the JWT to get the actual Organisator ID
 		_, err := utils.DecryptJWT(userJWT, db)
 		if err != nil {
@@ -353,7 +310,7 @@ func GetAllGroups(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [GetAllGroups] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
 			return
 		}
-		
+
 		var groups model.Groups
 		if err = groups.SelectFromDb(db, map[string]any{}); err != nil {
 			nw.Error("Error during fetching the groups")

@@ -93,7 +93,7 @@ func TestCreateGroup(t *testing.T) {
 	}
 }
 
-func TestJoinAndLeaveGroup(t *testing.T) {
+func TestLeaveGroup(t *testing.T) {
 	// Crée un mock de base de données (ou une vraie connexion en mémoire)
 	db, err := model.OpenDb("sqlite3", ":memory:")
 	if err != nil {
@@ -162,7 +162,6 @@ func TestJoinAndLeaveGroup(t *testing.T) {
 	}
 
 	joinOrLeave := map[string]any{
-		"JoinOrLeave": "join",
 		"GroupId":     group.Id,
 		"UserId":      utils.GenerateJWT(userData2.Id),
 	}
@@ -183,7 +182,7 @@ func TestJoinAndLeaveGroup(t *testing.T) {
 
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(JoinAndLeaveGroup(db))
+	handler := http.HandlerFunc(LeaveGroup(db))
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 	// directly and pass in our Request and ResponseRecorder.
