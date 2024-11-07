@@ -130,7 +130,7 @@ func LeaveGroup(db *sql.DB) http.HandlerFunc {
 		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
 			// Return error if the request body is invalid.
 			nw.Error("Invalid request body")
-			log.Printf("[%s] [JoinAndLeaveGroup] Invalid request body: %v", r.RemoteAddr, err)
+			log.Printf("[%s] [LeaveGroup] Invalid request body: %v", r.RemoteAddr, err)
 			return
 		}
 
@@ -139,7 +139,7 @@ func LeaveGroup(db *sql.DB) http.HandlerFunc {
 		if err != nil {
 			// Return error if the JWT is invalid.
 			nw.Error("Invalid JWT")
-			log.Printf("[%s] [JoinAndLeaveGroup] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [LeaveGroup] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
 			return
 		}
 		// Assign the decrypted UserId back to the datas struct.
@@ -149,7 +149,7 @@ func LeaveGroup(db *sql.DB) http.HandlerFunc {
 		if err = user.SelectFromDb(db, map[string]any{"Id": datas.UserId}); err != nil {
 			// Return error if there is a problem during the database query.
 			nw.Error("Internal error: Problem during database query")
-			log.Printf("[%s] [JoinAndLeaveGroup] %v", r.RemoteAddr, err)
+			log.Printf("[%s] [LeaveGroup] %v", r.RemoteAddr, err)
 			return
 		}
 
@@ -158,7 +158,7 @@ func LeaveGroup(db *sql.DB) http.HandlerFunc {
 		if err = group.SelectFromDb(db, map[string]any{"Id": datas.GroupId}); err != nil {
 			// Return error if there is a problem during the database query.
 			nw.Error("Internal error: Problem during database query")
-			log.Printf("[%s] [JoinAndLeaveGroup] %v", r.RemoteAddr, err)
+			log.Printf("[%s] [LeaveGroup] %v", r.RemoteAddr, err)
 			return
 		}
 
@@ -193,7 +193,7 @@ func LeaveGroup(db *sql.DB) http.HandlerFunc {
 		if err = user.UpdateDb(db, map[string]any{"GroupsJoined": user.GroupsJoined}, map[string]any{"Id": user.Id}); err != nil {
 			// Return error if there is a problem during database update.
 			nw.Error("Internal error: Problem during database update : " + err.Error())
-			log.Printf("[%s] [JoinAndLeaveGroup] %v", r.RemoteAddr, err)
+			log.Printf("[%s] [LeaveGroup] %v", r.RemoteAddr, err)
 			return
 		}
 
@@ -201,7 +201,7 @@ func LeaveGroup(db *sql.DB) http.HandlerFunc {
 		if err = DetailGroup.UpdateDb(db, map[string]any{"MemberIds": DetailGroup.MemberIds}, map[string]any{"Id": DetailGroup.Id}); err != nil {
 			// Return error if there is a problem during database update.
 			nw.Error("Internal error: Problem during database update : " + err.Error())
-			log.Printf("[%s] [JoinAndLeaveGroup] %v", r.RemoteAddr, err)
+			log.Printf("[%s] [LeaveGroup] %v", r.RemoteAddr, err)
 			return
 		}
 
@@ -215,7 +215,7 @@ func LeaveGroup(db *sql.DB) http.HandlerFunc {
 		})
 		if err != nil {
 			// Log any error that occurs while encoding the response.
-			log.Printf("[%s] [JoinAndLeaveGroup] %s", r.RemoteAddr, err.Error())
+			log.Printf("[%s] [LeaveGroup] %s", r.RemoteAddr, err.Error())
 		}
 	}
 }
@@ -413,6 +413,52 @@ func DeleteGroup(db *sql.DB) http.HandlerFunc {
 		if err != nil {
 			// Log any error that occurs while encoding the response.
 			log.Printf("[%s] [DeleteGroup] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
+
+func JoinGroup(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter {
+			ResponseWriter: w,
+		}
+
+		var datas model.JoinGroup
+
+		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [JoinGroup] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		decryptUserId, err := utils.DecryptJWT(datas.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [JoinGroup] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		datas.UserId = decryptUserId
+
+		if err = utils.IfExistsInDB("Groups", db, map[string]any{"Id": datas.GroupId}); err != nil {
+			nw.Error("There is no group with this id")
+			log.Printf("[%s] [JoinGroup] There is no group with this id : %v", r.RemoteAddr, err)
+			return
+		}
+
+		if err = datas.InsertIntoDb(db); err != nil {
+			nw.Error("There is an error storing the query")
+			log.Printf("[%s] [JoinGroup] There is an error storing the query : %v", r.RemoteAddr, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Join Request successfully send",
+		})
+		if err != nil {
+			log.Printf("[%s] [JoinGroup] %s", r.RemoteAddr, err.Error())
 		}
 	}
 }

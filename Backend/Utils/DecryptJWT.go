@@ -101,7 +101,7 @@ func IfExistsInDB(table string, db *sql.DB, args map[string]any) error {
 	}
 
 	// We check if the length of the retrieved data is not equal to 1
-	if len(authData) != 1 {
+	if len(authData) == 0 {
 		// Return an error if there is no match or multiple matches found
 		return errors.New("there is no match")
 	}

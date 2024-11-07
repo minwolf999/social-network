@@ -1212,6 +1212,17 @@ func (group *Group) JoinMembers() {
 	group.MemberIds = strings.Join(group.SplitMemberIds, " | ")
 }
 
+func (joinGroup *JoinGroup) InsertIntoDb(db *sql.DB) error {
+	// We check if any of the required fields (Id, LeaderId, MemberIds, GroupName, CreationDate) are empty
+	if joinGroup.GroupId == "" || joinGroup.UserId == "" {
+		// Return an error if any field is empty
+		return errors.New("empty field")
+	}
+
+	// We call InsertIntoDb to insert the group data into the "Groups" table in the database
+	return InsertIntoDb("Groups", db, joinGroup.UserId, joinGroup.GroupId)
+}
+
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
 //

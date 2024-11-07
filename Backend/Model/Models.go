@@ -85,6 +85,11 @@ type Group struct {
 	CreationDate   string `json:"CreationDate"`
 }
 
+type JoinGroup struct {
+	UserId string `json:"UserId"`
+	GroupId string `json:"GroupId"`
+}
+
 type Groups []Group
 
 type Event struct {
