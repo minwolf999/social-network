@@ -417,10 +417,9 @@ func DeleteGroup(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-
 func JoinGroup(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		nw := model.ResponseWriter {
+		nw := model.ResponseWriter{
 			ResponseWriter: w,
 		}
 
@@ -465,7 +464,7 @@ func JoinGroup(db *sql.DB) http.HandlerFunc {
 
 func GetJoinRequest(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		nw := model.ResponseWriter {
+		nw := model.ResponseWriter{
 			ResponseWriter: w,
 		}
 
@@ -507,10 +506,70 @@ func GetJoinRequest(db *sql.DB) http.HandlerFunc {
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
 			"Message": "Group join request getted successfully",
-			"Value": requests,
+			"Value":   requests,
 		})
 		if err != nil {
 			log.Printf("[%s] [GetJoinRequest] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
+func DeclineJoinRequest(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		var datas struct {
+			UserId  string `json:"UserId"`
+			GroupId string `json:"GroupId"`
+			JoinUserId  string `json:"Joiner"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [DeclineJoinRequest] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		decryptUserId, err := utils.DecryptJWT(datas.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [DeclineJoinRequest] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		datas.UserId = decryptUserId
+
+		if err = utils.IfExistsInDB("Groups", db, map[string]any{"Id": datas.GroupId}); err != nil {
+			nw.Error("There is no group with this id")
+			log.Printf("[%s] [GetJoinRequest] There is no group with this id : %v", r.RemoteAddr, err)
+			return
+		}
+
+		if err = utils.IfExistsInDB("Groups", db, map[string]any{"Id": datas.GroupId, "LeaderId": datas.UserId}); err != nil {
+			nw.Error("The current user isn't the leader of this goup")
+			log.Printf("[%s] [GetJoinRequest] The current user isn't the leader of this goup : %v", r.RemoteAddr, err)
+			return
+		}
+
+		if err = utils.IfNotExistsInDB("JoinGroupRequest", db, map[string]any{"UserId": datas.JoinUserId, "GroupId": datas.GroupId}); err != nil {
+			nw.Error("There is no request to join the group")
+			log.Printf("[%s] [DeclineJoinRequest] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+
+		if err = model.RemoveFromDB("JoinGroupRequest", db, map[string]any{"UserId": datas.JoinUserId, "GroupId": datas.GroupId}); err != nil {
+			nw.Error("there is an error during the delete of the request")
+			log.Printf("[%s] [DeclineJoinRequest] There is an error during the delete of the request : %s", r.RemoteAddr, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Join request successfully denied",
+		})
+		if err != nil {
+			log.Printf("[%s] [DeclineJoinRequest] %s", r.RemoteAddr, err.Error())
 		}
 	}
 }

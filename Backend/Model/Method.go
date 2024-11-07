@@ -1248,7 +1248,7 @@ func (groups *Groups) SelectFromDb(db *sql.DB, where map[string]any) error {
 // ----------------------------------------------------------------------------------------------
 
 func (joinGroup *JoinGroupRequests) SelectFromDb(db *sql.DB, where map[string]any) error {
-	userData, err := SelectFromDb("Groups", db, where)
+	userData, err := SelectFromDb("JoinGroupRequest", db, where)
 	if err != nil {
 		// Return an error if the data retrieval fails
 		return err
@@ -1268,7 +1268,7 @@ func (joinGroup *JoinGroupRequest) InsertIntoDb(db *sql.DB) error {
 	}
 
 	// We call InsertIntoDb to insert the group data into the "Groups" table in the database
-	return InsertIntoDb("Groups", db, joinGroup.UserId, joinGroup.GroupId)
+	return InsertIntoDb("JoinGroupRequest", db, joinGroup.UserId, joinGroup.GroupId)
 }
 
 

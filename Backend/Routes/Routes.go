@@ -45,6 +45,7 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/addFollowed", handler.AddFollower(db))
 	mux.Handle("/getFollowed", handler.GetFollowed(db))
 	mux.Handle("/getFollower", handler.GetFollower(db))
+
 	mux.Handle("/getFollowedRequest", handler.GetFollowedRequest(db))
 	mux.Handle("/declineFollowedRequest", handler.DeclineFollowedRequest(db))
 	mux.Handle("/acceptFollowedRequest", handler.AcceptFollowedRequest(db))
@@ -65,6 +66,7 @@ func Routes(mux *http.ServeMux) {
 
 	mux.Handle("/joinGroup", handler.JoinGroup(db))
 	mux.Handle("/getJoinRequest", handler.GetJoinRequest(db))
+	mux.Handle("/declineJoinRequest", handler.DeclineJoinRequest(db))
 
 	// Event routes
 	mux.Handle("/createEvent", handler.CreateEvent(db))
