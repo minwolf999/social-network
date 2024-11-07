@@ -86,10 +86,16 @@ type Group struct {
 }
 
 type JoinGroupRequest struct {
-	UserId string `json:"UserId"`
+	UserId  string `json:"UserId"`
 	GroupId string `json:"GroupId"`
 }
 type JoinGroupRequests []JoinGroupRequest
+
+type InviteGroupRequest struct {
+	SenderId  string `json:"SenderId"`
+	GroupId string `json:"GroupId"`
+	ReceiverId string `json:"ReceiverId"`
+}
 
 type Groups []Group
 

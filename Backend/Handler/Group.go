@@ -424,7 +424,6 @@ func JoinGroup(db *sql.DB) http.HandlerFunc {
 		}
 
 		var datas model.JoinGroupRequest
-
 		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
 			nw.Error("Invalid request body")
 			log.Printf("[%s] [JoinGroup] Invalid request body: %v", r.RemoteAddr, err)
@@ -647,6 +646,56 @@ func AcceptJoinRequest(db *sql.DB) http.HandlerFunc {
 		})
 		if err != nil {
 			log.Printf("[%s] [AcceptJoinRequest] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
+func InviteGroup(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		var datas model.InviteGroupRequest
+		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [InviteGroup] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		decryptUserId, err := utils.DecryptJWT(datas.SenderId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [InviteGroup] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		datas.SenderId = decryptUserId
+
+		if err = utils.IfExistsInDB("Groups", db, map[string]any{"Id": datas.GroupId}); err != nil {
+			nw.Error("There is no group with this id")
+			log.Printf("[%s] [InviteGroup] There is no group with this id : %v", r.RemoteAddr, err)
+			return
+		}
+
+		if err = utils.IfExistsInDB("UserInfo", db, map[string]any{"Id": datas.ReceiverId}); err != nil {
+			nw.Error("There is no user with this id")
+			log.Printf("[%s] [InviteGroup] There is no user with the id %s : %v", r.RemoteAddr, datas.ReceiverId, err)
+			return
+		}
+
+		if err = datas.InsertIntoDb(db); err != nil {
+			nw.Error("There is an error during the store of the invitation")
+			log.Printf("[%s] [InviteGroup] There is an error during the store of the invitation : %v", r.RemoteAddr, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Invitation request successfully send",
+		})
+		if err != nil {
+			log.Printf("[%s] [InviteGroup] %s", r.RemoteAddr, err.Error())
 		}
 	}
 }

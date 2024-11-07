@@ -1275,6 +1275,23 @@ func (joinGroup *JoinGroupRequest) InsertIntoDb(db *sql.DB) error {
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
 //
+//	DB Method for InviteGroupRequest struct
+//
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+
+func (inviteGroupRequest *InviteGroupRequest) InsertIntoDb(db *sql.DB) error {
+	if inviteGroupRequest.GroupId == "" || inviteGroupRequest.ReceiverId == "" || inviteGroupRequest.SenderId == "" {
+		return errors.New("empty field")
+	}
+
+	return InsertIntoDb("InviteGroupRequest", db, inviteGroupRequest.SenderId, inviteGroupRequest.GroupId, inviteGroupRequest.ReceiverId)
+}
+
+
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+//
 //	DB Method for Event struct
 //
 // ----------------------------------------------------------------------------------------------
