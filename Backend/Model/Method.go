@@ -1105,7 +1105,7 @@ func (follower *FollowRequest) InsertIntoDb(db *sql.DB) error {
 
 func (follower *FollowRequests) SelectFromDb(db *sql.DB, where map[string]any) error {
 	// We call SelectFromDb to retrieve data from the "UserInfo" table based on the given conditions
-	userData, err := SelectFromDb("FollowingRequest", db, where)
+	userData, err := SelectFromDb("FollowRequestDetail", db, where)
 	if err != nil {
 		// Return an error if the data retrieval fails
 		return err

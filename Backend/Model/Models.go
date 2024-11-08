@@ -78,8 +78,11 @@ type Follower struct {
 type Followers []Follower
 
 type FollowRequest struct {
-	UserId     string `json:"UserId"`
-	FollowerId string `json:"FollowerId"`
+	UserId    string `json:"UserId"`
+	User_Name string `json:"User_Name"`
+
+	FollowerId    string `json:"FollowerId"`
+	Follower_Name string `json:"Follower_Name"`
 }
 type FollowRequests []FollowRequest
 
