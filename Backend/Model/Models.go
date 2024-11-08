@@ -106,9 +106,14 @@ type JoinGroupRequest struct {
 type JoinGroupRequests []JoinGroupRequest
 
 type InviteGroupRequest struct {
-	SenderId   string `json:"SenderId"`
+	SenderId    string `json:"SenderId"`
+	Sender_Name string `json:"Sender_Name"`
+
 	GroupId    string `json:"GroupId"`
-	ReceiverId string `json:"ReceiverId"`
+	Group_Name string `json:"GroupName"`
+
+	ReceiverId    string `json:"ReceiverId"`
+	Receiver_Name string `json:"Receiver_Name"`
 }
 type InviteGroupRequests []InviteGroupRequest
 

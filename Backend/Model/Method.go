@@ -1297,7 +1297,7 @@ func (inviteGroupRequest *InviteGroupRequest) InsertIntoDb(db *sql.DB) error {
 }
 
 func (invitations *InviteGroupRequests) SelectFromDb(db *sql.DB, where map[string]any) error {
-	userData, err := SelectFromDb("InviteGroupRequest", db, where)
+	userData, err := SelectFromDb("InviteGroupRequestDetail", db, where)
 	if err != nil {
 		return err
 	}
