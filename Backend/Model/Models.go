@@ -97,8 +97,11 @@ type Group struct {
 }
 
 type JoinGroupRequest struct {
-	UserId  string `json:"UserId"`
-	GroupId string `json:"GroupId"`
+	UserId    string `json:"UserId"`
+	User_Name string `json:"User_Name"`
+
+	GroupId   string `json:"GroupId"`
+	GroupName string `json:"GroupName"`
 }
 type JoinGroupRequests []JoinGroupRequest
 

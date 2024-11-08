@@ -1268,7 +1268,7 @@ func (joinGroup *JoinGroupRequest) InsertIntoDb(db *sql.DB) error {
 }
 
 func (joinGroup *JoinGroupRequests) SelectFromDb(db *sql.DB, where map[string]any) error {
-	userData, err := SelectFromDb("JoinGroupRequest", db, where)
+	userData, err := SelectFromDb("JoinGroupRequestDetail", db, where)
 	if err != nil {
 		// Return an error if the data retrieval fails
 		return err
