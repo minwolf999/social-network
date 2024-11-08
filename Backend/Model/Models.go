@@ -86,6 +86,7 @@ type FollowRequests []FollowRequest
 type Group struct {
 	Id             string `json:"Id"`
 	LeaderId       string `json:"LeaderId"`
+	Leader         string `json:"Leader"`
 	MemberIds      string `json:"MemberIds"`
 	SplitMemberIds []string
 	GroupName      string `json:"GroupName"`

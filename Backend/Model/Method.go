@@ -1164,7 +1164,7 @@ The function returns 1 value:
 */
 func (group *Group) SelectFromDb(db *sql.DB, where map[string]any) error {
 	// We call SelectFromDb to retrieve data from the "Groups" table based on the given conditions
-	userData, err := SelectFromDb("Groups", db, where)
+	userData, err := SelectFromDb("GroupDetail", db, where)
 	if err != nil {
 		// Return an error if the data retrieval fails
 		return err
