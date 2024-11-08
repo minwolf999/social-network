@@ -49,6 +49,7 @@ func CreateTables(db *sql.DB) {
 			LastName VARCHAR(50) NOT NULL,
 			BirthDate VARCHAR(20) NOT NULL,
 			ProfilePicture TEXT,
+			Banner TEXT,
 			Username VARCHAR(50),
 			AboutMe VARCHAR(280),
 			Status VARCHAR(20),

@@ -609,7 +609,7 @@ func (register *Register) InsertIntoDb(db *sql.DB) error {
 	}
 
 	// We call InsertIntoDb to insert the registration data into the "UserInfo" table in the database
-	return InsertIntoDb("UserInfo", db, register.Auth.Id, register.Auth.Email, register.FirstName, register.LastName, register.BirthDate, register.ProfilePicture, register.Username, register.AboutMe, register.Status, register.GroupsJoined)
+	return InsertIntoDb("UserInfo", db, register.Auth.Id, register.Auth.Email, register.FirstName, register.LastName, register.BirthDate, register.ProfilePicture, register.Banner, register.Username, register.AboutMe, register.Status, register.GroupsJoined)
 }
 
 /*

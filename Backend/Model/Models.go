@@ -23,6 +23,7 @@ type Register struct {
 	BirthDate string `json:"BirthDate"`
 
 	ProfilePicture string `json:"ProfilePicture"`
+	Banner         string `json:"Banner"`
 	Username       string `json:"Username"`
 	AboutMe        string `json:"AboutMe"`
 	Gender         string `json:"Gender"`
@@ -92,8 +93,8 @@ type JoinGroupRequest struct {
 type JoinGroupRequests []JoinGroupRequest
 
 type InviteGroupRequest struct {
-	SenderId  string `json:"SenderId"`
-	GroupId string `json:"GroupId"`
+	SenderId   string `json:"SenderId"`
+	GroupId    string `json:"GroupId"`
 	ReceiverId string `json:"ReceiverId"`
 }
 type InviteGroupRequests []InviteGroupRequest
