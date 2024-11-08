@@ -438,9 +438,23 @@ func JoinGroup(db *sql.DB) http.HandlerFunc {
 		}
 		datas.UserId = decryptUserId
 
-		if err = utils.IfExistsInDB("Groups", db, map[string]any{"Id": datas.GroupId}); err != nil {
+		var group model.Group
+		if err = group.SelectFromDb(db, map[string]any{"Id": datas.GroupId}); err != nil {
+			nw.Error("There is a problem during the fetch of the DB")
+			log.Printf("[%s] [JoinGroup] There is a problem during the fetch of the DB : %v", r.RemoteAddr, err)
+			return
+		}
+
+		if group.GroupName == "" {
 			nw.Error("There is no group with this id")
 			log.Printf("[%s] [JoinGroup] There is no group with this id : %v", r.RemoteAddr, err)
+			return
+		}
+
+		group.SplitMembers()
+		if slices.Contains(group.SplitMemberIds, datas.UserId) {
+			nw.Error("You are already in the group")
+			log.Printf("[%s] [JoinGroup] This user is already in the group : %v", r.RemoteAddr, err)
 			return
 		}
 
@@ -671,9 +685,23 @@ func InviteGroup(db *sql.DB) http.HandlerFunc {
 		}
 		datas.SenderId = decryptUserId
 
-		if err = utils.IfExistsInDB("Groups", db, map[string]any{"Id": datas.GroupId}); err != nil {
+		var group model.Group
+		if err = group.SelectFromDb(db, map[string]any{"Id": datas.GroupId}); err != nil {
+			nw.Error("There is a problem during the fetch of the DB")
+			log.Printf("[%s] [InviteGroup] There is a problem during the fetch of the DB : %v", r.RemoteAddr, err)
+			return
+		}
+
+		if group.GroupName == "" {
 			nw.Error("There is no group with this id")
 			log.Printf("[%s] [InviteGroup] There is no group with this id : %v", r.RemoteAddr, err)
+			return
+		}
+
+		group.SplitMembers()
+		if slices.Contains(group.SplitMemberIds, datas.ReceiverId) {
+			nw.Error("This user is already in the group")
+			log.Printf("[%s] [InviteGroup] This user is already in the group : %v", r.RemoteAddr, err)
 			return
 		}
 
