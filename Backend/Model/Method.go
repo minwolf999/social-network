@@ -1038,7 +1038,7 @@ The function returns 1 value:
 */
 func (followers *Followers) SelectFromDb(db *sql.DB, where map[string]any) error {
 	// We call SelectFromDb to retrieve data from the "Follower" table based on the given conditions
-	userData, err := SelectFromDb("Follower", db, where)
+	userData, err := SelectFromDb("FollowDetail", db, where)
 	if err != nil {
 		// Return an error if the data retrieval fails
 		return err
@@ -1084,7 +1084,6 @@ func (follower *Follower) DeleteFromDb(db *sql.DB, where map[string]any) error {
 	return RemoveFromDB("Follower", db, where)
 }
 
-
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
 //
@@ -1092,7 +1091,6 @@ func (follower *Follower) DeleteFromDb(db *sql.DB, where map[string]any) error {
 //
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
-
 
 func (follower *FollowRequest) InsertIntoDb(db *sql.DB) error {
 	// We check if any of the required fields (Id, UserId, FollowerId) are empty
@@ -1236,7 +1234,6 @@ func (group *Group) JoinMembers() {
 	group.MemberIds = strings.Join(group.SplitMemberIds, " | ")
 }
 
-
 func (groups *Groups) SelectFromDb(db *sql.DB, where map[string]any) error {
 	// We call SelectFromDb to retrieve data from the "UserInfo" table based on the given conditions
 	userData, err := SelectFromDb("Groups", db, where)
@@ -1298,7 +1295,6 @@ func (inviteGroupRequest *InviteGroupRequest) InsertIntoDb(db *sql.DB) error {
 
 	return InsertIntoDb("InviteGroupRequest", db, inviteGroupRequest.SenderId, inviteGroupRequest.GroupId, inviteGroupRequest.ReceiverId)
 }
-
 
 func (invitations *InviteGroupRequests) SelectFromDb(db *sql.DB, where map[string]any) error {
 	userData, err := SelectFromDb("InviteGroupRequest", db, where)

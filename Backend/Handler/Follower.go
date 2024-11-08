@@ -430,7 +430,7 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		followedRequest.UserId = decryptAuthorId
-		
+
 		if err := utils.IfExistsInDB("FollowingRequest", db, map[string]any{"UserId": followedRequest.UserId, "FollowerId": followedRequest.FollowerId}); err != nil {
 			nw.Error("There is no request for following this user")
 			log.Printf("[%s] [AcceptFollowedRequest] There is no request for following this user : %s", r.RemoteAddr, err)

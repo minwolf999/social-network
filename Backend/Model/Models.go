@@ -65,9 +65,15 @@ type Comment struct {
 type Comments []Comment
 
 type Follower struct {
-	Id         string `json:"Id"`
-	UserId     string `json:"UserId"`
-	FollowerId string `json:"FollowerId"`
+	Id string `json:"Id"`
+
+	UserId        string `json:"UserId"`
+	User_Name     string `json:"User_Name"`
+	User_Username string `json:"User_Username"`
+
+	FollowerId      string `json:"FollowerId"`
+	Follower_Name   string `json:"Follower_Name"`
+	Follow_Username string `json:"Follower_Username"`
 }
 type Followers []Follower
 

@@ -412,6 +412,8 @@ func PrepareStmt(tabelName string, db *sql.DB, Args map[string]any) ([]string, *
 	// Build the SQL query with WHERE clauses
 	query := fmt.Sprintf("SELECT * FROM %s %s", tabelName, whereString)
 
+	fmt.Println(query, params)
+
 	// Prepare the SQL query
 	stmt, err := db.Prepare(query)
 	if err != nil {
