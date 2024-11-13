@@ -274,3 +274,50 @@ func GetEvent(db *sql.DB) http.HandlerFunc {
 		}
 	}
 }
+
+func GetAllGroupEvents(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		var datas struct{
+			UserId string `json:"UserId"`
+			GroupId string `json:"GroupId"`
+		}
+
+		// Decode the JSON request body into the comment object
+		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
+			// Send error if decoding fails
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [GetAllGroupEvents] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		// Decrypt the OrganisatorId from the JWT to get the actual Organisator ID
+		_, err := utils.DecryptJWT(datas.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [GetAllGroupEvents] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+
+		var event model.Event
+		events, err := event.SelectFromDb(db, map[string]any{"GroupId":datas.GroupId});
+		if err != nil {
+			nw.Error("Error during the fetching of the DB")
+			log.Printf("[%s] [GetAllGroupEvents] Error during the fetching of the DB : %v", r.RemoteAddr, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Events getted successfully",
+			"Value": events,
+		})
+		if err != nil {
+			log.Printf("[%s] [GetEvent] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
