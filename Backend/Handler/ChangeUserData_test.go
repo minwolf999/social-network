@@ -23,7 +23,7 @@ func TestHandleChangeUserData(t *testing.T) {
 
 	var userData = model.Register{
 		Auth: model.Auth{
-			Id: "userid",
+			Id:              "userid",
 			Email:           "unemail@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -44,9 +44,9 @@ func TestHandleChangeUserData(t *testing.T) {
 	}
 
 	user := map[string]any{
-		"SessionId":  utils.GenerateJWT(userData.Id),
-		"NewName": "test",
-		"NewPass": "newPass",
+		"SessionId": utils.GenerateJWT(userData.Id),
+		"NewName":   "test",
+		"NewPass":   "newPass",
 	}
 
 	body, err := json.Marshal(user)
@@ -87,74 +87,6 @@ func TestHandleChangeUserData(t *testing.T) {
 
 	if bodyValue["Success"] != true {
 		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
-		return
-	}
-}
-
-func TestChangeUserName(t *testing.T) {
-	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := model.OpenDb("sqlite3", ":memory:")
-	if err != nil {
-		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
-		return
-	}
-	defer db.Close()
-
-	CreateTables(db)
-
-	var user = model.Register{
-		Auth: model.Auth{
-			Id:              "Id",
-			Email:           "unemail@gmail.com",
-			Password:        "MonMotDePasse123!",
-			ConfirmPassword: "MonMotDePasse123!",
-		},
-		FirstName: "Jean",
-		LastName:  "Dujardin",
-		BirthDate: "1990-01-01",
-	}
-
-	if err = user.Auth.InsertIntoDb(db); err != nil {
-		t.Fatalf("error during the push: %v", err)
-		return
-	}
-
-	if err = user.InsertIntoDb(db); err != nil {
-		t.Fatalf("error during the push: %v", err)
-		return
-	}
-
-	if err = ChangeUserName(db, "test", user); err != nil {
-		t.Fatalf("error during the modification of the username : %v", err)
-		return
-	}
-}
-
-func TestChangePass(t *testing.T) {
-	// Crée un mock de base de données (ou une vraie connexion en mémoire)
-	db, err := model.OpenDb("sqlite3", ":memory:")
-	if err != nil {
-		t.Fatalf("Erreur lors de la création de la base de données en mémoire : %v", err)
-		return
-	}
-	defer db.Close()
-
-	CreateTables(db)
-
-	var user = model.Auth{
-		Id:              "Id",
-		Email:           "unemail@gmail.com",
-		Password:        "MonMotDePasse123!",
-		ConfirmPassword: "MonMotDePasse123!",
-	}
-
-	if err = user.InsertIntoDb(db); err != nil {
-		t.Fatalf("error during the push: %v", err)
-		return
-	}
-
-	if err = ChangePass(db, "test", user); err != nil {
-		t.Fatalf("error during the modification of the username : %v", err)
 		return
 	}
 }

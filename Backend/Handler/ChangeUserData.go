@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 	model "social-network/Model"
@@ -35,45 +34,90 @@ func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Define a struct for the request body
-		var request struct {
-			SessionId string `json:"SessionId"` // User session ID
-			NewName   string `json:"NewName"`   // New username
-			NewPass   string `json:"NewPass"`   // New password
-		}
+		var userInfo model.Register
 
 		// Decode the JSON request body into the request struct
-		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&userInfo); err != nil {
 			nw.Error("Invalid request body") // Send error if decoding fails
 			log.Printf("[%s] [ChangeUserData] Invalid request body: %v", r.RemoteAddr, err)
 			return
 		}
 
 		// Decrypt the session ID to get the user ID
-		uid, err := utils.DecryptJWT(request.SessionId, db)
+		uid, err := utils.DecryptJWT(userInfo.Id, db)
 		if err != nil {
 			nw.Error("Error when decrypt the JWT") // Handle JWT decryption error
-			log.Printf("[%s] [ChangeUserData] %s", r.RemoteAddr, err.Error())
+			log.Printf("[%s] [ChangeUserData] Error when decrypt the JWT : %s", r.RemoteAddr, err.Error())
+			return
+		}
+		userInfo.Id = uid
+
+		var userPreviousData model.Register
+		if err = userPreviousData.SelectFromDb(db, map[string]any{"Id": userInfo.Id}); err != nil {
+			nw.Error("Error during the fetching of the DB") // Handle JWT decryption error
+			log.Printf("[%s] [ChangeUserData] Error during the fetching of the DB : %s", r.RemoteAddr, err.Error())
 			return
 		}
 
-		var userInfo model.Register // Variable to hold user information
-
-		// Update username if a new name is provided
-		if request.NewName != "" {
-			userInfo.Id = uid
-			if err := ChangeUserName(db, request.NewName, userInfo); err != nil {
-				nw.Error("Error changing username") // Handle username change error
-				log.Printf("[%s] [ChangeUserData] Error changing username: %v", r.RemoteAddr, err)
+		if userPreviousData.Email != userInfo.Email {
+			if err = userPreviousData.Auth.UpdateDb(db, map[string]any{"Email": userInfo.Email}, map[string]any{"Id": userInfo.Id}); err != nil {
+				nw.Error("Error during the updating of the DB") // Handle JWT decryption error
+				log.Printf("[%s] [ChangeUserData] Error during the updating of the DB : %s", r.RemoteAddr, err.Error())
 				return
 			}
 		}
 
-		// Update password if a new password is provided
-		if request.NewPass != "" {
-			userInfo.Auth.Id = uid
-			if err := ChangePass(db, request.NewPass, userInfo.Auth); err != nil {
-				nw.Error("Error changing password") // Handle password change error
-				log.Printf("[%s] [ChangeUserData] Error changing password: %v", r.RemoteAddr, err)
+		if err = bcrypt.CompareHashAndPassword([]byte(userPreviousData.Password), []byte(userInfo.Password)); err == nil {
+			hashedPass, err := bcrypt.GenerateFromPassword([]byte(userInfo.Password), bcrypt.DefaultCost)
+			if err != nil {
+				nw.Error("Error during the hashing of the password") // Handle JWT decryption error
+				log.Printf("[%s] [ChangeUserData] Error during the hashing of the password : %s", r.RemoteAddr, err.Error())
+				return
+			}
+	
+			if err = userPreviousData.Auth.UpdateDb(db, map[string]any{"Password": string(hashedPass)}, map[string]any{"Id": userInfo.Id}); err != nil {
+				nw.Error("Error during the hashing of the password") // Handle JWT decryption error
+				log.Printf("[%s] [ChangeUserData] Error during the hashing of the password : %s", r.RemoteAddr, err.Error())
+				return
+			}
+		}
+
+		if userPreviousData.Username != userInfo.Username {
+			if err = userPreviousData.UpdateDb(db, map[string]any{"Username": userInfo.Username}, map[string]any{"Id": userInfo.Id}); err != nil {
+				nw.Error("Error during the updating of the DB") // Handle JWT decryption error
+				log.Printf("[%s] [ChangeUserData] Error during the updating of the DB : %s", r.RemoteAddr, err.Error())
+				return
+			}
+		}
+
+		if userPreviousData.AboutMe != userInfo.AboutMe {
+			if err = userPreviousData.UpdateDb(db, map[string]any{"AboutMe": userInfo.AboutMe}, map[string]any{"Id": userInfo.Id}); err != nil {
+				nw.Error("Error during the updating of the DB") // Handle JWT decryption error
+				log.Printf("[%s] [ChangeUserData] Error during the updating of the DB : %s", r.RemoteAddr, err.Error())
+				return
+			}
+		}
+
+		if userPreviousData.Status != userInfo.Status && (userInfo.Status == "private" || userInfo.Status == "public") {
+			if err = userPreviousData.UpdateDb(db, map[string]any{"Status": userInfo.Status}, map[string]any{"Id": userInfo.Id}); err != nil {
+				nw.Error("Error during the updating of the DB") // Handle JWT decryption error
+				log.Printf("[%s] [ChangeUserData] Error during the updating of the DB : %s", r.RemoteAddr, err.Error())
+				return
+			}
+		}
+
+		if userPreviousData.ProfilePicture != userInfo.ProfilePicture {
+			if err = userPreviousData.UpdateDb(db, map[string]any{"ProfilePicture": userInfo.ProfilePicture}, map[string]any{"Id": userInfo.Id}); err != nil {
+				nw.Error("Error during the updating of the DB") // Handle JWT decryption error
+				log.Printf("[%s] [ChangeUserData] Error during the updating of the DB : %s", r.RemoteAddr, err.Error())
+				return
+			}
+		}
+
+		if userPreviousData.Banner != userInfo.Banner {
+			if err = userPreviousData.UpdateDb(db, map[string]any{"Banner": userInfo.Banner}, map[string]any{"Id": userInfo.Id}); err != nil {
+				nw.Error("Error during the updating of the DB") // Handle JWT decryption error
+				log.Printf("[%s] [ChangeUserData] Error during the updating of the DB : %s", r.RemoteAddr, err.Error())
 				return
 			}
 		}
@@ -87,66 +131,5 @@ func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
 		if err != nil {
 			log.Printf("[%s] [ChangeUserData] %s", r.RemoteAddr, err.Error())
 		}
-	}
-}
-
-/*
-This function takes 3 arguments:
-  - a pointer to an sql.DB instance named db, representing the database connection.
-  - a string named name, representing the new username.
-  - a model.Register instance named userdata, representing the user data.
-
-The purpose of this function is to change the user's username in the database.
-
-The function performs the following steps:
-  - Selects the user data from the database using the user ID.
-  - Checks if the new username is the same as the current one, returning an error if they are the same.
-  - If they are different, it updates the database with the new username.
-*/
-func ChangeUserName(db *sql.DB, name string, userdata model.Register) error {
-	err := userdata.SelectFromDb(db, map[string]any{"Id": userdata.Id}) // Retrieve user data
-	if err != nil {
-		return err // Return any errors encountered
-	}
-
-	// Check if the new username is the same as the current username
-	if userdata.Username == name {
-		return errors.New("new username and current username are the same")
-	} else {
-		// Update the database with the new username
-		return userdata.UpdateDb(db, map[string]any{"Username": name}, map[string]any{"Id": userdata.Id})
-	}
-}
-
-/*
-This function takes 3 arguments:
-  - a pointer to an sql.DB instance named db, representing the database connection.
-  - a string named newpass, representing the new password.
-  - a model.Auth instance named userData, representing the user's authentication data.
-
-The purpose of this function is to change the user's password in the database.
-
-The function performs the following steps:
-  - Selects the user data from the database using the user ID.
-  - Compares the new password with the current password, returning an error if they are the same.
-  - If they are different, it hashes the new password and updates the database with the new hashed password.
-*/
-func ChangePass(db *sql.DB, newpass string, userData model.Auth) error {
-	err := userData.SelectFromDb(db, map[string]any{"Id": userData.Id}) // Retrieve user data
-	if err != nil {
-		return err // Return any errors encountered
-	}
-
-	// Compare the new password with the current password
-	if err = bcrypt.CompareHashAndPassword([]byte(userData.Password), []byte(newpass)); err == nil {
-		return errors.New("new password and current password are the same") // Return error if they are the same
-	} else {
-		// Hash the new password and update the database
-		hashedPass, err := bcrypt.GenerateFromPassword([]byte(newpass), bcrypt.DefaultCost)
-		if err != nil {
-			return err // Return any errors encountered during hashing
-		}
-
-		return userData.UpdateDb(db, map[string]any{"Password": string(hashedPass)}, map[string]any{"Id": userData.Id}) // Update password in database
 	}
 }
