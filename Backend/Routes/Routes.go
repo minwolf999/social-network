@@ -63,6 +63,7 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/getGroup", handler.GetGroup(db))
 	mux.Handle("/getAllGroups", handler.GetAllGroups(db))
 	mux.Handle("/getGroupsJoined", handler.GetGroupsJoined(db))
+	mux.Handle("/getGroupsPosts", handler.GetGroupsPosts(db))
 	mux.Handle("/deleteGroup", handler.DeleteGroup(db))
 
 	mux.Handle("/joinGroup", handler.JoinGroup(db))

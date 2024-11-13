@@ -344,7 +344,7 @@ func GetGroupsJoined(db *sql.DB) http.HandlerFunc {
 		if err := json.NewDecoder(r.Body).Decode(&userJWT); err != nil {
 			// Send error if decoding fails
 			nw.Error("Invalid request body")
-			log.Printf("[%s] [GetAllGroups] Invalid request body: %v", r.RemoteAddr, err)
+			log.Printf("[%s] [GetGroupsJoined] Invalid request body: %v", r.RemoteAddr, err)
 			return
 		}
 
@@ -352,14 +352,14 @@ func GetGroupsJoined(db *sql.DB) http.HandlerFunc {
 		userId, err := utils.DecryptJWT(userJWT, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
-			log.Printf("[%s] [GetAllGroups] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [GetGroupsJoined] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
 			return
 		}
 
 		var groups model.Groups
 		if err = groups.SelectFromDb(db, map[string]any{}); err != nil {
 			nw.Error("Error during fetching the groups")
-			log.Printf("[%s] [GetAllGroups] Error during fetching the groups : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [GetGroupsJoined] Error during fetching the groups : %v", r.RemoteAddr, err)
 			return
 		}
 
@@ -385,7 +385,61 @@ func GetGroupsJoined(db *sql.DB) http.HandlerFunc {
 		})
 		if err != nil {
 			// Log any error that occurs while encoding the response.
-			log.Printf("[%s] [GetAllGroups] %s", r.RemoteAddr, err.Error())
+			log.Printf("[%s] [GetGroupsJoined] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
+func GetGroupsPosts(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		var datas struct{
+			UserId string `json:"UserId"`
+			GroupId string `json:"GroupId"`
+		}
+
+		// Decode the JSON request body into the comment object
+		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
+			// Send error if decoding fails
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [GetGroupsPosts] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		// Decrypt the OrganisatorId from the JWT to get the actual Organisator ID
+		_, err := utils.DecryptJWT(datas.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [GetGroupsPosts] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+
+		if err := utils.IfExistsInDB("Groups", db, map[string]any{"Id": datas.GroupId}); err != nil {
+			nw.Error("Invalid group id")
+			log.Printf("[%s] [GetGroupsPosts] Invalid group id: %v", r.RemoteAddr, err)
+			return
+		}
+
+		var posts model.Posts
+		if err = posts.SelectFromDb(db, map[string]any{"IsGroup": datas.GroupId}); err != nil {
+			nw.Error("Error during the fetch of the DB")
+			log.Printf("[%s] [GetGroupsPosts] Error during the fetch of the DB: %v", r.RemoteAddr, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Group's posts getted successfully",
+
+			"Posts": posts,
+		})
+		if err != nil {
+			// Log any error that occurs while encoding the response.
+			log.Printf("[%s] [GetGroupsPosts] %s", r.RemoteAddr, err.Error())
 		}
 	}
 }
