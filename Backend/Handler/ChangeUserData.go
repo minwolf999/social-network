@@ -68,6 +68,12 @@ func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
 		}
 
 		if err = bcrypt.CompareHashAndPassword([]byte(userPreviousData.Password), []byte(userInfo.Password)); err == nil {
+			if !IsValidPassword(userInfo.Password) {
+				nw.Error("Incorrect password ! the password must contain 8 characters, 1 uppercase letter, 1 special character, 1 number") // Handle JWT decryption error
+				log.Printf("[%s] [ChangeUserData] incorrect password ! the password must contain 8 characters, 1 uppercase letter, 1 special character, 1 number", r.RemoteAddr)
+				return
+			}
+
 			hashedPass, err := bcrypt.GenerateFromPassword([]byte(userInfo.Password), bcrypt.DefaultCost)
 			if err != nil {
 				nw.Error("Error during the hashing of the password") // Handle JWT decryption error
