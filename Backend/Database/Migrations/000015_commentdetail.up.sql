@@ -4,6 +4,7 @@ CREATE VIEW IF NOT EXISTS CommentDetail AS
   SELECT 
     c.Id,
 	c.Text,
+	c.Image,
 	c.CreationDate,
 	c.AuthorId,
 	c.LikeCount,
