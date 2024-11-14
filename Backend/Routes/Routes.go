@@ -55,7 +55,7 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/like", handler.HandleLike(db))
 
 	// Setting route
-	mux.Handle("/settings", handler.HandleChangeUserData(db))
+	mux.Handle("/updateUserInfo", handler.HandleChangeUserData(db))
 
 	// Group routes
 	mux.Handle("/createGroup", handler.CreateGroup(db))
