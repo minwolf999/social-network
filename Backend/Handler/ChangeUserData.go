@@ -59,7 +59,7 @@ func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if userPreviousData.Email != userInfo.Email {
+		if userPreviousData.Email != userInfo.Email && userInfo.Email != ""{
 			if err = userPreviousData.Auth.UpdateDb(db, map[string]any{"Email": userInfo.Email}, map[string]any{"Id": userInfo.Id}); err != nil {
 				nw.Error("Error during the updating of the DB") // Handle JWT decryption error
 				log.Printf("[%s] [ChangeUserData] Error during the updating of the DB : %s", r.RemoteAddr, err.Error())
@@ -67,7 +67,7 @@ func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
-		if err = bcrypt.CompareHashAndPassword([]byte(userPreviousData.Password), []byte(userInfo.Password)); err == nil {
+		if err = bcrypt.CompareHashAndPassword([]byte(userPreviousData.Password), []byte(userInfo.Password)); err != nil && userInfo.Password != "" {
 			if !IsValidPassword(userInfo.Password) {
 				nw.Error("Incorrect password ! the password must contain 8 characters, 1 uppercase letter, 1 special character, 1 number") // Handle JWT decryption error
 				log.Printf("[%s] [ChangeUserData] incorrect password ! the password must contain 8 characters, 1 uppercase letter, 1 special character, 1 number", r.RemoteAddr)
@@ -88,7 +88,7 @@ func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
-		if userPreviousData.Username != userInfo.Username {
+		if userPreviousData.Username != userInfo.Username && userInfo.Username != "" {
 			if err = userPreviousData.UpdateDb(db, map[string]any{"Username": userInfo.Username}, map[string]any{"Id": userInfo.Id}); err != nil {
 				nw.Error("Error during the updating of the DB") // Handle JWT decryption error
 				log.Printf("[%s] [ChangeUserData] Error during the updating of the DB : %s", r.RemoteAddr, err.Error())
@@ -96,7 +96,7 @@ func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
-		if userPreviousData.AboutMe != userInfo.AboutMe {
+		if userPreviousData.AboutMe != userInfo.AboutMe && userInfo.AboutMe != "" {
 			if err = userPreviousData.UpdateDb(db, map[string]any{"AboutMe": userInfo.AboutMe}, map[string]any{"Id": userInfo.Id}); err != nil {
 				nw.Error("Error during the updating of the DB") // Handle JWT decryption error
 				log.Printf("[%s] [ChangeUserData] Error during the updating of the DB : %s", r.RemoteAddr, err.Error())
@@ -112,7 +112,7 @@ func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
-		if userPreviousData.ProfilePicture != userInfo.ProfilePicture {
+		if userPreviousData.ProfilePicture != userInfo.ProfilePicture && userInfo.ProfilePicture != "" {
 			if err = userPreviousData.UpdateDb(db, map[string]any{"ProfilePicture": userInfo.ProfilePicture}, map[string]any{"Id": userInfo.Id}); err != nil {
 				nw.Error("Error during the updating of the DB") // Handle JWT decryption error
 				log.Printf("[%s] [ChangeUserData] Error during the updating of the DB : %s", r.RemoteAddr, err.Error())
@@ -120,7 +120,7 @@ func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
-		if userPreviousData.Banner != userInfo.Banner {
+		if userPreviousData.Banner != userInfo.Banner && userInfo.Banner != "" {
 			if err = userPreviousData.UpdateDb(db, map[string]any{"Banner": userInfo.Banner}, map[string]any{"Id": userInfo.Id}); err != nil {
 				nw.Error("Error during the updating of the DB") // Handle JWT decryption error
 				log.Printf("[%s] [ChangeUserData] Error during the updating of the DB : %s", r.RemoteAddr, err.Error())
