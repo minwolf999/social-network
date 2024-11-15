@@ -296,34 +296,78 @@ func GetLike(db *sql.DB) http.HandlerFunc {
 		}
 		request.UserId = userId
 
+		if request.Table != "LikePost" && request.Table != "LikeComment" {
+			nw.Error("Invalid table")
+			log.Printf("[%s] [GetLike] Invalid table", r.RemoteAddr)
+			return
+		}
+
 		userData, err := model.SelectFromDb(request.Table, db, map[string]any{"GroupId": request.PostId})
 		if err != nil {
-
+			nw.Error("Error during the fetch of the DB")
+			log.Printf("[%s] [GetLike] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
 		}
 
 		serializedData, err := json.Marshal(userData)
 		if err != nil {
-
+			nw.Error("Error during the fetch of the DB")
+			log.Printf("[%s] [GetLike] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
 		}
 
-		var idsLike []string
-		if err = json.Unmarshal(serializedData, &idsLike); err != nil {
+		if request.Table == "LikePost" {
+			var PostLike []struct {
+				UserId string `json:"UserId"`
+				PostId string `json:"PostId"`
+			}
 
-		}
+			if err = json.Unmarshal(serializedData, &PostLike); err != nil {
+				nw.Error("Error during the fetch of the DB")
+				log.Printf("[%s] [GetLike] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+				return
+			}
 
-		// Set the response header to indicate JSON content and respond with success message.
-		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(map[string]any{
-			// Indicates the operation was successful.
-			"Success": true,
-			// Success message for the like action.
-			"Message": "Like getted successfully",
+			// Set the response header to indicate JSON content and respond with success message.
+			w.Header().Set("Content-Type", "application/json")
+			err = json.NewEncoder(w).Encode(map[string]any{
+				// Indicates the operation was successful.
+				"Success": true,
+				// Success message for the like action.
+				"Message": "Like getted successfully",
 
-			"Value": idsLike,
-		})
-		if err != nil {
-			// Log any error that occurs while encoding the response.
-			log.Printf("[%s] [Like] %s", r.RemoteAddr, err.Error())
+				"Value": PostLike,
+			})
+			if err != nil {
+				// Log any error that occurs while encoding the response.
+				log.Printf("[%s] [Like] %s", r.RemoteAddr, err.Error())
+			}
+		} else if request.Table == "LikeComment" {
+			var CommentLike []struct {
+				UserId    string `json:"UserId"`
+				CommentId string `json:"CommentId"`
+			}
+
+			if err = json.Unmarshal(serializedData, &CommentLike); err != nil {
+				nw.Error("Error during the fetch of the DB")
+				log.Printf("[%s] [GetLike] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+				return
+			}
+
+			// Set the response header to indicate JSON content and respond with success message.
+			w.Header().Set("Content-Type", "application/json")
+			err = json.NewEncoder(w).Encode(map[string]any{
+				// Indicates the operation was successful.
+				"Success": true,
+				// Success message for the like action.
+				"Message": "Like getted successfully",
+
+				"Value": CommentLike,
+			})
+			if err != nil {
+				// Log any error that occurs while encoding the response.
+				log.Printf("[%s] [Like] %s", r.RemoteAddr, err.Error())
+			}
 		}
 	}
 }
