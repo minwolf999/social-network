@@ -32,13 +32,12 @@ func TestOpenDb(t *testing.T) {
 
 func CreateTables(db *sql.DB) {
 	db.Exec(`
-		PRAGMA foreign_keys = ON;
-
 		CREATE TABLE IF NOT EXISTS Auth (
 			Id VARCHAR(36) NOT NULL,
 			Email VARCHAR(100) NOT NULL UNIQUE,
 			Password VARCHAR(50) NOT NULL,
 			ConnectionAttempt INTEGER,
+		
 			PRIMARY KEY (Id)
 		);
 		
@@ -214,36 +213,162 @@ func CreateTables(db *sql.DB) {
 		  SELECT 
 		    e.Id,
 		    g.GroupName,
-		
+
 		    CASE 
 		      WHEN u1.Username = '' THEN CONCAT(u1.FirstName, ' ', u1.LastName)
 		      ELSE u1.Username 
 		    END AS Organisator,
-		
+
 		    e.Title,
 		    e.Description,
 		    e.DateOfTheEvent,
-		
+
 		    GROUP_CONCAT(DISTINCT CASE 
 		        WHEN u2.Username = '' THEN CONCAT(u2.FirstName, ' ', u2.LastName)
 		        ELSE u2.Username 
 		    END) AS JoinUsers,
-		
+
 		    GROUP_CONCAT(DISTINCT CASE
 		        WHEN u3.Username = '' THEN CONCAT(u3.FirstName, ' ', u3.LastName)
 		        ELSE u3.Username
 		    END) AS DeclineUsers
-		
-		
+
+
 		FROM Event AS e
 		INNER JOIN Groups AS g ON g.Id = e.GroupId
 		INNER JOIN UserInfo AS u1 ON u1.Id = e.OrganisatorId
-		
+
 		LEFT JOIN JoinEvent AS j ON j.EventId = e.Id
 		LEFT JOIN UserInfo AS u2 ON u2.Id = j.UserId
-		
+
 		LEFT JOIN DeclineEvent AS d ON d.EventId = e.Id
 		LEFT JOIN UserInfo AS u3 ON u3.Id = d.UserId;
+
+
+		CREATE TABLE IF NOT EXISTS FollowingRequest (
+			UserId VARCHAR(36) NOT NULL,
+			FollowerId VARCHAR(36) NOT NULL,
+
+			CONSTRAINT fk_userid FOREIGN KEY (UserId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE,
+			CONSTRAINT fk_followerid FOREIGN KEY (FollowerId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE
+		);
+
+		CREATE TABLE IF NOT EXISTS JoinGroupRequest (
+			UserId VARCHAR(36) NOT NULL,
+			GroupId VARCHAR(36) NOT NULL,
+
+			CONSTRAINT fk_userid FOREIGN KEY (UserId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE,
+			CONSTRAINT fk_followerid FOREIGN KEY (GroupId) REFERENCES "Groups"("Id") ON DELETE CASCADE
+		);
+
+		CREATE TABLE IF NOT EXISTS InviteGroupRequest (
+			SenderId VARCHAR(36) NOT NULL,
+			GroupId VARCHAR(36) NOT NULL,
+			ReceiverId VARCHAR(36) NOT NULL,
+
+			CONSTRAINT fk_senderid FOREIGN KEY (SenderId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE,
+			CONSTRAINT fk_followerid FOREIGN KEY (GroupId) REFERENCES "Groups"("Id") ON DELETE CASCADE,
+			CONSTRAINT fk_receiverid FOREIGN KEY (ReceiverId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE
+		);
+
+		CREATE VIEW IF NOT EXISTS FollowDetail AS
+		SELECT 
+			f.Id,
+			f.UserId AS UserId,
+			User.Username AS User_Username,
+			
+			CASE
+			WHEN CONCAT(User.FirstName, ' ', User.LastName) = ' ' THEN ''
+			ELSE CONCAT(User.FirstName, ' ', User.LastName)
+			END AS User_Name,
+
+			f.FollowerId AS FollowerId,
+			Follower.Username AS Follower_Username,
+
+			CASE
+			WHEN CONCAT(Follower.FirstName, ' ', Follower.LastName) = ' ' THEN ''
+			ELSE CONCAT(Follower.FirstName, ' ', Follower.LastName)
+			END AS Follower_Name
+
+		FROM Follower AS f
+		INNER JOIN UserInfo AS User ON User.Id = f.UserId
+		INNER JOIN UserInfo AS Follower ON Follower.Id = f.FollowerId;
+
+		CREATE VIEW IF NOT EXISTS GroupDetail AS
+		SELECT 
+			g.Id,
+			g.LeaderId,
+			
+			CASE 
+			WHEN u.Username = '' THEN CONCAT(u.FirstName, ' ', u.LastName)
+			ELSE u.Username 
+			END AS Leader,
+
+			g.MemberIds,
+			g.groupName,
+			g.CreationDate
+
+		FROM Groups AS g
+		INNER JOIN UserInfo AS u ON u.Id = g.LeaderId;
+
+		CREATE VIEW IF NOT EXISTS FollowRequestDetail AS
+			SELECT
+				f.UserId AS UserId,
+				CASE 
+					WHEN User.Username = '' THEN CONCAT(User.FirstName, ' ', User.LastName)
+					ELSE User.Username 
+				END AS User_Name,
+
+				f.FollowerId AS FollowerId,
+				CASE 
+					WHEN Follower.Username = '' THEN CONCAT(Follower.FirstName, ' ', Follower.LastName)
+					ELSE Follower.Username 
+				END AS Follower_Name
+				
+
+			FROM FollowingRequest AS f
+			INNER JOIN UserInfo AS User ON User.Id = f.UserId
+			INNER JOIN UserInfo AS Follower ON Follower.Id = f.FollowerId;
+
+		CREATE View IF NOT EXISTS JoinGroupRequestDetail AS
+			SELECT
+				j.UserId,
+				
+				CASE 
+					WHEN u.Username = '' THEN CONCAT(u.FirstName, ' ', u.LastName)
+					ELSE u.Username 
+				END AS User_Name,
+
+				j.GroupId,
+				g.GroupName
+
+			FROM JoinGroupRequest AS j
+			INNER JOIN UserInfo AS u ON u.Id = j.UserId
+			INNER JOIN Groups AS g ON g.Id = j.GroupId;
+
+		CREATE View IF NOT EXISTS InviteGroupRequestDetail AS
+		SELECT
+			i.SenderId,
+			
+			CASE 
+				WHEN Sender.Username = '' THEN CONCAT(Sender.FirstName, ' ', Sender.LastName)
+				ELSE Sender.Username 
+			END AS Sender_Name,
+
+			i.GroupId,
+			g.GroupName,
+
+			i.ReceiverId,
+			
+			CASE
+				WHEN Receiver.Username = '' THEN CONCAT(Receiver.FirstName, ' ', Receiver.LastName)
+				ELSE Receiver.Username 
+			END AS Receiver_Name
+			
+		FROM InviteGroupRequest AS i
+		INNER JOIN UserInfo AS Sender ON Sender.Id = i.SenderId
+		INNER JOIN Groups AS g ON g.Id = i.GroupId
+		INNER JOIN UserInfo AS Receiver ON Receiver.Id = i.ReceiverId;
 	`)
 }
 

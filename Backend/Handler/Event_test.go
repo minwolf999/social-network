@@ -41,31 +41,31 @@ func TestCreateEvent(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
-
-	userData.Id = utils.GenerateJWT(userData.Id)
-
+	
 	group := model.Group{
 		Id:           "groupid",
-		LeaderId:     "userid",
-		MemberIds:    "userid",
+		LeaderId:     userData.Id,
+		MemberIds:    userData.Id,
 		GroupName:    "test",
 		CreationDate: "now",
 	}
-
+	
 	if err = group.InsertIntoDb(db); err != nil {
 		t.Fatal(err)
 		return
 	}
 
-	var user = model.Event{
+	userData.Id = utils.GenerateJWT(userData.Id)
+
+	var event = model.Event{
 		OrganisatorId:  userData.Id,
-		GroupId:        "groupid",
+		GroupId:        group.Id,
 		Title:          "titre",
 		Description:    "description",
 		DateOfTheEvent: "now",
 	}
 
-	body, err := json.Marshal(user)
+	body, err := json.Marshal(event)
 	if err != nil {
 		t.Fatalf("Erreur lors de la sérialisation du corps de la requête : %v", err)
 		return

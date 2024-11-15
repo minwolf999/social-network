@@ -44,9 +44,8 @@ func TestHandleChangeUserData(t *testing.T) {
 	}
 
 	user := map[string]any{
-		"SessionId": utils.GenerateJWT(userData.Id),
-		"NewName":   "test",
-		"NewPass":   "newPass",
+		"Id": utils.GenerateJWT(userData.Id),
+		"Email":   "test",
 	}
 
 	body, err := json.Marshal(user)

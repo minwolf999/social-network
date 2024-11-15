@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	model "social-network/Model"
@@ -126,19 +127,6 @@ func TestLeaveGroup(t *testing.T) {
 		return
 	}
 
-	var group = model.Group{
-		Id:           "groupid",
-		LeaderId:     userData1.Id,
-		MemberIds:    userData1.Id,
-		GroupName:    "test",
-		CreationDate: "now",
-	}
-
-	if err = group.InsertIntoDb(db); err != nil {
-		t.Fatal(err)
-		return
-	}
-
 	userData2 := model.Register{
 		Auth: model.Auth{
 			Id:              "userid2",
@@ -149,6 +137,7 @@ func TestLeaveGroup(t *testing.T) {
 		FirstName: "Jean",
 		LastName:  "Dujardin",
 		BirthDate: "1990-01-01",
+		GroupsJoined: "groupid",
 	}
 
 	if err = userData2.Auth.InsertIntoDb(db); err != nil {
@@ -161,12 +150,25 @@ func TestLeaveGroup(t *testing.T) {
 		return
 	}
 
-	joinOrLeave := map[string]any{
-		"GroupId":     group.Id,
-		"UserId":      utils.GenerateJWT(userData2.Id),
+	var group = model.Group{
+		Id:           "groupid",
+		LeaderId:     userData1.Id,
+		MemberIds:    fmt.Sprintf("%s | %s", userData1.Id, userData2.Id),
+		GroupName:    "test",
+		CreationDate: "now",
 	}
 
-	body, err := json.Marshal(joinOrLeave)
+	if err = group.InsertIntoDb(db); err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	Leave := map[string]any{
+		"UserId":  utils.GenerateJWT(userData2.Id),
+		"GroupId": group.Id,
+	}
+
+	body, err := json.Marshal(Leave)
 	if err != nil {
 		t.Fatalf("Erreur lors de la sérialisation du corps de la requête : %v", err)
 		return
@@ -174,7 +176,7 @@ func TestLeaveGroup(t *testing.T) {
 
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
-	req, err := http.NewRequest("POST", "/joinOrLeaveGroup", bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", "/LeaveGroup", bytes.NewBuffer(body))
 	if err != nil {
 		t.Fatal(err)
 		return

@@ -365,9 +365,9 @@ func GetGroupsJoined(db *sql.DB) http.HandlerFunc {
 
 		for i := range groups {
 			groups[i].SplitMembers()
-			
+
 			if !slices.Contains(groups[i].SplitMemberIds, userId) {
-				if i < len(groups) -1 {
+				if i < len(groups)-1 {
 					groups = append(groups[:i], groups[i+1:]...)
 				} else {
 					groups = groups[:i]
@@ -396,8 +396,8 @@ func GetGroupsPosts(db *sql.DB) http.HandlerFunc {
 			ResponseWriter: w,
 		}
 
-		var datas struct{
-			UserId string `json:"UserId"`
+		var datas struct {
+			UserId  string `json:"UserId"`
 			GroupId string `json:"GroupId"`
 		}
 
@@ -845,7 +845,7 @@ func InviteGroup(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func GetInvitationGroup (db *sql.DB) http.HandlerFunc {
+func GetInvitationGroup(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nw := model.ResponseWriter{
 			ResponseWriter: w,
@@ -877,7 +877,7 @@ func GetInvitationGroup (db *sql.DB) http.HandlerFunc {
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
 			"Message": "Invitations successfully getted",
-			"Value": invitations,
+			"Value":   invitations,
 		})
 		if err != nil {
 			log.Printf("[%s] [InviteGroup] %s", r.RemoteAddr, err.Error())
