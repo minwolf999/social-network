@@ -53,6 +53,7 @@ func Routes(mux *http.ServeMux) {
 
 	// Like route
 	mux.Handle("/like", handler.HandleLike(db))
+	mux.Handle("/getLikePost", handler.GetLike(db))
 
 	// Setting route
 	mux.Handle("/updateUserInfo", handler.HandleChangeUserData(db))

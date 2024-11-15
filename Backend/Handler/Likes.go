@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	model "social-network/Model"
+	utils "social-network/Utils"
 )
 
 /*
@@ -32,7 +33,7 @@ func HandleLike(db *sql.DB) http.HandlerFunc {
 			// ID of the user performing the like/dislike action.
 			UserID string `json:"UserID"`
 			// Table name indicating whether it's for likes or dislikes.
-			Table  string `json:"Table"`
+			Table string `json:"Table"`
 		}
 
 		// Decode the JSON request body into the request struct.
@@ -42,6 +43,14 @@ func HandleLike(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [Like] Invalid request body: %v", r.RemoteAddr, err)
 			return
 		}
+
+		userId, err := utils.DecryptJWT(request.UserID, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [Like] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		request.UserID = userId
 
 		// Validate the provided table name.
 		if request.Table != "LikePost" && request.Table != "DislikePost" && request.Table != "LikeComment" && request.Table != "DislikeComment" {
@@ -61,7 +70,7 @@ func HandleLike(db *sql.DB) http.HandlerFunc {
 
 		// Set the response header to indicate JSON content and respond with success message.
 		w.Header().Set("Content-Type", "application/json")
-		err := json.NewEncoder(w).Encode(map[string]any{
+		err = json.NewEncoder(w).Encode(map[string]any{
 			// Indicates the operation was successful.
 			"Success": true,
 			// Success message for the like action.
@@ -73,7 +82,6 @@ func HandleLike(db *sql.DB) http.HandlerFunc {
 		}
 	}
 }
-
 
 /*
 This function takes 4 arguments:
@@ -111,7 +119,6 @@ func handleLikeLogic(db *sql.DB, table, postID, userID string) error {
 	return nil
 }
 
-
 /*
 This function takes 4 arguments:
   - a pointer to an SQL database object
@@ -130,7 +137,7 @@ func hasUserLikedPost(db *sql.DB, table, postID, userID string) (bool, error) {
 		// Return false and the error if statement preparation fails.
 		return false, err
 	}
-	
+
 	// Declare a variable to hold the count result.
 	var count int
 	// Execute the query and scan the result into the count variable.
@@ -142,7 +149,6 @@ func hasUserLikedPost(db *sql.DB, table, postID, userID string) (bool, error) {
 	// Return true if count is not zero, indicating the user has liked the post.
 	return count != 0, nil
 }
-
 
 /*
 This function takes 4 arguments:
@@ -162,7 +168,7 @@ func addLike(db *sql.DB, table, postID, userID string) error {
 		// Return the error if statement preparation fails.
 		return err
 	}
-	
+
 	// Execute the insert statement with the post ID and user ID.
 	_, err = stmt.Exec(postID, userID)
 	if err != nil {
@@ -182,7 +188,6 @@ func addLike(db *sql.DB, table, postID, userID string) error {
 	// Update the like count for the corresponding parent table and post ID.
 	return updateLikeCount(db, parentTable, postID, 1)
 }
-
 
 /*
 This function takes 4 arguments:
@@ -209,14 +214,14 @@ func removeLike(db *sql.DB, table, postID, userID string) error {
 		// Return the error if execution fails.
 		return err
 	}
-	
+
 	// Get the number of rows affected by the delete operation.
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		// Return the error if getting affected rows fails.
 		return err
 	}
-	
+
 	// Return an error if no rows were affected, indicating the like was not found.
 	if rowsAffected == 0 {
 		return fmt.Errorf("like not found")
@@ -235,7 +240,6 @@ func removeLike(db *sql.DB, table, postID, userID string) error {
 	// Update the like count for the corresponding parent table and post ID.
 	return updateLikeCount(db, parentTable, postID, -1)
 }
-
 
 /*
 This function takes 4 arguments:
@@ -258,8 +262,68 @@ func updateLikeCount(db *sql.DB, table, postID string, delta int) error {
 
 	// Execute the update statement with the delta value and post ID.
 	_, err = stmt.Exec(delta, postID)
-	
+
 	// Return any error that occurs during execution.
 	return err
 }
 
+func GetLike(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		// Struct to hold the data from the request body.
+		var request struct {
+			UserId string `json:"UserId"`
+			PostId string `json:"PostId"`
+			Table  string `json:"Table"`
+		}
+
+		// Decode the JSON request body into the request struct.
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			// Return error if the request body is invalid.
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [GetLike] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		userId, err := utils.DecryptJWT(request.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [GetLike] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		request.UserId = userId
+
+		userData, err := model.SelectFromDb(request.Table, db, map[string]any{"GroupId": request.PostId})
+		if err != nil {
+
+		}
+
+		serializedData, err := json.Marshal(userData)
+		if err != nil {
+
+		}
+
+		var idsLike []string
+		if err = json.Unmarshal(serializedData, &idsLike); err != nil {
+
+		}
+
+		// Set the response header to indicate JSON content and respond with success message.
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			// Indicates the operation was successful.
+			"Success": true,
+			// Success message for the like action.
+			"Message": "Like getted successfully",
+
+			"Value": idsLike,
+		})
+		if err != nil {
+			// Log any error that occurs while encoding the response.
+			log.Printf("[%s] [Like] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}

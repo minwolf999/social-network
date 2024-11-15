@@ -363,7 +363,7 @@ func GetGroupsJoined(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		for i := range groups {
+		for i := 0; i < len(groups); i++ {
 			groups[i].SplitMembers()
 
 			if !slices.Contains(groups[i].SplitMemberIds, userId) {
@@ -372,6 +372,7 @@ func GetGroupsJoined(db *sql.DB) http.HandlerFunc {
 				} else {
 					groups = groups[:i]
 				}
+				i--
 			}
 		}
 
