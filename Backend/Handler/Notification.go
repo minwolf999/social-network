@@ -150,3 +150,141 @@ func GetUserNotification(db *sql.DB) http.HandlerFunc {
 		}
 	}
 }
+
+func DeleteAllNotifications(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		var userId string
+		// Decode the JSON request body into the comment object
+		if err := json.NewDecoder(r.Body).Decode(&userId); err != nil {
+			// Send error if decoding fails
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [DeleteAllNotifications] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		// Decrypt the OrganisatorId from the JWT to get the actual Organisator ID
+		decryptUserId, err := utils.DecryptJWT(userId, db)
+		if err != nil {
+			nw.Error("Invalid JWT") // Handle invalid JWT error
+			log.Printf("[%s] [DeleteAllNotifications] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		// Set the decrypted Organisator ID
+		userId = decryptUserId
+
+		var notification model.Notification
+		if err = notification.DeleteFromDb(db, map[string]any{"UserId": userId}); err != nil {
+			nw.Error("Error during the update of the DB") // Handle invalid JWT error
+			log.Printf("[%s] [DeleteAllNotifications] Error during the update of the DB : %v", r.RemoteAddr, err)
+			return
+		}
+
+		// Send a success response in JSON format
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "User notifications deleted successfully",
+		})
+		if err != nil {
+			log.Printf("[%s] [DeleteAllNotifications] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
+func DeleteAllGroupNotifications(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		var datas struct {
+			UserId  string `json:"UserId"`
+			GroupId string `json:"GroupId"`
+		}
+		// Decode the JSON request body into the comment object
+		if err := json.NewDecoder(r.Body).Decode(&datas.UserId); err != nil {
+			// Send error if decoding fails
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [DeleteAllGroupNotifications] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		// Decrypt the OrganisatorId from the JWT to get the actual Organisator ID
+		decryptUserId, err := utils.DecryptJWT(datas.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT") // Handle invalid JWT error
+			log.Printf("[%s] [DeleteAllGroupNotifications] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		// Set the decrypted Organisator ID
+		datas.UserId = decryptUserId
+
+		var notification model.Notification
+		if err = notification.DeleteFromDb(db, map[string]any{"UserId": datas.UserId, "GroupId": datas.GroupId}); err != nil {
+			nw.Error("Error during the update of the DB") // Handle invalid JWT error
+			log.Printf("[%s] [DeleteAllGroupNotifications] Error during the update of the DB : %v", r.RemoteAddr, err)
+			return
+		}
+
+		// Send a success response in JSON format
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Group notifications deleted successfully",
+		})
+		if err != nil {
+			log.Printf("[%s] [DeleteAllGroupNotifications] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
+func DeleteAllUserNotifications(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		var datas struct {
+			UserId  string `json:"UserId"`
+			OtherUserId string `json:"OtherUserId"`
+		}
+		// Decode the JSON request body into the comment object
+		if err := json.NewDecoder(r.Body).Decode(&datas.UserId); err != nil {
+			// Send error if decoding fails
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [DeleteAllUserNotifications] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		// Decrypt the OrganisatorId from the JWT to get the actual Organisator ID
+		decryptUserId, err := utils.DecryptJWT(datas.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT") // Handle invalid JWT error
+			log.Printf("[%s] [DeleteAllUserNotifications] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		// Set the decrypted Organisator ID
+		datas.UserId = decryptUserId
+
+		var notification model.Notification
+		if err = notification.DeleteFromDb(db, map[string]any{"UserId": datas.UserId, "OtherUserId": datas.OtherUserId}); err != nil {
+			nw.Error("Error during the update of the DB") // Handle invalid JWT error
+			log.Printf("[%s] [DeleteAllUserNotifications] Error during the update of the DB : %v", r.RemoteAddr, err)
+			return
+		}
+
+		// Send a success response in JSON format
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "User notifications deleted successfully",
+		})
+		if err != nil {
+			log.Printf("[%s] [DeleteAllUserNotifications] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
