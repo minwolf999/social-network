@@ -491,6 +491,34 @@ func (userData *UserData) ParseDeclineEventsData() (DeclineEvents, error) {
 	return postResult, nil
 }
 
+func (userData *UserData) ParseNotificationsData() (Notifications, error) {
+	// We declare a slice to hold the parsed JoinEvents data
+	var notifications Notifications
+
+	// We iterate over each element in the userData
+	for _, v := range *userData {
+		// We declare a temporary variable to hold the unmarshaled joinEvent data
+		var notification Notification
+
+		// We marshal the map to get it in []byte
+		serializedData, err := json.Marshal(v)
+		if err != nil {
+			return nil, errors.New("internal error: conversion problem")
+		}
+
+		// We Unmarshal in the good structure
+		if err = json.Unmarshal(serializedData, &notification); err != nil {
+			return nil, err
+		}
+
+		// Append the parsed JoinEvent data to the result slice
+		notifications = append(notifications, notification)
+	}
+
+	// Return the result and any error encountered
+	return notifications, nil
+}
+
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
 //
@@ -1517,4 +1545,41 @@ func (declineEvent *DeclineEvents) SelectFromDb(db *sql.DB, where map[string]any
 func (declineEvent *DeclineEvent) DeleteFromDb(db *sql.DB, where map[string]any) error {
 	// We call RemoveFromDB to delete the record(s) from the "DeclineEvents" table based on the specified conditions
 	return RemoveFromDB("DeclineEvent", db, where)
+}
+
+
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+//
+//	DB Method for Notification struct
+//
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+
+func (notification *Notification) InsertIntoDb (db *sql.DB) error {
+	if notification.Id == "" || notification.UserId == "" || notification.Status == "" || notification.Description == "" {
+		return errors.New("there is an empty field")
+	}
+
+	return InsertIntoDb("Notification", db, notification.Id, notification.UserId, notification.Status, notification.Description)
+}
+
+func (notifications *Notifications) SelectFromDb(db *sql.DB, where map[string]any) error {
+	// We call SelectFromDb to retrieve data from the "CommentDetail" table based on the given conditions
+	userData, err := SelectFromDb("Notification", db, where)
+	if err != nil {
+		// Return an error if the data retrieval fails
+		return err
+	}
+
+	// We parse the retrieved data into the Comments structure and assign it to the comments object
+	*notifications, err = userData.ParseNotificationsData()
+
+	// Return any error encountered during parsing
+	return err
+}
+
+func (notification *Notification) DeleteFromDb(db *sql.DB, where map[string]any) error {
+	// We call RemoveFromDB to delete the record(s) from the "DeclineEvents" table based on the specified conditions
+	return RemoveFromDB("Notification", db, where)
 }

@@ -155,6 +155,14 @@ type JoinEvents []JoinEvent
 type DeclineEvent JoinEvent
 type DeclineEvents []DeclineEvent
 
+type Notification struct {
+	Id          string `json:"Id"`
+	UserId      string `json:"UserId"`
+	Status      string `json:"Status"`
+	Description string `json:"Description"`
+}
+type Notifications []Notification
+
 type ResponseWriter struct {
 	http.ResponseWriter
 }
