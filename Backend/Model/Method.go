@@ -1561,7 +1561,7 @@ func (notification *Notification) InsertIntoDb (db *sql.DB) error {
 		return errors.New("there is an empty field")
 	}
 
-	return InsertIntoDb("Notification", db, notification.Id, notification.UserId, notification.Status, notification.Description, notification.GroupId)
+	return InsertIntoDb("Notification", db, notification.Id, notification.UserId, notification.Status, notification.Description, notification.GroupId, notification.OtherUserId)
 }
 
 func (notifications *Notifications) SelectFromDb(db *sql.DB, where map[string]any) error {

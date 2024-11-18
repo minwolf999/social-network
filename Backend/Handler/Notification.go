@@ -54,3 +54,4 @@ func GetAllNotifications(db *sql.DB) http.HandlerFunc {
 		}
 	}
 }
+

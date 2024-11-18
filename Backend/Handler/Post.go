@@ -117,6 +117,7 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 					Status:      "Group",
 					Description: fmt.Sprintf("A new post as been send by %s for the group %s", userDataName, group.GroupName),
 					GroupId:     group.Id,
+					OtherUserId: "",
 				}
 
 				if err = notification.InsertIntoDb(db); err != nil {

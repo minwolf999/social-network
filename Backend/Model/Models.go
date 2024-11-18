@@ -161,6 +161,7 @@ type Notification struct {
 	Status      string `json:"Status"`
 	Description string `json:"Description"`
 	GroupId     string `json:"GroupId"`
+	OtherUserId string `json:"OtherUserId"`
 }
 type Notifications []Notification
 
