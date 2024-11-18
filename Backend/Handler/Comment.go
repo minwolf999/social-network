@@ -108,6 +108,7 @@ func CreateComment(db *sql.DB) http.HandlerFunc {
 			UserId:      comment.AuthorId,
 			Status:      "Comment",
 			Description: fmt.Sprintf("A comment as been posted by %s for your post \"%s\"", userDataName, post.Text),
+			GroupId:     post.IsGroup,
 		}
 
 		if err = notification.InsertIntoDb(db); err != nil {

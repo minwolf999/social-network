@@ -603,6 +603,7 @@ func JoinGroup(db *sql.DB) http.HandlerFunc {
 			UserId:      group.LeaderId,
 			Status:      "Group",
 			Description: fmt.Sprintf("An join request as been send to join the group \"%s\" by %s", group.GroupName, userDataName),
+			GroupId:     group.Id,
 		}
 
 		if err = notification.InsertIntoDb(db); err != nil {
@@ -896,6 +897,7 @@ func InviteGroup(db *sql.DB) http.HandlerFunc {
 			UserId:      datas.ReceiverId,
 			Status:      "Group",
 			Description: fmt.Sprintf("An invitation to join the group \"%s\" as been send by %s", group.GroupName, userDataName),
+			GroupId:     group.Id,
 		}
 
 		if err = notification.InsertIntoDb(db); err != nil {

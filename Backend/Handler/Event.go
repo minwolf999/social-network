@@ -104,6 +104,7 @@ func CreateEvent(db *sql.DB) http.HandlerFunc {
 			UserId:      event.OrganisatorId,
 			Status:      "Event",
 			Description: fmt.Sprintf("An Event \"%s\" as been posted by %s for the group %s", event.Title, userDataName, group.GroupName),
+			GroupId:     group.Id,
 		}
 
 		if err = notification.InsertIntoDb(db); err != nil {

@@ -143,6 +143,7 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 			UserId:      follower.FollowerId,
 			Status:      "Follow",
 			Description: fmt.Sprintf("%s %s", notifMessage, userDataName),
+			GroupId:     "",
 		}
 
 		if err = notification.InsertIntoDb(db); err != nil {
