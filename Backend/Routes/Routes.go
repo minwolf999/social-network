@@ -85,7 +85,8 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/getAllGroupEvents", handler.GetAllGroupEvents(db))
 
 	// Notification routes
-	mux.Handle("/GetAllNotifications", handler.GetAllNotifications(db))
+	mux.Handle("/getAllNotifications", handler.GetAllNotifications(db))
+	mux.Handle("/getGroupNotification", handler.GetGroupNotification(db))
 
 	// Websocket route
 	mux.Handle("/websocket", handler.Websocket(db))
