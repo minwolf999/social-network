@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -66,18 +67,52 @@ func CreateComment(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Generate a new UUID for the comment
-		uuid, err := uuid.NewV7()
+		uid, err := uuid.NewV7()
 		if err != nil {
 			nw.Error("There is a problem with the generation of the uuid") // Handle UUID generation error
 			log.Printf("[%s] [CreateComment] There is a problem with the generation of the uuid : %s", r.RemoteAddr, err)
 			return
 		}
-		comment.Id = uuid.String() // Set the generated UUID as the comment ID
+		comment.Id = uid.String() // Set the generated UUID as the comment ID
 
 		// Insert the comment into the database
 		if err = comment.InsertIntoDb(db); err != nil {
 			nw.Error("Internal Error: There is a problem during the push in the DB: " + err.Error())
 			log.Printf("[%s] [CreateComment] %s", r.RemoteAddr, err.Error())
+			return
+		}
+
+		notifId, err := uuid.NewV7()
+		if err != nil {
+			nw.Error("There is a problem with the generation of the uuid") // Handle UUID generation error
+			log.Printf("[%s] [CreateComment] There is a problem with the generation of the uuid : %s", r.RemoteAddr, err)
+			return
+		}
+
+		var userData model.Register
+		if err = userData.SelectFromDb(db, map[string]any{"Id": comment.AuthorId}); err != nil {
+			nw.Error("There is a problem during the fetching of the user") // Handle UUID generation error
+			log.Printf("[%s] [CreateComment] There is a problem during the fetching of the user : %s", r.RemoteAddr, err)
+			return
+		}
+
+		var userDataName string
+		if userData.Username == "" {
+			userDataName = userData.FirstName + " " + userData.LastName
+		} else {
+			userDataName = userData.Username
+		}
+
+		notification := model.Notification{
+			Id:          notifId.String(),
+			UserId:      comment.AuthorId,
+			Status:      "Comment",
+			Description: fmt.Sprintf("A comment as been posted by %s for your post \"%s\"", userDataName, post.Text),
+		}
+
+		if err = notification.InsertIntoDb(db); err != nil {
+			nw.Error("There is a probleme during the sending of a notification")
+			log.Printf("[%s] [CreateComment] There is a probleme during the sending of a notification : %s", r.RemoteAddr, err)
 			return
 		}
 
@@ -124,7 +159,7 @@ func GetComment(db *sql.DB) http.HandlerFunc {
 		// Check if a specific post ID is provided
 		if comment.PostId != "" {
 			err = comment.SelectFromDb(db, map[string]any{"Id": comment.Id}) // Retrieve a specific comment
-			comments = append(comments, comment) // Add the comment to the comments slice
+			comments = append(comments, comment)                             // Add the comment to the comments slice
 		} else {
 			// If no post ID is provided, retrieve all comments
 			err = comments.SelectFromDb(db, map[string]any{})

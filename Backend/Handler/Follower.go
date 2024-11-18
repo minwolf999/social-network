@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	model "social-network/Model"
@@ -46,13 +47,13 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Generate a new UUID for the follower relationship
-		uuid, err := uuid.NewV7()
+		uid, err := uuid.NewV7()
 		if err != nil {
 			nw.Error("There is a problem with the generation of the uuid") // Handle UUID generation error
 			log.Printf("[%s] [AddFollower] There is a problem with the generation of the uuid : %s", r.RemoteAddr, err)
 			return
 		}
-		follower.Id = uuid.String() // Set the generated UUID as the follower ID
+		follower.Id = uid.String() // Set the generated UUID as the follower ID
 
 		// Check if the user exists in the Auth table
 		if err = utils.IfExistsInDB("Auth", db, map[string]any{"Id": follower.UserId}); err != nil {
@@ -84,7 +85,11 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		notifMessage := ""
+
 		if followerData.Status == "public" {
+			notifMessage = "You have been followed"
+
 			// Insert the follower relationship into the database
 			if err := follower.InsertIntoDb(db); err != nil {
 				nw.Error("Internal Error: There is a problem during the push in the DB: " + err.Error())
@@ -92,6 +97,8 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 				return
 			}
 		} else if followerData.Status == "private" {
+			notifMessage = "You have receive a followed request"
+
 			// Check if the follower user exists in the Auth table
 			if err = utils.IfNotExistsInDB("FollowingRequest", db, map[string]any{"UserId": follower.UserId, "FollowerId": follower.FollowerId}); err != nil {
 				nw.Error("The request has already been send")
@@ -108,6 +115,40 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 				nw.Error("Impossible to send the request")
 				log.Printf("[%s] [AddFollower] Impossible to send the request : %s", r.RemoteAddr, err)
 			}
+		}
+
+		notifId, err := uuid.NewV7()
+		if err != nil {
+			nw.Error("There is a problem with the generation of the uuid") // Handle UUID generation error
+			log.Printf("[%s] [AddFollower] There is a problem with the generation of the uuid : %s", r.RemoteAddr, err)
+			return
+		}
+
+		var userData model.Register
+		if err = userData.SelectFromDb(db, map[string]any{"Id": follower.UserId}); err != nil {
+			nw.Error("There is a problem during the fetching of the user") // Handle UUID generation error
+			log.Printf("[%s] [AddFollower] There is a problem during the fetching of the user : %s", r.RemoteAddr, err)
+			return
+		}
+
+		var userDataName string
+		if userData.Username == "" {
+			userDataName = userData.FirstName + " " + userData.LastName
+		} else {
+			userDataName = userData.Username
+		}
+
+		notification := model.Notification{
+			Id:          notifId.String(),
+			UserId:      follower.FollowerId,
+			Status:      "Follow",
+			Description: fmt.Sprintf("%s %s", notifMessage, userDataName),
+		}
+
+		if err = notification.InsertIntoDb(db); err != nil {
+			nw.Error("There is a probleme during the sending of a notification")
+			log.Printf("[%s] [AddFollower] There is a probleme during the sending of a notification : %s", r.RemoteAddr, err)
+			return
 		}
 
 		// Send a success response in JSON format

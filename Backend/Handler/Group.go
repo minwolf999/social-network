@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"slices"
@@ -576,6 +577,40 @@ func JoinGroup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		notifId, err := uuid.NewV7()
+		if err != nil {
+			nw.Error("There is a problem with the generation of the uuid") // Handle UUID generation error
+			log.Printf("[%s] [JoinGroup] There is a problem with the generation of the uuid : %s", r.RemoteAddr, err)
+			return
+		}
+
+		var userData model.Register
+		if err = userData.SelectFromDb(db, map[string]any{"Id": datas.UserId}); err != nil {
+			nw.Error("There is a problem during the fetching of the user") // Handle UUID generation error
+			log.Printf("[%s] [JoinGroup] There is a problem during the fetching of the user : %s", r.RemoteAddr, err)
+			return
+		}
+
+		var userDataName string
+		if userData.Username == "" {
+			userDataName = userData.FirstName + " " + userData.LastName
+		} else {
+			userDataName = userData.Username
+		}
+
+		notification := model.Notification{
+			Id:          notifId.String(),
+			UserId:      group.LeaderId,
+			Status:      "Group",
+			Description: fmt.Sprintf("An join request as been send to join the group \"%s\" by %s", group.GroupName, userDataName),
+		}
+
+		if err = notification.InsertIntoDb(db); err != nil {
+			nw.Error("There is a probleme during the sending of a notification")
+			log.Printf("[%s] [JoinGroup] There is a probleme during the sending of a notification : %s", r.RemoteAddr, err)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
@@ -832,6 +867,40 @@ func InviteGroup(db *sql.DB) http.HandlerFunc {
 		if err = datas.InsertIntoDb(db); err != nil {
 			nw.Error("There is an error during the store of the invitation")
 			log.Printf("[%s] [InviteGroup] There is an error during the store of the invitation : %v", r.RemoteAddr, err)
+			return
+		}
+
+		notifId, err := uuid.NewV7()
+		if err != nil {
+			nw.Error("There is a problem with the generation of the uuid") // Handle UUID generation error
+			log.Printf("[%s] [InviteGroup] There is a problem with the generation of the uuid : %s", r.RemoteAddr, err)
+			return
+		}
+
+		var userData model.Register
+		if err = userData.SelectFromDb(db, map[string]any{"Id": datas.SenderId}); err != nil {
+			nw.Error("There is a problem during the fetching of the user") // Handle UUID generation error
+			log.Printf("[%s] [InviteGroup] There is a problem during the fetching of the user : %s", r.RemoteAddr, err)
+			return
+		}
+
+		var userDataName string
+		if userData.Username == "" {
+			userDataName = userData.FirstName + " " + userData.LastName
+		} else {
+			userDataName = userData.Username
+		}
+
+		notification := model.Notification{
+			Id:          notifId.String(),
+			UserId:      datas.ReceiverId,
+			Status:      "Group",
+			Description: fmt.Sprintf("An invitation to join the group \"%s\" as been send by %s", group.GroupName, userDataName),
+		}
+
+		if err = notification.InsertIntoDb(db); err != nil {
+			nw.Error("There is a probleme during the sending of a notification")
+			log.Printf("[%s] [InviteGroup] There is a probleme during the sending of a notification : %s", r.RemoteAddr, err)
 			return
 		}
 

@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"slices"
@@ -51,7 +52,7 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 		post.AuthorId = decryptAuthorId
 
 		// Validate the post fields: text, creation date, and status.
-		if post.Text == "" || post.CreationDate == "" || 
+		if post.Text == "" || post.CreationDate == "" ||
 			(post.Status != "public" && post.Status != "private" && strings.Split(post.Status, " | ")[0] != "almost private") {
 			// Return error if any required fields are empty or invalid.
 			nw.Error("There is an empty field")
@@ -60,7 +61,7 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Generate a new UUID for the post.
-		uuid, err := uuid.NewV7()
+		uid, err := uuid.NewV7()
 		if err != nil {
 			// Return error if UUID generation fails.
 			nw.Error("There is a problem with the generation of the uuid")
@@ -68,7 +69,7 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		// Set the post ID to the newly generated UUID.
-		post.Id = uuid.String()
+		post.Id = uid.String()
 
 		// Attempt to insert the post into the database.
 		if err = post.InsertIntoDb(db); err != nil {
@@ -76,6 +77,53 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 			nw.Error("Internal Error: There is a problem during the push in the DB: " + err.Error())
 			log.Printf("[%s] [CreatePost] %s", r.RemoteAddr, err.Error())
 			return
+		}
+
+		if post.IsGroup != "" {
+			var group model.Group
+			if err = group.SelectFromDb(db, map[string]any{"Id": post.IsGroup}); err != nil {
+				nw.Error("There is a problem during the fetching of the group") // Handle UUID generation error
+				log.Printf("[%s] [CreatePost] There is a problem during the fetching of the group : %s", r.RemoteAddr, err)
+				return
+			}
+
+			var userData model.Register
+			if err = userData.SelectFromDb(db, map[string]any{"Id": post.AuthorId}); err != nil {
+				nw.Error("There is a problem during the fetching of the user") // Handle UUID generation error
+				log.Printf("[%s] [CreatePost] There is a problem during the fetching of the user : %s", r.RemoteAddr, err)
+				return
+			}
+
+			var userDataName string
+			if userData.Username == "" {
+				userDataName = userData.FirstName + " " + userData.LastName
+			} else {
+				userDataName = userData.Username
+			}
+
+			group.SplitMembers()
+			for i := range group.SplitMemberIds {
+
+				notifId, err := uuid.NewV7()
+				if err != nil {
+					nw.Error("There is a problem with the generation of the uuid") // Handle UUID generation error
+					log.Printf("[%s] [CreatePost] There is a problem with the generation of the uuid : %s", r.RemoteAddr, err)
+					return
+				}
+
+				notification := model.Notification{
+					Id:          notifId.String(),
+					UserId:      group.SplitMemberIds[i],
+					Status:      "Group",
+					Description: fmt.Sprintf("A new post as been send by %s for the group %s", userDataName, group.GroupName),
+				}
+
+				if err = notification.InsertIntoDb(db); err != nil {
+					nw.Error("There is a probleme during the sending of a notification")
+					log.Printf("[%s] [CreatePost] There is a probleme during the sending of a notification : %s", r.RemoteAddr, err)
+					return
+				}
+			}
 		}
 
 		// Set response headers for JSON content.
@@ -86,14 +134,13 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 			"Success": true,
 			"Message": "Post created successfully",
 			// Return the newly created post ID.
-			"IdPost":  post.Id,
+			"IdPost": post.Id,
 		})
 		if err != nil {
 			log.Printf("[%s] [CreatePost] %s", r.RemoteAddr, err.Error())
 		}
 	}
 }
-
 
 /*
 GetPost handles the retrieval of posts from the database.
@@ -172,7 +219,7 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 			// Note the correction from "successfuly" to "successfully"
 			"Message": "Get posts successfully",
 			// Return the list of retrieved posts.
-			"Posts":   posts,
+			"Posts": posts,
 		})
 		if err != nil {
 			// Log any error that occurs while encoding the response.
@@ -180,4 +227,3 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 		}
 	}
 }
-
