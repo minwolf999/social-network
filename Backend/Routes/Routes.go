@@ -51,7 +51,7 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/acceptFollowedRequest", handler.AcceptFollowedRequest(db))
 	mux.Handle("/removeFollowed", handler.RemoveFollower(db))
 
-	// Like route
+	// Like routes
 	mux.Handle("/like", handler.HandleLike(db))
 	mux.Handle("/getLikePost", handler.GetLike(db))
 
@@ -84,6 +84,8 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/getEvent", handler.GetEvent(db))
 	mux.Handle("/getAllGroupEvents", handler.GetAllGroupEvents(db))
 
+	// Notification routes
+	mux.Handle("/GetAllNotifications", handler.GetAllNotifications(db))
 
 	// Websocket route
 	mux.Handle("/websocket", handler.Websocket(db))
