@@ -271,7 +271,7 @@ func GetFollowed(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Retrieve the list of users followed by the authenticated user from the database
-		if err := follows.SelectFromDb(db, map[string]any{"FollowerId": follows[0].UserId}); err != nil {
+		if err := follows.SelectFromDb(db, map[string]any{"FollowerId": follows[0].FollowerId}); err != nil {
 			nw.Error("Internal Error: There is a problem during the select in the DB: " + err.Error())
 			log.Printf("[%s] [GetFollowed] %s", r.RemoteAddr, err.Error())
 			return
@@ -332,19 +332,19 @@ func GetFollower(db *sql.DB) http.HandlerFunc {
 		if follower.OtherUserId != "" {
 			follows = model.Followers{
 				{
-					FollowerId: follower.OtherUserId,
+					UserId: follower.OtherUserId,
 				},
 			}
 		} else {
 			follows = model.Followers{
 				{
-					FollowerId: follower.UserId,
+					UserId: follower.UserId,
 				},
 			}
 		}
 
 		// Retrieve the list of followers from the database
-		if err := follows.SelectFromDb(db, map[string]any{"UserId": follows[0].FollowerId}); err != nil {
+		if err := follows.SelectFromDb(db, map[string]any{"UserId": follows[0].UserId}); err != nil {
 			nw.Error("Internal Error: There is a problem during the select in the DB: " + err.Error())
 			log.Printf("[%s] [GetFollower] %s", r.RemoteAddr, err.Error())
 			return
