@@ -353,6 +353,18 @@ func CreateTables(db *sql.DB) {
 		INNER JOIN UserInfo AS Sender ON Sender.Id = i.SenderId
 		INNER JOIN Groups AS g ON g.Id = i.GroupId
 		INNER JOIN UserInfo AS Receiver ON Receiver.Id = i.ReceiverId;
+
+		CREATE TABLE IF NOT EXISTS Notification (
+			Id VARCHAR(36) NOT NULL,
+			UserId VARCHAR(36) NOT NULL,
+			Status VARCHAR(100) NOT NULL,
+			Description VARCHAR(256) NOT NULL,
+			
+			GroupId VARCHAR(36),
+			OtherUserId VARCHAR(36),
+
+			CONSTRAINT fk_userid FOREIGN KEY (UserId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE
+		);
 	`)
 }
 

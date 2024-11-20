@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	model "social-network/Model"
+	utils "social-network/Utils"
 	"testing"
 )
 
@@ -42,9 +43,10 @@ func TestHandleLike(t *testing.T) {
 		return
 	}
 
+	
 	var post = model.Post{
 		Id:           "postId",
-		AuthorId:     "userId",
+		AuthorId:     register.Id,
 		Text:         "text",
 		CreationDate: "now",
 		Status:       "public",
@@ -53,10 +55,12 @@ func TestHandleLike(t *testing.T) {
 		t.Fatalf("%v", err)
 		return
 	}
+	
+	register.Id = utils.GenerateJWT(register.Id)
 
 	var like = map[string]any {
-		"PostID": "postId",
-		"UserID": "userId",
+		"PostID": post.Id,
+		"UserID": register.Id,
 		"Table": "LikePost",
 	}
 
