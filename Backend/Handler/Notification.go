@@ -65,8 +65,9 @@ func GetGroupNotification(db *sql.DB) http.HandlerFunc {
 			UserId  string `json:"UserId"`
 			GroupId string `json:"GroupId"`
 		}
+		
 		// Decode the JSON request body into the comment object
-		if err := json.NewDecoder(r.Body).Decode(&datas.UserId); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
 			// Send error if decoding fails
 			nw.Error("Invalid request body")
 			log.Printf("[%s] [GetGroupNotification] Invalid request body: %v", r.RemoteAddr, err)
@@ -110,11 +111,11 @@ func GetUserNotification(db *sql.DB) http.HandlerFunc {
 		}
 
 		var datas struct {
-			UserId  string `json:"UserId"`
+			UserId      string `json:"UserId"`
 			OtherUserId string `json:"OtherUserId"`
 		}
 		// Decode the JSON request body into the comment object
-		if err := json.NewDecoder(r.Body).Decode(&datas.UserId); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
 			// Send error if decoding fails
 			nw.Error("Invalid request body")
 			log.Printf("[%s] [GetGroupNotification] Invalid request body: %v", r.RemoteAddr, err)
@@ -206,7 +207,7 @@ func DeleteAllGroupNotifications(db *sql.DB) http.HandlerFunc {
 			GroupId string `json:"GroupId"`
 		}
 		// Decode the JSON request body into the comment object
-		if err := json.NewDecoder(r.Body).Decode(&datas.UserId); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
 			// Send error if decoding fails
 			nw.Error("Invalid request body")
 			log.Printf("[%s] [DeleteAllGroupNotifications] Invalid request body: %v", r.RemoteAddr, err)
@@ -249,11 +250,11 @@ func DeleteAllUserNotifications(db *sql.DB) http.HandlerFunc {
 		}
 
 		var datas struct {
-			UserId  string `json:"UserId"`
+			UserId      string `json:"UserId"`
 			OtherUserId string `json:"OtherUserId"`
 		}
 		// Decode the JSON request body into the comment object
-		if err := json.NewDecoder(r.Body).Decode(&datas.UserId); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
 			// Send error if decoding fails
 			nw.Error("Invalid request body")
 			log.Printf("[%s] [DeleteAllUserNotifications] Invalid request body: %v", r.RemoteAddr, err)
