@@ -226,11 +226,14 @@ func GetFollowed(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Initialize a Follower object to hold the decoded request body
-		var follower model.Follower
+		var follower struct {
+			UserId      string `json:"UserId"`
+			OtherUserId string `json:"OtherUserId"`
+		}
 		// Decode the JSON request body into the follower object
 		if err := json.NewDecoder(r.Body).Decode(&follower); err != nil {
 			nw.Error("Invalid request body") // Send error if decoding fails
-			log.Printf("[%s] [GetFollower] Invalid request body: %v", r.RemoteAddr, err)
+			log.Printf("[%s] [GetFollowed] Invalid request body: %v", r.RemoteAddr, err)
 			return
 		}
 
@@ -238,7 +241,7 @@ func GetFollowed(db *sql.DB) http.HandlerFunc {
 		decryptAuthorId, err := utils.DecryptJWT(follower.UserId, db)
 		if err != nil {
 			nw.Error("Invalid JWT") // Handle invalid JWT error
-			log.Printf("[%s] [GetFollower] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [GetFollowed] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
 			return
 		}
 		follower.UserId = decryptAuthorId // Set the decrypted user ID
@@ -246,21 +249,31 @@ func GetFollowed(db *sql.DB) http.HandlerFunc {
 		// Check if the user exists in the Auth table
 		if err = utils.IfExistsInDB("Auth", db, map[string]any{"Id": follower.UserId}); err != nil {
 			nw.Error("Invalid Id in the JWT")
-			log.Printf("[%s] [GetFollower] Invalid Id in the JWT : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [GetFollowed] Invalid Id in the JWT : %v", r.RemoteAddr, err)
 			return
 		}
 
 		// Prepare a list to hold the followed users
-		var follows = model.Followers{
-			{
-				UserId: follower.UserId,
-			},
+		var follows model.Followers
+
+		if follower.OtherUserId != "" {
+			follows = model.Followers{
+				{
+					FollowerId: follower.OtherUserId,
+				},
+			}
+		} else {
+			follows = model.Followers{
+				{
+					FollowerId: follower.UserId,
+				},
+			}
 		}
 
 		// Retrieve the list of users followed by the authenticated user from the database
 		if err := follows.SelectFromDb(db, map[string]any{"UserId": follows[0].UserId}); err != nil {
 			nw.Error("Internal Error: There is a problem during the select in the DB: " + err.Error())
-			log.Printf("[%s] [GetFollower] %s", r.RemoteAddr, err.Error())
+			log.Printf("[%s] [GetFollowed] %s", r.RemoteAddr, err.Error())
 			return
 		}
 
@@ -272,7 +285,7 @@ func GetFollowed(db *sql.DB) http.HandlerFunc {
 			"Follow":  follows,
 		})
 		if err != nil {
-			log.Printf("[%s] [GetFollower] %s", r.RemoteAddr, err.Error())
+			log.Printf("[%s] [GetFollowed] %s", r.RemoteAddr, err.Error())
 		}
 	}
 }
@@ -287,7 +300,8 @@ func GetFollower(db *sql.DB) http.HandlerFunc {
 
 		// Initialize a struct to hold the decoded request body
 		var follower struct {
-			UserId string `json:"UserId"`
+			UserId      string `json:"UserId"`
+			OtherUserId string `json:"OtherUserId"`
 		}
 		// Decode the JSON request body into the follower struct
 		if err := json.NewDecoder(r.Body).Decode(&follower); err != nil {
@@ -313,10 +327,20 @@ func GetFollower(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Prepare a list to hold the followers of the user
-		var follows = model.Followers{
-			{
-				FollowerId: follower.UserId,
-			},
+		var follows model.Followers
+
+		if follower.OtherUserId != "" {
+			follows = model.Followers{
+				{
+					FollowerId: follower.OtherUserId,
+				},
+			}
+		} else {
+			follows = model.Followers{
+				{
+					FollowerId: follower.UserId,
+				},
+			}
 		}
 
 		// Retrieve the list of followers from the database
