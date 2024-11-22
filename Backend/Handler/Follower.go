@@ -585,3 +585,78 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 		}
 	}
 }
+
+func GetFollowerAndFollowed(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		// Initialize a struct to hold the decoded request body
+		var userId string
+		// Decode the JSON request body into the follower struct
+		if err := json.NewDecoder(r.Body).Decode(&userId); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [GetFollowerAndFollowed] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		// Decrypt the UserId from the JWT to get the actual user ID
+		decryptAuthorId, err := utils.DecryptJWT(userId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [GetFollowerAndFollowed] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		userId = decryptAuthorId
+
+		var followeds model.Followers
+		if err = followeds.SelectFromDb(db, map[string]any{"UserId": userId}); err != nil {
+			nw.Error("Error during the fetch of the database")
+			log.Printf("[%s] [GetFollowerAndFollowed] Error during the fetch of the database : %v", r.RemoteAddr, err)
+			return
+		}
+
+		var followers model.Followers
+		if err = followers.SelectFromDb(db, map[string]any{"FollowerId": userId}); err != nil {
+			nw.Error("Error during the fetch of the database")
+			log.Printf("[%s] [GetFollowerAndFollowed] Error during the fetch of the database : %v", r.RemoteAddr, err)
+			return
+		}
+
+		var followerAndFollowed []struct {
+			UserId        string `json:"UserId"`
+			User_Name     string `json:"User_Name"`
+			User_Username string `json:"User_Username"`
+		}
+
+		for _, v := range followeds {
+			for _, v2 := range followers {
+				if v.FollowerId == v2.UserId {
+					var data struct {
+						UserId        string `json:"UserId"`
+						User_Name     string `json:"User_Name"`
+						User_Username string `json:"User_Username"`
+					}
+
+					data.UserId = v.FollowerId
+					data.User_Name = v.Follower_Name
+					data.User_Username = v.Follow_Username
+
+					followerAndFollowed = append(followerAndFollowed, data)
+				}
+			}
+		}
+
+		// Send the list of followers as a response in JSON format
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Get followed and follower successfully",
+			"Follow":  followerAndFollowed,
+		})
+		if err != nil {
+			log.Printf("[%s] [GetFollowerAndFollowed] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
