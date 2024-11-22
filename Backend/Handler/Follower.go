@@ -426,6 +426,50 @@ func GetFollowedRequest(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+func GetFollowRequest(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		// Initialize a struct to hold the decoded request body
+		var userId string
+		// Decode the JSON request body into the follower struct
+		if err := json.NewDecoder(r.Body).Decode(&userId); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [GetFollowRequest] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		// Decrypt the UserId from the JWT to get the actual user ID
+		decryptAuthorId, err := utils.DecryptJWT(userId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [GetFollowRequest] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		userId = decryptAuthorId
+
+		var followRequests model.FollowRequests
+		if err = followRequests.SelectFromDb(db, map[string]any{"UserId": userId}); err != nil {
+			nw.Error("Error during the fetch of the database")
+			log.Printf("[%s] [GetFollowRequest] Error during the fetch of the database : %v", r.RemoteAddr, err)
+			return
+		}
+
+		// Send the list of followers as a response in JSON format
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Get followed successfully",
+			"Follow":  followRequests,
+		})
+		if err != nil {
+			log.Printf("[%s] [GetFollowRequest] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
 func DeclineFollowedRequest(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nw := model.ResponseWriter{

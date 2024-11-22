@@ -47,6 +47,7 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/getFollower", handler.GetFollower(db))
 
 	mux.Handle("/getFollowedRequest", handler.GetFollowedRequest(db))
+	mux.Handle("/getFollowRequest", handler.GetFollowRequest(db))
 	mux.Handle("/declineFollowedRequest", handler.DeclineFollowedRequest(db))
 	mux.Handle("/acceptFollowedRequest", handler.AcceptFollowedRequest(db))
 	mux.Handle("/removeFollowed", handler.RemoveFollower(db))
