@@ -55,12 +55,15 @@ func (userData *UserData) ParseAuthData() (Auth, error) {
 	// We Unmarshal in the good structure
 	var authResult []Auth
 	err = json.Unmarshal(serializedData, &authResult)
-
-	if len(authResult) == 0 {
+	if err != nil {
 		return Auth{}, err
 	}
 
-	return authResult[0], err
+	if len(authResult) == 0 {
+		return Auth{}, errors.New("there is no entry in the DB")
+	}
+
+	return authResult[0], nil
 }
 
 /*
@@ -92,12 +95,15 @@ func (userData *UserData) ParseRegisterData() (Register, error) {
 
 	// We unmarshal the JSON data into the registerResult slice
 	err = json.Unmarshal(serializedData, &registerResult)
-
-	if len(registerResult) == 0 {
+	if err != nil {
 		return Register{}, err
 	}
+
+	if len(registerResult) == 0 {
+		return Register{}, errors.New("there is no entry in the DB")
+	}
 	// Return the first element of the registerResult slice and any error encountered
-	return registerResult[0], err
+	return registerResult[0], nil
 }
 
 /*
