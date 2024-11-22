@@ -56,6 +56,10 @@ func (userData *UserData) ParseAuthData() (Auth, error) {
 	var authResult []Auth
 	err = json.Unmarshal(serializedData, &authResult)
 
+	if len(authResult) == 0 {
+		return Auth{}, err
+	}
+
 	return authResult[0], err
 }
 
@@ -89,6 +93,9 @@ func (userData *UserData) ParseRegisterData() (Register, error) {
 	// We unmarshal the JSON data into the registerResult slice
 	err = json.Unmarshal(serializedData, &registerResult)
 
+	if len(registerResult) == 0 {
+		return Register{}, err
+	}
 	// Return the first element of the registerResult slice and any error encountered
 	return registerResult[0], err
 }
