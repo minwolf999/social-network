@@ -486,13 +486,13 @@ func DeclineFollowedRequest(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Decrypt the UserId from the JWT to get the actual user ID
-		decryptAuthorId, err := utils.DecryptJWT(followedRequest.UserId, db)
+		decryptAuthorId, err := utils.DecryptJWT(followedRequest.FollowerId, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
 			log.Printf("[%s] [DeclineFollowedRequest] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
 			return
 		}
-		followedRequest.UserId = decryptAuthorId
+		followedRequest.FollowerId = decryptAuthorId
 
 		if err := utils.IfExistsInDB("FollowRequestDetail", db, map[string]any{"UserId": followedRequest.UserId, "FollowerId": followedRequest.FollowerId}); err != nil {
 			nw.Error("There is no request for following this user")
@@ -534,13 +534,13 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Decrypt the UserId from the JWT to get the actual user ID
-		decryptAuthorId, err := utils.DecryptJWT(followedRequest.UserId, db)
+		decryptAuthorId, err := utils.DecryptJWT(followedRequest.FollowerId, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
 			log.Printf("[%s] [DeclineFollowedRequest] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
 			return
 		}
-		followedRequest.UserId = decryptAuthorId
+		followedRequest.FollowerId = decryptAuthorId
 
 		if err := utils.IfExistsInDB("FollowRequestDetail", db, map[string]any{"UserId": followedRequest.UserId, "FollowerId": followedRequest.FollowerId}); err != nil {
 			nw.Error("There is no request for following this user")
