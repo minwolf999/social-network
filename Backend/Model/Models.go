@@ -94,6 +94,9 @@ type Group struct {
 	SplitMemberIds []string
 	GroupName      string `json:"GroupName"`
 	CreationDate   string `json:"CreationDate"`
+
+	GroupPicture string `json:"GroupPicture"`
+	Banner       string `json:"Banner"`
 }
 
 type JoinGroupRequest struct {

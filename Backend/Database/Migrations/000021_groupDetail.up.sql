@@ -12,7 +12,9 @@ CREATE VIEW IF NOT EXISTS GroupDetail AS
 
     g.MemberIds,
     g.groupName,
-    g.CreationDate
+    g.CreationDate,
+    g.GroupPicture,
+    g.Banner
 
 FROM Groups AS g
 INNER JOIN UserInfo AS u ON u.Id = g.LeaderId

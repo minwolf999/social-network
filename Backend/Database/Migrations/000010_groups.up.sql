@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS Groups (
 	MemberIds TEXT NOT NULL,
 	GroupName VARCHAR(200) NOT NULL,
 	CreationDate VARCHAR(20) NOT NULL,
+	Banner TEXT,
+	GroupPicture TEXT,
 
 	PRIMARY KEY (Id),
 
