@@ -12,6 +12,7 @@ CREATE VIEW IF NOT EXISTS GroupDetail AS
 
     g.MemberIds,
     g.groupName,
+    g.GroupDescription,
     g.CreationDate,
     g.GroupPicture,
     g.Banner

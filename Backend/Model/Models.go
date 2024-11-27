@@ -87,13 +87,14 @@ type FollowRequest struct {
 type FollowRequests []FollowRequest
 
 type Group struct {
-	Id             string `json:"Id"`
-	LeaderId       string `json:"LeaderId"`
-	Leader         string `json:"Leader"`
-	MemberIds      string `json:"MemberIds"`
-	SplitMemberIds []string
-	GroupName      string `json:"GroupName"`
-	CreationDate   string `json:"CreationDate"`
+	Id               string `json:"Id"`
+	LeaderId         string `json:"LeaderId"`
+	Leader           string `json:"Leader"`
+	MemberIds        string `json:"MemberIds"`
+	SplitMemberIds   []string
+	GroupName        string `json:"GroupName"`
+	GroupDescription string `json:"GroupDescription"`
+	CreationDate     string `json:"CreationDate"`
 
 	GroupPicture string `json:"GroupPicture"`
 	Banner       string `json:"Banner"`
