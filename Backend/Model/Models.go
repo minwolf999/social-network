@@ -71,9 +71,9 @@ type Follower struct {
 	User_Name     string `json:"User_Name"`
 	User_Username string `json:"User_Username"`
 
-	FollowerId      string `json:"FollowerId"`
-	Follower_Name   string `json:"Follower_Name"`
-	Follow_Username string `json:"Follower_Username"`
+	FollowedId      string `json:"FollowerId"`
+	Followed_Name   string `json:"Follower_Name"`
+	Followed_Username string `json:"Follower_Username"`
 }
 type Followers []Follower
 
@@ -81,8 +81,8 @@ type FollowRequest struct {
 	UserId    string `json:"UserId"`
 	User_Name string `json:"User_Name"`
 
-	FollowerId    string `json:"FollowerId"`
-	Follower_Name string `json:"Follower_Name"`
+	FollowedId    string `json:"FollowerId"`
+	Followed_Name string `json:"Follower_Name"`
 }
 type FollowRequests []FollowRequest
 

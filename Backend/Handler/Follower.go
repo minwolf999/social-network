@@ -40,7 +40,7 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 		follower.UserId = decryptAuthorId // Set the decrypted user ID
 
 		// Check if FollowerId is provided
-		if follower.FollowerId == "" {
+		if follower.FollowedId == "" {
 			nw.Error("There is no id for the user to follow")
 			log.Printf("[%s] [AddFollower] There is no id for the user to follow", r.RemoteAddr)
 			return
@@ -63,14 +63,14 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Check if the follower user exists in the Auth table
-		if err = utils.IfExistsInDB("Auth", db, map[string]any{"Id": follower.FollowerId}); err != nil {
+		if err = utils.IfExistsInDB("Auth", db, map[string]any{"Id": follower.FollowedId}); err != nil {
 			nw.Error("The Id of the person you want to follow doesn't exist")
 			log.Printf("[%s] [AddFollower] %s", r.RemoteAddr, "The Id of the person you want to follow doesn't exist")
 			return
 		}
 
 		var followerData model.Register
-		followerData.Id = follower.FollowerId
+		followerData.Id = follower.FollowedId
 
 		if err = followerData.SelectFromDb(db, map[string]any{"Id": followerData.Id}); err != nil {
 			nw.Error("There is a probleme during the fetching of the other user's data")
@@ -100,7 +100,7 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 			notifMessage = "You have receive a followed request"
 
 			// Check if the follower user exists in the Auth table
-			if err = utils.IfNotExistsInDB("FollowingRequest", db, map[string]any{"UserId": follower.UserId, "FollowerId": follower.FollowerId}); err != nil {
+			if err = utils.IfNotExistsInDB("FollowingRequest", db, map[string]any{"UserId": follower.UserId, "FollowerId": follower.FollowedId}); err != nil {
 				nw.Error("The request has already been send")
 				log.Printf("[%s] [AddFollower] The request has already been send : %s", r.RemoteAddr, err)
 				return
@@ -108,7 +108,7 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 
 			var followRequest = model.FollowRequest{
 				UserId:     follower.UserId,
-				FollowerId: follower.FollowerId,
+				FollowedId: follower.FollowedId,
 			}
 
 			if err = followRequest.InsertIntoDb(db); err != nil {
@@ -140,7 +140,7 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 
 		notification := model.Notification{
 			Id:          notifId.String(),
-			UserId:      follower.FollowerId,
+			UserId:      follower.FollowedId,
 			Status:      "Follow",
 			Description: fmt.Sprintf("%s %s", notifMessage, userDataName),
 			GroupId:     "",
@@ -192,14 +192,14 @@ func RemoveFollower(db *sql.DB) http.HandlerFunc {
 		follower.UserId = decryptAuthorId // Set the decrypted user ID
 
 		// Check if FollowerId is provided
-		if follower.FollowerId == "" {
+		if follower.FollowedId == "" {
 			nw.Error("There is no id for the user to unfollow")
 			log.Printf("[%s] [RemoveFollower] There is no id for the user to unfollow", r.RemoteAddr)
 			return
 		}
 
 		// Attempt to delete the follower relationship from the database
-		if err = follower.DeleteFromDb(db, map[string]any{"UserId": follower.UserId, "FollowerId": follower.FollowerId}); err != nil {
+		if err = follower.DeleteFromDb(db, map[string]any{"UserId": follower.UserId, "FollowerId": follower.FollowedId}); err != nil {
 			nw.Error("Internal Error: There is a problem during the delete in the DB: " + err.Error())
 			log.Printf("[%s] [RemoveFollower] %s", r.RemoteAddr, err.Error())
 			return
@@ -244,14 +244,14 @@ func RemoveFollowed(db *sql.DB) http.HandlerFunc {
 		follower.UserId = decryptAuthorId // Set the decrypted user ID
 
 		// Check if FollowerId is provided
-		if follower.FollowerId == "" {
+		if follower.FollowedId == "" {
 			nw.Error("There is no id for the user to unfollow")
 			log.Printf("[%s] [RemoveFollower] There is no id for the user to unfollow", r.RemoteAddr)
 			return
 		}
 
 		// Attempt to delete the follower relationship from the database
-		if err = follower.DeleteFromDb(db, map[string]any{"FollowerId": follower.UserId, "UserId": follower.FollowerId}); err != nil {
+		if err = follower.DeleteFromDb(db, map[string]any{"FollowerId": follower.UserId, "UserId": follower.FollowedId}); err != nil {
 			nw.Error("Internal Error: There is a problem during the delete in the DB: " + err.Error())
 			log.Printf("[%s] [RemoveFollower] %s", r.RemoteAddr, err.Error())
 			return
@@ -311,19 +311,19 @@ func GetFollowed(db *sql.DB) http.HandlerFunc {
 		if follower.OtherUserId != "" {
 			follows = model.Followers{
 				{
-					FollowerId: follower.OtherUserId,
+					FollowedId: follower.OtherUserId,
 				},
 			}
 		} else {
 			follows = model.Followers{
 				{
-					FollowerId: follower.UserId,
+					FollowedId: follower.UserId,
 				},
 			}
 		}
 
 		// Retrieve the list of users followed by the authenticated user from the database
-		if err := follows.SelectFromDb(db, map[string]any{"FollowerId": follows[0].FollowerId}); err != nil {
+		if err := follows.SelectFromDb(db, map[string]any{"FollowerId": follows[0].FollowedId}); err != nil {
 			nw.Error("Internal Error: There is a problem during the select in the DB: " + err.Error())
 			log.Printf("[%s] [GetFollowed] %s", r.RemoteAddr, err.Error())
 			return
@@ -538,21 +538,21 @@ func DeclineFollowedRequest(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Decrypt the UserId from the JWT to get the actual user ID
-		decryptAuthorId, err := utils.DecryptJWT(followedRequest.FollowerId, db)
+		decryptAuthorId, err := utils.DecryptJWT(followedRequest.FollowedId, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
 			log.Printf("[%s] [DeclineFollowedRequest] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
 			return
 		}
-		followedRequest.FollowerId = decryptAuthorId
+		followedRequest.FollowedId = decryptAuthorId
 
-		if err := utils.IfExistsInDB("FollowRequestDetail", db, map[string]any{"UserId": followedRequest.UserId, "FollowerId": followedRequest.FollowerId}); err != nil {
+		if err := utils.IfExistsInDB("FollowRequestDetail", db, map[string]any{"UserId": followedRequest.UserId, "FollowerId": followedRequest.FollowedId}); err != nil {
 			nw.Error("There is no request for following this user")
 			log.Printf("[%s] [DeclineFollowedRequest] There is no request for following this user : %s", r.RemoteAddr, err)
 			return
 		}
 
-		if err := followedRequest.DeleteFromDb(db, map[string]any{"UserId": followedRequest.UserId, "FollowerId": followedRequest.FollowerId}); err != nil {
+		if err := followedRequest.DeleteFromDb(db, map[string]any{"UserId": followedRequest.UserId, "FollowerId": followedRequest.FollowedId}); err != nil {
 			nw.Error("Error during the delete of the request")
 			log.Printf("[%s] [DeclineFollowedRequest] Error during the delete of the request: %v", r.RemoteAddr, err)
 			return
@@ -586,15 +586,15 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Decrypt the UserId from the JWT to get the actual user ID
-		decryptAuthorId, err := utils.DecryptJWT(followedRequest.FollowerId, db)
+		decryptAuthorId, err := utils.DecryptJWT(followedRequest.FollowedId, db)
 		if err != nil {
 			nw.Error("Invalid JWT")
 			log.Printf("[%s] [DeclineFollowedRequest] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
 			return
 		}
-		followedRequest.FollowerId = decryptAuthorId
+		followedRequest.FollowedId = decryptAuthorId
 
-		if err := utils.IfExistsInDB("FollowRequestDetail", db, map[string]any{"UserId": followedRequest.UserId, "FollowerId": followedRequest.FollowerId}); err != nil {
+		if err := utils.IfExistsInDB("FollowRequestDetail", db, map[string]any{"UserId": followedRequest.UserId, "FollowerId": followedRequest.FollowedId}); err != nil {
 			nw.Error("There is no request for following this user")
 			log.Printf("[%s] [AcceptFollowedRequest] There is no request for following this user : %s", r.RemoteAddr, err)
 			return
@@ -610,8 +610,8 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 
 		var follow = model.Follower{
 			Id:         uuid.String(),
-			UserId:     followedRequest.FollowerId,
-			FollowerId: followedRequest.UserId,
+			UserId:     followedRequest.FollowedId,
+			FollowedId: followedRequest.UserId,
 		}
 
 		if err = follow.InsertIntoDb(db); err != nil {
@@ -620,7 +620,7 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if err := followedRequest.DeleteFromDb(db, map[string]any{"UserId": followedRequest.UserId, "FollowerId": followedRequest.FollowerId}); err != nil {
+		if err := followedRequest.DeleteFromDb(db, map[string]any{"UserId": followedRequest.UserId, "FollowerId": followedRequest.FollowedId}); err != nil {
 			nw.Error("Error during the delete of the request")
 			log.Printf("[%s] [AcceptFollowedRequest] Error during the delete of the request: %v", r.RemoteAddr, err)
 			return
@@ -684,16 +684,16 @@ func GetFollowerAndFollowed(db *sql.DB) http.HandlerFunc {
 
 		for _, v := range followeds {
 			for _, v2 := range followers {
-				if v.FollowerId == v2.UserId {
+				if v.FollowedId == v2.UserId {
 					var data struct {
 						UserId        string `json:"UserId"`
 						User_Name     string `json:"User_Name"`
 						User_Username string `json:"User_Username"`
 					}
 
-					data.UserId = v.FollowerId
-					data.User_Name = v.Follower_Name
-					data.User_Username = v.Follow_Username
+					data.UserId = v.FollowedId
+					data.User_Name = v.Followed_Name
+					data.User_Username = v.Followed_Username
 
 					followerAndFollowed = append(followerAndFollowed, data)
 				}

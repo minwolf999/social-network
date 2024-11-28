@@ -177,7 +177,7 @@ func TestRemoveFollower(t *testing.T) {
 	follow := model.Follower{
 		Id: "followid",
 		UserId:     userData1.Id,
-		FollowerId: userData2.Id,
+		FollowedId: userData2.Id,
 	}
 
 	if err = follow.InsertIntoDb(db); err != nil {
@@ -286,7 +286,7 @@ func TestGetFollowed(t *testing.T) {
 	follow := model.Follower{
 		Id: "followid",
 		UserId:     userData1.Id,
-		FollowerId: userData2.Id,
+		FollowedId: userData2.Id,
 	}
 
 	if err = follow.InsertIntoDb(db); err != nil {
@@ -295,7 +295,7 @@ func TestGetFollowed(t *testing.T) {
 	}
 
 	follow.UserId = JWT
-	follow.FollowerId = ""
+	follow.FollowedId = ""
 
 	body, err := json.Marshal(follow)
 	if err != nil {
@@ -399,7 +399,7 @@ func TestGetFollower(t *testing.T) {
 	follow := model.Follower{
 		Id: "followerid",
 		UserId:     userData1.Id,
-		FollowerId: userData2.Id,
+		FollowedId: userData2.Id,
 	}
 
 	if err = follow.InsertIntoDb(db); err != nil {
@@ -410,7 +410,7 @@ func TestGetFollower(t *testing.T) {
 
 	follow = model.Follower{
 		UserId: utils.GenerateJWT(userData2.Id),
-		FollowerId: "",
+		FollowedId: "",
 	}
 
 	body, err := json.Marshal(follow)

@@ -1025,13 +1025,13 @@ The function returns 1 value:
 */
 func (follower *Follower) InsertIntoDb(db *sql.DB) error {
 	// We check if any of the required fields (Id, UserId, FollowerId) are empty
-	if follower.Id == "" || follower.UserId == "" || follower.FollowerId == "" {
+	if follower.Id == "" || follower.UserId == "" || follower.FollowedId == "" {
 		// Return an error if any field is empty
 		return errors.New("empty field")
 	}
 
 	// We call InsertIntoDb to insert the follower data into the "Follower" table in the database
-	return InsertIntoDb("Follower", db, follower.Id, follower.UserId, follower.FollowerId)
+	return InsertIntoDb("Follower", db, follower.Id, follower.UserId, follower.FollowedId)
 }
 
 /*
@@ -1047,13 +1047,13 @@ The function returns 2 values:
 */
 func (follower *Follower) IsFollowedBy(db *sql.DB) (bool, error) {
 	// We check if either the UserId or FollowerId fields are empty
-	if follower.UserId == "" || follower.FollowerId == "" {
+	if follower.UserId == "" || follower.FollowedId == "" {
 		// Return false and an error if any field is empty
 		return false, errors.New("empty id")
 	}
 
 	// We call SelectFromDb to check if there is a record of the follower in the database
-	userData, err := SelectFromDb("Follower", db, map[string]any{"UserId": follower.UserId, "FollowedId": follower.FollowerId})
+	userData, err := SelectFromDb("Follower", db, map[string]any{"UserId": follower.UserId, "FollowedId": follower.FollowedId})
 	if err != nil {
 		// Return false and the error if the data retrieval fails
 		return false, err
@@ -1139,13 +1139,13 @@ func (follower *Follower) DeleteFromDb(db *sql.DB, where map[string]any) error {
 
 func (follower *FollowRequest) InsertIntoDb(db *sql.DB) error {
 	// We check if any of the required fields (Id, UserId, FollowerId) are empty
-	if follower.UserId == "" || follower.FollowerId == "" {
+	if follower.UserId == "" || follower.FollowedId == "" {
 		// Return an error if any field is empty
 		return errors.New("empty field")
 	}
 
 	// We call InsertIntoDb to insert the follower data into the "Follower" table in the database
-	return InsertIntoDb("FollowingRequest", db, follower.UserId, follower.FollowerId)
+	return InsertIntoDb("FollowingRequest", db, follower.UserId, follower.FollowedId)
 }
 
 func (follower *FollowRequests) SelectFromDb(db *sql.DB, where map[string]any) error {
