@@ -124,13 +124,13 @@ func CreateTables(db *sql.DB) {
 		
 		CREATE TABLE IF NOT EXISTS Follower (
 			Id VARCHAR(36) NOT NULL,
-			UserId VARCHAR(36) NOT NULL,
 			FollowerId VARCHAR(36) NOT NULL,
-		
+			FollowedId VARCHAR(36) NOT NULL,
+
 			PRIMARY KEY (Id),
-		
-			CONSTRAINT fk_userid FOREIGN KEY (UserId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE,
-			CONSTRAINT fk_followerid FOREIGN KEY (FollowerId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE
+
+			CONSTRAINT fk_followerid FOREIGN KEY (FollowerId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE,
+			CONSTRAINT fk_followedid FOREIGN KEY (FollowedId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE
 		);
 		
 		CREATE TABLE IF NOT EXISTS Groups (
@@ -138,10 +138,13 @@ func CreateTables(db *sql.DB) {
 			LeaderId VARCHAR(36) NOT NULL,
 			MemberIds TEXT NOT NULL,
 			GroupName VARCHAR(200) NOT NULL,
+			GroupDescription VARCHAR(500),
 			CreationDate VARCHAR(20) NOT NULL,
-		
+			Banner TEXT,
+			GroupPicture TEXT,
+
 			PRIMARY KEY (Id),
-		
+
 			CONSTRAINT fk_leaderid FOREIGN KEY (LeaderId) REFERENCES "UserInfo"("Id")	
 		);
 
@@ -246,11 +249,11 @@ func CreateTables(db *sql.DB) {
 
 
 		CREATE TABLE IF NOT EXISTS FollowingRequest (
-			UserId VARCHAR(36) NOT NULL,
 			FollowerId VARCHAR(36) NOT NULL,
+			FollowedId VARCHAR(36) NOT NULL,
 
-			CONSTRAINT fk_userid FOREIGN KEY (UserId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE,
-			CONSTRAINT fk_followerid FOREIGN KEY (FollowerId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE
+			CONSTRAINT fk_followerid FOREIGN KEY (FollowerId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE,
+			CONSTRAINT fk_followedid FOREIGN KEY (FollowedId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE
 		);
 
 		CREATE TABLE IF NOT EXISTS JoinGroupRequest (
@@ -274,25 +277,25 @@ func CreateTables(db *sql.DB) {
 		CREATE VIEW IF NOT EXISTS FollowDetail AS
 		SELECT 
 			f.Id,
-			f.UserId AS UserId,
-			User.Username AS User_Username,
+			f.FollowerId AS FollowerId,
+			User.Username AS Follower_Username,
 			
 			CASE
 			WHEN CONCAT(User.FirstName, ' ', User.LastName) = ' ' THEN ''
 			ELSE CONCAT(User.FirstName, ' ', User.LastName)
-			END AS User_Name,
+			END AS Follower_Name,
 
-			f.FollowerId AS FollowerId,
-			Follower.Username AS Follower_Username,
+			f.FollowedId AS FollowedId,
+			Follower.Username AS Followed_Username,
 
 			CASE
 			WHEN CONCAT(Follower.FirstName, ' ', Follower.LastName) = ' ' THEN ''
 			ELSE CONCAT(Follower.FirstName, ' ', Follower.LastName)
-			END AS Follower_Name
+			END AS Followed_Name
 
 		FROM Follower AS f
-		INNER JOIN UserInfo AS User ON User.Id = f.UserId
-		INNER JOIN UserInfo AS Follower ON Follower.Id = f.FollowerId;
+		INNER JOIN UserInfo AS User ON User.Id = f.FollowerId
+		INNER JOIN UserInfo AS Follower ON Follower.Id = f.FollowedId;
 
 		CREATE VIEW IF NOT EXISTS GroupDetail AS
 		SELECT 
@@ -312,23 +315,23 @@ func CreateTables(db *sql.DB) {
 		INNER JOIN UserInfo AS u ON u.Id = g.LeaderId;
 
 		CREATE VIEW IF NOT EXISTS FollowRequestDetail AS
-			SELECT
-				f.UserId AS UserId,
-				CASE 
-					WHEN User.Username = '' THEN CONCAT(User.FirstName, ' ', User.LastName)
-					ELSE User.Username 
-				END AS User_Name,
+		SELECT
+			f.FollowerId AS FollowerId,
+			CASE 
+				WHEN User.Username = '' THEN CONCAT(User.FirstName, ' ', User.LastName)
+				ELSE User.Username 
+			END AS Follower_Name,
 
-				f.FollowerId AS FollowerId,
-				CASE 
-					WHEN Follower.Username = '' THEN CONCAT(Follower.FirstName, ' ', Follower.LastName)
-					ELSE Follower.Username 
-				END AS Follower_Name
-				
+			f.FollowedId AS FollowedId,
+			CASE 
+				WHEN Follower.Username = '' THEN CONCAT(Follower.FirstName, ' ', Follower.LastName)
+				ELSE Follower.Username 
+			END AS Followed_Name
+			
 
-			FROM FollowingRequest AS f
-			INNER JOIN UserInfo AS User ON User.Id = f.UserId
-			INNER JOIN UserInfo AS Follower ON Follower.Id = f.FollowerId;
+		FROM FollowingRequest AS f
+		INNER JOIN UserInfo AS User ON User.Id = f.FollowerId
+		INNER JOIN UserInfo AS Follower ON Follower.Id = f.FollowedId;
 
 		CREATE View IF NOT EXISTS JoinGroupRequestDetail AS
 			SELECT

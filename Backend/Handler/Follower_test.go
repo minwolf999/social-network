@@ -25,7 +25,7 @@ func TestAddFollower(t *testing.T) {
 
 	var userData1 = model.Register{
 		Auth: model.Auth{
-			Id: "userid1",
+			Id:              "userid1",
 			Email:           "test1@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -45,12 +45,11 @@ func TestAddFollower(t *testing.T) {
 		return
 	}
 
-
 	JWT := utils.GenerateJWT(userData1.Id)
 
 	var userData2 = model.Register{
 		Auth: model.Auth{
-			Id: "userid2",
+			Id:              "userid2",
 			Email:           "unemail7@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -64,16 +63,15 @@ func TestAddFollower(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
-	
+
 	if err = userData2.InsertIntoDb(db); err != nil {
 		t.Fatal(err)
 		return
 	}
 
-
 	follow := map[string]any{
-		"UserId":     JWT,
-		"FollowerId": userData2.Id,
+		"FollowerId": JWT,
+		"FollowedId": userData2.Id,
 	}
 
 	body, err := json.Marshal(follow)
@@ -129,7 +127,7 @@ func TestRemoveFollower(t *testing.T) {
 
 	var userData1 = model.Register{
 		Auth: model.Auth{
-			Id: "userid1",
+			Id:              "userid1",
 			Email:           "test1@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -149,12 +147,11 @@ func TestRemoveFollower(t *testing.T) {
 		return
 	}
 
-
 	JWT := utils.GenerateJWT(userData1.Id)
 
 	userData2 := model.Register{
 		Auth: model.Auth{
-			Id: "userid2",
+			Id:              "userid2",
 			Email:           "unemail7@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -175,8 +172,8 @@ func TestRemoveFollower(t *testing.T) {
 	}
 
 	follow := model.Follower{
-		Id: "followid",
-		FollowerId:     userData1.Id,
+		Id:         "followid",
+		FollowerId: userData1.Id,
 		FollowedId: userData2.Id,
 	}
 
@@ -239,7 +236,7 @@ func TestGetFollowed(t *testing.T) {
 
 	userData1 := model.Register{
 		Auth: model.Auth{
-			Id: "userid1",
+			Id:              "userid1",
 			Email:           "test1@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -263,7 +260,7 @@ func TestGetFollowed(t *testing.T) {
 
 	userData2 := model.Register{
 		Auth: model.Auth{
-			Id: "userid2",
+			Id:              "userid2",
 			Email:           "unemail7@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -284,8 +281,8 @@ func TestGetFollowed(t *testing.T) {
 	}
 
 	follow := model.Follower{
-		Id: "followid",
-		FollowerId:     userData1.Id,
+		Id:         "followid",
+		FollowerId: userData1.Id,
 		FollowedId: userData2.Id,
 	}
 
@@ -294,10 +291,14 @@ func TestGetFollowed(t *testing.T) {
 		return
 	}
 
-	follow.FollowerId = JWT
-	follow.FollowedId = ""
+	var follower struct {
+		UserId      string `json:"UserId"`
+		OtherUserId string `json:"OtherUserId"`
+	}
+	follower.UserId = JWT
+	follower.OtherUserId = ""
 
-	body, err := json.Marshal(follow)
+	body, err := json.Marshal(follower)
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -350,7 +351,7 @@ func TestGetFollower(t *testing.T) {
 
 	userData1 := model.Register{
 		Auth: model.Auth{
-			Id: "userid1",
+			Id:              "userid1",
 			Email:           "test1@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -374,7 +375,7 @@ func TestGetFollower(t *testing.T) {
 
 	userData2 := model.Register{
 		Auth: model.Auth{
-			Id: "userid2",
+			Id:              "userid2",
 			Email:           "unemail7@gmail.com",
 			Password:        "MonMotDePasse123!",
 			ConfirmPassword: "MonMotDePasse123!",
@@ -397,8 +398,8 @@ func TestGetFollower(t *testing.T) {
 	// JWT2 := bodyValue["sessionId"]
 
 	follow := model.Follower{
-		Id: "followerid",
-		FollowerId:     userData1.Id,
+		Id:         "followerid",
+		FollowerId: userData1.Id,
 		FollowedId: userData2.Id,
 	}
 
@@ -407,13 +408,14 @@ func TestGetFollower(t *testing.T) {
 		return
 	}
 
-
-	follow = model.Follower{
-		FollowerId: utils.GenerateJWT(userData2.Id),
-		FollowedId: "",
+	var follower struct {
+		UserId      string `json:"UserId"`
+		OtherUserId string `json:"OtherUserId"`
 	}
 
-	body, err := json.Marshal(follow)
+	follower.UserId = utils.GenerateJWT(userData2.Id)
+
+	body, err := json.Marshal(follower)
 	if err != nil {
 		t.Fatal(err)
 		return

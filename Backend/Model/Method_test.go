@@ -207,8 +207,8 @@ func TestParseCommentData(t *testing.T) {
 func TestParseFollowerData(t *testing.T) {
 	testMap := UserData{
 		{
-			"UserId":     "U_Id",
-			"FollowerId": "F_Id",
+			"FollowerId": "U_Id",
+			"FollowedId": "F_Id",
 		},
 	}
 
@@ -218,12 +218,12 @@ func TestParseFollowerData(t *testing.T) {
 		return
 	}
 
-	if userData[0].FollowerId != testMap[0]["UserId"] {
+	if userData[0].FollowerId != testMap[0]["FollowerId"] {
 		t.Fatal("Text before and after the parse are not the same")
 		return
 	}
 
-	if userData[0].FollowedId != testMap[0]["FollowerId"] {
+	if userData[0].FollowedId != testMap[0]["FollowedId"] {
 		t.Fatal("AuthorId before and after the parse are not the same")
 		return
 	}
@@ -232,8 +232,8 @@ func TestParseFollowerData(t *testing.T) {
 func TestParseGroupData(t *testing.T) {
 	testMap := UserData{
 		{
-			"Id": "id",
-			"LeaderId": "Leader",
+			"Id":        "id",
+			"LeaderId":  "Leader",
 			"GroupName": "Group",
 		},
 	}

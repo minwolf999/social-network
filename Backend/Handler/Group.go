@@ -82,7 +82,7 @@ func CreateGroup(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Insert the new group into the database.
-		if err := model.InsertIntoDb("Groups", db, group.Id, group.LeaderId, group.MemberIds, group.GroupName, group.CreationDate); err != nil {
+		if err := group.InsertIntoDb(db); err != nil {
 			// Return error if database insertion fails.
 			nw.Error("Internal Error: There is a problem during the push in the DB: " + err.Error())
 			log.Printf("[%s] [CreateGroup] %s", r.RemoteAddr, err.Error())
