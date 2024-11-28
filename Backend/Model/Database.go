@@ -165,7 +165,7 @@ func LoadData(db *sql.DB) error {
 	
 			var follower Follower
 			follower.FollowedId = previousUserId
-			follower.UserId = user.Auth.Id
+			follower.FollowerId = user.Auth.Id
 	
 			uid, err = uuid.NewV7()
 			if err != nil {

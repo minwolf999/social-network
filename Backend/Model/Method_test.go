@@ -218,7 +218,7 @@ func TestParseFollowerData(t *testing.T) {
 		return
 	}
 
-	if userData[0].UserId != testMap[0]["UserId"] {
+	if userData[0].FollowerId != testMap[0]["UserId"] {
 		t.Fatal("Text before and after the parse are not the same")
 		return
 	}

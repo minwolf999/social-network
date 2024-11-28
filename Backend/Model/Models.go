@@ -67,22 +67,22 @@ type Comments []Comment
 type Follower struct {
 	Id string `json:"Id"`
 
-	UserId        string `json:"UserId"`
-	User_Name     string `json:"User_Name"`
-	User_Username string `json:"User_Username"`
+	FollowerId        string `json:"FollowerId"`
+	Follower_Name     string `json:"Follower_Name"`
+	Follower_Username string `json:"Follower_Username"`
 
-	FollowedId      string `json:"FollowerId"`
-	Followed_Name   string `json:"Follower_Name"`
-	Followed_Username string `json:"Follower_Username"`
+	FollowedId      string `json:"FollowedId"`
+	Followed_Name   string `json:"Followed_Name"`
+	Followed_Username string `json:"Followed_Username"`
 }
 type Followers []Follower
 
 type FollowRequest struct {
-	UserId    string `json:"UserId"`
-	User_Name string `json:"User_Name"`
+	FollowerId    string `json:"FollowerId"`
+	Follower_Name string `json:"Follower_Name"`
 
-	FollowedId    string `json:"FollowerId"`
-	Followed_Name string `json:"Follower_Name"`
+	FollowedId    string `json:"FollowedId"`
+	Followed_Name string `json:"Followed_Name"`
 }
 type FollowRequests []FollowRequest
 
