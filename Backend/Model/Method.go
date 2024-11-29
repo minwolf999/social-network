@@ -1662,7 +1662,7 @@ func (message *Message) InsertIntoDb(db *sql.DB) error {
 
 func (messages *Messages) SelectFromDb(db *sql.DB, where map[string]any) error {
 	// We call SelectFromDb to retrieve data from the "CommentDetail" table based on the given conditions
-	userData, err := SelectFromDb("chat", db, where)
+	userData, err := SelectFromDb("ChatDetail", db, where)
 	if err != nil {
 		// Return an error if the data retrieval fails
 		return err
@@ -1684,7 +1684,7 @@ func (messages *Messages) GetPrivateMessages(db *sql.DB, message Message) (error
 		return errors.New("there is an empty user")
 	}
 
-	stmt, err := db.Prepare("SELECT * FROM Chat WHERE SenderId = ? AND ReceiverId = ? OR SenderId = ? AND ReceiverId = ?")
+	stmt, err := db.Prepare("SELECT * FROM ChatDetail WHERE SenderId = ? AND ReceiverId = ? OR SenderId = ? AND ReceiverId = ?")
 	if err != nil {
 		return err
 	}
