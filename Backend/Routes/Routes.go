@@ -73,6 +73,7 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/deleteGroup", handler.DeleteGroup(db))
 
 	mux.Handle("/joinGroup", handler.JoinGroup(db))
+	mux.Handle("/getSendJoinRequest", handler.GetSendJoinRequest(db))
 	mux.Handle("/getJoinRequest", handler.GetJoinRequest(db))
 	mux.Handle("/declineJoinRequest", handler.DeclineJoinRequest(db))
 	mux.Handle("/acceptJoinRequest", handler.AcceptJoinRequest(db))

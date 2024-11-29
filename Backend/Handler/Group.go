@@ -686,6 +686,49 @@ func GetJoinRequest(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+func GetSendJoinRequest(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		var datas struct {
+			UserId  string `json:"UserId"`
+			GroupId string `json:"GroupId"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&datas.UserId); err != nil {
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [GetSendJoinRequest] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		decryptUserId, err := utils.DecryptJWT(datas.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [GetSendJoinRequest] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		datas.UserId = decryptUserId
+
+		var requests model.JoinGroupRequests
+		if err = requests.SelectFromDb(db, map[string]any{"UserId": datas.UserId, "GroupId": datas.GroupId}); err != nil {
+			nw.Error("Error during the fetch of the DB")
+			log.Printf("[%s] [GetSendJoinRequest] Error during the fetch of the DB : %v", r.RemoteAddr, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Group join request getted successfully",
+			"Value":   requests,
+		})
+		if err != nil {
+			log.Printf("[%s] [GetSendJoinRequest] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
 func DeclineJoinRequest(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nw := model.ResponseWriter{
