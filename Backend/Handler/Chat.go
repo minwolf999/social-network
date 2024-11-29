@@ -104,7 +104,7 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 
 			notification := model.Notification{
 				Id:          notifId.String(),
-				UserId:      message.ReceiverId.(string),
+				UserId:      message.ReceiverId,
 				Status:      "Chat",
 				Description: fmt.Sprintf("A message as been send by %s", userDataName),
 				GroupId:     "",
@@ -153,7 +153,7 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 					UserId:      group.SplitMemberIds[i],
 					Status:      "Chat",
 					Description: fmt.Sprintf("A message as been send by %s", userDataName),
-					GroupId:     message.GroupId.(string),
+					GroupId:     message.GroupId,
 					OtherUserId: "",
 				}
 

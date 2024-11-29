@@ -1647,13 +1647,13 @@ func (message *Message) InsertIntoDb(db *sql.DB) error {
 
 	var GroupId = sql.NullString{Valid: false}
 	if message.GroupId != "" {
-		GroupId.String = message.GroupId.(string)
+		GroupId.String = message.GroupId
 		GroupId.Valid = true
 	}
 
 	var ReceiverId = sql.NullString{Valid: false}
 	if message.ReceiverId != "" {
-		ReceiverId.String = message.ReceiverId.(string)
+		ReceiverId.String = message.ReceiverId
 		ReceiverId.Valid = true
 	}
 
@@ -1696,10 +1696,14 @@ func (messages *Messages) GetPrivateMessages(db *sql.DB, message Message) (error
 
 	for rows.Next() {
 		var message Message
-		err = rows.Scan(&message.Id, &message.SenderId, &message.Sender_Name, &message.CreationDate, &message.Message, &message.Image, &message.ReceiverId, &message.Receiver_Name, &message.GroupId, &message.Group_Name)
+		var tmpReceiverId, tmpGroupId any
+		err = rows.Scan(&message.Id, &message.SenderId, &message.Sender_Name, &message.CreationDate, &message.Message, &message.Image, &tmpReceiverId, &message.Receiver_Name, &tmpGroupId, &message.Group_Name)
 		if err != nil {
 			return err
 		}
+
+		message.ReceiverId = tmpReceiverId.(string)
+		message.GroupId = tmpGroupId.(string)
 
 		*messages = append(*messages, message)
 	}

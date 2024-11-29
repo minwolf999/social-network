@@ -176,9 +176,9 @@ type Message struct {
 	CreationDate  string `json:"CreationDate"`
 	Message       string `json:"Message"`
 	Image         string `json:"Image"`
-	ReceiverId    any `json:"ReceiverId"`
+	ReceiverId    string `json:"ReceiverId"`
 	Receiver_Name string `json:"Receiver_Name"`
-	GroupId       any `json:"GroupId"`
+	GroupId       string `json:"GroupId"`
 	Group_Name    string `json:"Group_Name"`
 }
 type Messages []Message
