@@ -170,13 +170,16 @@ type Notification struct {
 type Notifications []Notification
 
 type Message struct {
-	Id           string `json:"Id"`
-	SenderId     string `json:"SenderId"`
-	CreationDate string `json:"CreationDate"`
-	Message      string `json:"Message"`
-	Image        string `json:"Image"`
-	ReceiverId   string `json:"ReceiverId"`
-	GroupId      string `json:"GroupId"`
+	Id            string `json:"Id"`
+	SenderId      string `json:"SenderId"`
+	Sender_Name   string `json:"Sender_Name"`
+	CreationDate  string `json:"CreationDate"`
+	Message       string `json:"Message"`
+	Image         string `json:"Image"`
+	ReceiverId    string `json:"ReceiverId"`
+	Receiver_Name string `json:"Receiver_Name"`
+	GroupId       string `json:"GroupId"`
+	Group_Name    string `json:"Group_Name"`
 }
 type Messages []Message
 
