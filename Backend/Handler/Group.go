@@ -575,6 +575,12 @@ func JoinGroup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		if err = utils.IfNotExistsInDB("JoinGroupRequest", db, map[string]any{"UserId": datas.UserId, "GroupId": datas.GroupId}); err != nil {
+			nw.Error("You are already send a request to join this group")
+			log.Printf("[%s] [JoinGroup] You are already send a request to join this group : %v", r.RemoteAddr, err)
+			return
+		}
+
 		if err = datas.InsertIntoDb(db); err != nil {
 			nw.Error("There is an error storing the query")
 			log.Printf("[%s] [JoinGroup] There is an error storing the query : %v", r.RemoteAddr, err)
