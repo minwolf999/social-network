@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -168,4 +169,103 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [AddMessage] %s", r.RemoteAddr, err.Error())
 		}
 	}
+}
+
+func GetMessage(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		var message model.Message
+
+		// Decode the JSON request body into the request struct
+		if err := json.NewDecoder(r.Body).Decode(&message); err != nil {
+			nw.Error("Invalid request body") // Send error if decoding fails
+			log.Printf("[%s] [GetMessage] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		uid, err := utils.DecryptJWT(message.SenderId, db)
+		if err != nil {
+			nw.Error("Error when decrypt the JWT") // Handle JWT decryption error
+			log.Printf("[%s] [GetMessage] Error when decrypt the JWT : %s", r.RemoteAddr, err.Error())
+			return
+		}
+		message.SenderId = uid
+
+		if message.ReceiverId == "" && message.GroupId == "" {
+			nw.Error("There is no recipient") // Handle JWT decryption error
+			log.Printf("[%s] [GetMessage] There is no recipient", r.RemoteAddr)
+			return
+		}
+
+		if message.ReceiverId != "" && message.GroupId != "" {
+			nw.Error("Is this a private message or a group message ?") // Handle JWT decryption error
+			log.Printf("[%s] [GetMessage] Is this a private message or a group message ?", r.RemoteAddr)
+			return
+		}
+
+		var messages model.Messages
+		if message.GroupId != "" {
+			messages, err = GetGroupsMessages(db, message)
+			if err != nil {
+				nw.Error("Error during the fetch of the group messages") // Handle JWT decryption error
+				log.Printf("[%s] [GetMessage] Error during the fetch of the group messages: %v", r.RemoteAddr, err)
+				return
+			}
+		} else {
+			messages, err = GetPrivateMessages(db, message)
+			if err != nil {
+				nw.Error("Error during the fetch of the messages") // Handle JWT decryption error
+				log.Printf("[%s] [GetMessage] Error during the fetch of the messages: %v", r.RemoteAddr, err)
+				return
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Message retreived successfully",
+			"Value":   messages,
+		})
+		if err != nil {
+			log.Printf("[%s] [GetMessage] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
+func GetGroupsMessages(db *sql.DB, message model.Message) (model.Messages, error) {
+	var messages model.Messages
+	err := messages.SelectFromDb(db, map[string]any{})
+	return messages, err
+}
+
+func GetPrivateMessages(db *sql.DB, message model.Message) (model.Messages, error) {
+	if message.SenderId == "" || message.ReceiverId == "" {
+		return nil, errors.New("there is an empty user")
+	}
+
+	stmt, err := db.Prepare("SELECT * FROM Chat WHERE SenderId = ? AND ReceiverId = ? OR SenderId = ? AND ReceiverId = ?")
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := stmt.Query(message.SenderId, message.ReceiverId, message.ReceiverId, message.SenderId)
+	if err != nil {
+		return nil, err
+	}
+
+	var messages model.Messages
+	for rows.Next() {
+		var message model.Message
+		err = rows.Scan(&message.Id, &message.SenderId, &message.CreationDate, &message.Message, &message.Image, &message.ReceiverId, &message.GroupId)
+		if err != nil {
+			return nil, err
+		}
+
+		messages = append(messages, message)
+	}
+
+	return messages, nil
 }

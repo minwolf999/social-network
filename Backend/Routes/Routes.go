@@ -99,6 +99,7 @@ func Routes(mux *http.ServeMux) {
 
 	// Chat routes
 	mux.Handle("/addMessage", handler.AddMessage(db))
+	mux.Handle("/getMessage", handler.GetMessage(db))
 
 	// Websocket route
 	mux.Handle("/websocket", handler.Websocket(db))

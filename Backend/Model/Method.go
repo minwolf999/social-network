@@ -532,6 +532,34 @@ func (userData *UserData) ParseNotificationsData() (Notifications, error) {
 	return notifications, nil
 }
 
+func (userData *UserData) ParseMessagesData() (Messages, error) {
+	// We declare a slice to hold the parsed JoinEvents data
+	var messages Messages
+
+	// We iterate over each element in the userData
+	for _, v := range *userData {
+		// We declare a temporary variable to hold the unmarshaled joinEvent data
+		var message Message
+
+		// We marshal the map to get it in []byte
+		serializedData, err := json.Marshal(v)
+		if err != nil {
+			return nil, errors.New("internal error: conversion problem")
+		}
+
+		// We Unmarshal in the good structure
+		if err = json.Unmarshal(serializedData, &message); err != nil {
+			return nil, err
+		}
+
+		// Append the parsed JoinEvent data to the result slice
+		messages = append(messages, message)
+	}
+
+	// Return the result and any error encountered
+	return messages, nil
+}
+
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
 //
@@ -1196,8 +1224,6 @@ func (group *Group) InsertIntoDb(db *sql.DB) error {
 		group.Banner = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAbAAAAD9CAYAAADd/yIsAAAABHNCSVQICAgIfAhkiAAAABl0RVh0U29mdHdhcmUAZ25vbWUtc2NyZWVuc2hvdO8Dvz4AAAAodEVYdENyZWF0aW9uIFRpbWUAbWVyLiAyMCBub3YuIDIwMjQgMTE6NDA6MjGc5VWRAAAD1ElEQVR4nO3VQQ0AIBDAMMC/58MDH7KkVbDf9szMAoCY8zsAAF4YGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkGRgACQZGABJBgZAkoEBkHQBjPMF9sYol6wAAAAASUVORK5CYII="
 	}
 
-
-
 	// We call InsertIntoDb to insert the group data into the "Groups" table in the database
 	return InsertIntoDb("Groups", db, group.Id, group.LeaderId, group.MemberIds, group.GroupName, group.GroupDescription, group.CreationDate, group.GroupPicture, group.Banner)
 }
@@ -1570,7 +1596,6 @@ func (declineEvent *DeclineEvent) DeleteFromDb(db *sql.DB, where map[string]any)
 	return RemoveFromDB("DeclineEvent", db, where)
 }
 
-
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
 //
@@ -1579,7 +1604,7 @@ func (declineEvent *DeclineEvent) DeleteFromDb(db *sql.DB, where map[string]any)
 // ----------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------
 
-func (notification *Notification) InsertIntoDb (db *sql.DB) error {
+func (notification *Notification) InsertIntoDb(db *sql.DB) error {
 	if notification.Id == "" || notification.UserId == "" || notification.Status == "" || notification.Description == "" {
 		return errors.New("there is an empty field")
 	}
@@ -1621,4 +1646,19 @@ func (message *Message) InsertIntoDb(db *sql.DB) error {
 	}
 
 	return InsertIntoDb("Chat", db, message.Id, message.SenderId, message.CreationDate, message.Message, message.Image, message.ReceiverId, message.GroupId)
+}
+
+func (messages *Messages) SelectFromDb(db *sql.DB, where map[string]any) error {
+	// We call SelectFromDb to retrieve data from the "CommentDetail" table based on the given conditions
+	userData, err := SelectFromDb("chat", db, where)
+	if err != nil {
+		// Return an error if the data retrieval fails
+		return err
+	}
+
+	// We parse the retrieved data into the Comments structure and assign it to the comments object
+	*messages, err = userData.ParseMessagesData()
+
+	// Return any error encountered during parsing
+	return err
 }
