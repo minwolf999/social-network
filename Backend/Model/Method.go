@@ -1696,14 +1696,35 @@ func (messages *Messages) GetPrivateMessages(db *sql.DB, message Message) (error
 
 	for rows.Next() {
 		var message Message
-		var tmpReceiverId, tmpGroupId any
-		err = rows.Scan(&message.Id, &message.SenderId, &message.Sender_Name, &message.CreationDate, &message.Message, &message.Image, &tmpReceiverId, &message.Receiver_Name, &tmpGroupId, &message.Group_Name)
+		var tmpReceiverId, tmpReceiver_Name, tmpGroupId, tmpGroup_Name any
+		err = rows.Scan(&message.Id, &message.SenderId, &message.Sender_Name, &message.CreationDate, &message.Message, &message.Image, &tmpReceiverId, &tmpReceiver_Name, &tmpGroupId, &tmpGroup_Name)
 		if err != nil {
 			return err
 		}
 
-		message.ReceiverId = tmpReceiverId.(string)
-		message.GroupId = tmpGroupId.(string)
+		if tmpReceiverId != nil {
+			message.ReceiverId = tmpReceiverId.(string)
+		} else {
+			message.ReceiverId = ""
+		}
+
+		if tmpReceiver_Name != nil {
+			message.Receiver_Name = tmpReceiver_Name.(string)
+		} else {
+			message.Receiver_Name = ""
+		}
+		
+		if tmpGroupId != nil {
+			message.GroupId = tmpGroupId.(string)
+		} else {
+			message.GroupId = ""
+		}
+
+		if tmpGroup_Name != nil {
+			message.Group_Name = tmpGroup_Name.(string)
+		} else {
+			message.Group_Name = ""
+		}
 
 		*messages = append(*messages, message)
 	}
