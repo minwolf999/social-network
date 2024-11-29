@@ -97,6 +97,9 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/deleteAllGroupNotifications", handler.DeleteAllGroupNotifications(db))
 	mux.Handle("/deleteAllUserNotifications", handler.DeleteAllUserNotifications(db))
 
+	// Chat routes
+	mux.Handle("/addMessage", handler.AddMessage(db))
+
 	// Websocket route
 	mux.Handle("/websocket", handler.Websocket(db))
 }

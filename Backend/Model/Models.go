@@ -71,8 +71,8 @@ type Follower struct {
 	Follower_Name     string `json:"Follower_Name"`
 	Follower_Username string `json:"Follower_Username"`
 
-	FollowedId      string `json:"FollowedId"`
-	Followed_Name   string `json:"Followed_Name"`
+	FollowedId        string `json:"FollowedId"`
+	Followed_Name     string `json:"Followed_Name"`
 	Followed_Username string `json:"Followed_Username"`
 }
 type Followers []Follower
@@ -168,6 +168,17 @@ type Notification struct {
 	OtherUserId string `json:"OtherUserId"`
 }
 type Notifications []Notification
+
+type Message struct {
+	Id           string `json:"Id"`
+	SenderId     string `json:"SenderId"`
+	CreationDate string `json:"CreationDate"`
+	Message      string `json:"Message"`
+	Image        string `json:"Image"`
+	ReceiverId   string `json:"ReceiverId"`
+	GroupId      string `json:"GroupId"`
+}
+type Messages []Message
 
 type ResponseWriter struct {
 	http.ResponseWriter

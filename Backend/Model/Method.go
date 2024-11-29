@@ -1606,3 +1606,19 @@ func (notification *Notification) DeleteFromDb(db *sql.DB, where map[string]any)
 	// We call RemoveFromDB to delete the record(s) from the "DeclineEvents" table based on the specified conditions
 	return RemoveFromDB("Notification", db, where)
 }
+
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+//
+//	DB Method for Message struct
+//
+// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+
+func (message *Message) InsertIntoDb(db *sql.DB) error {
+	if message.Id == "" || message.SenderId == "" || message.Message == "" || message.CreationDate == "" {
+		return errors.New("there is an empty field")
+	}
+
+	return InsertIntoDb("Chat", db, message.Id, message.SenderId, message.CreationDate, message.Message, message.Image, message.ReceiverId, message.GroupId)
+}
