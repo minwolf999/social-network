@@ -696,7 +696,7 @@ func GetSendJoinRequest(db *sql.DB) http.HandlerFunc {
 			UserId  string `json:"UserId"`
 			GroupId string `json:"GroupId"`
 		}
-		if err := json.NewDecoder(r.Body).Decode(&datas.UserId); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
 			nw.Error("Invalid request body")
 			log.Printf("[%s] [GetSendJoinRequest] Invalid request body: %v", r.RemoteAddr, err)
 			return
