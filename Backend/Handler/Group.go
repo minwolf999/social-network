@@ -171,17 +171,21 @@ func LeaveGroup(db *sql.DB) http.HandlerFunc {
 		DetailGroup.SplitMembers()
 
 		index := slices.Index(DetailGroup.SplitMemberIds, datas.UserId)
-		if index < len(DetailGroup.SplitMemberIds)-1 {
-			DetailGroup.SplitMemberIds = append(DetailGroup.SplitMemberIds[:index], DetailGroup.SplitMemberIds[index+1:]...)
-		} else {
-			DetailGroup.SplitMemberIds = DetailGroup.SplitMemberIds[:index]
+		if index != -1 {
+			if index < len(DetailGroup.SplitMemberIds)-1 {
+				DetailGroup.SplitMemberIds = append(DetailGroup.SplitMemberIds[:index], DetailGroup.SplitMemberIds[index+1:]...)
+			} else {
+				DetailGroup.SplitMemberIds = DetailGroup.SplitMemberIds[:index]
+			}
 		}
 
 		index = slices.Index(user.SplitGroupsJoined, datas.GroupId)
-		if index < len(user.SplitGroupsJoined)-1 {
-			user.SplitGroupsJoined = append(user.SplitGroupsJoined[:index], user.SplitGroupsJoined[index+1:]...)
-		} else {
-			user.SplitGroupsJoined = user.SplitGroupsJoined[:index]
+		if index != -1 {
+			if index < len(user.SplitGroupsJoined)-1 {
+				user.SplitGroupsJoined = append(user.SplitGroupsJoined[:index], user.SplitGroupsJoined[index+1:]...)
+			} else {
+				user.SplitGroupsJoined = user.SplitGroupsJoined[:index]
+			}
 		}
 
 		// Update the LeaderId to the first member's ID after a user leaves.
@@ -212,7 +216,7 @@ func LeaveGroup(db *sql.DB) http.HandlerFunc {
 			"Success": true,
 
 			// Success message for joining the group.
-			"Message": "Group joined successfully",
+			"Message": "Group leaved successfully",
 		})
 		if err != nil {
 			// Log any error that occurs while encoding the response.
