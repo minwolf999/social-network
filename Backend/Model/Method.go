@@ -1647,13 +1647,13 @@ func (message *Message) InsertIntoDb(db *sql.DB) error {
 
 	var GroupId = sql.NullString{Valid: false}
 	if message.GroupId != "" {
-		GroupId.String = message.GroupId
+		GroupId.String = message.GroupId.(string)
 		GroupId.Valid = true
 	}
 
 	var ReceiverId = sql.NullString{Valid: false}
 	if message.ReceiverId != "" {
-		ReceiverId.String = message.ReceiverId
+		ReceiverId.String = message.ReceiverId.(string)
 		ReceiverId.Valid = true
 	}
 
