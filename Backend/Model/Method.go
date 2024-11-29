@@ -1645,7 +1645,19 @@ func (message *Message) InsertIntoDb(db *sql.DB) error {
 		return errors.New("there is an empty field")
 	}
 
-	return InsertIntoDb("Chat", db, message.Id, message.SenderId, message.CreationDate, message.Message, message.Image, message.ReceiverId, message.GroupId)
+	var GroupId = sql.NullString{Valid: false}
+	if message.GroupId != "" {
+		GroupId.String = message.GroupId
+		GroupId.Valid = true
+	}
+
+	var ReceiverId = sql.NullString{Valid: false}
+	if message.ReceiverId != "" {
+		ReceiverId.String = message.ReceiverId
+		ReceiverId.Valid = true
+	}
+
+	return InsertIntoDb("Chat", db, message.Id, message.SenderId, message.CreationDate, message.Message, message.Image, ReceiverId, GroupId)
 }
 
 func (messages *Messages) SelectFromDb(db *sql.DB, where map[string]any) error {
@@ -1661,4 +1673,36 @@ func (messages *Messages) SelectFromDb(db *sql.DB, where map[string]any) error {
 
 	// Return any error encountered during parsing
 	return err
+}
+
+func (messages Messages) GetGroupsMessages(db *sql.DB, message Message) (error) {
+	return messages.SelectFromDb(db, map[string]any{"GroupId": message.GroupId})
+}
+
+func (messages *Messages) GetPrivateMessages(db *sql.DB, message Message) (error) {
+	if message.SenderId == "" || message.ReceiverId == "" {
+		return errors.New("there is an empty user")
+	}
+
+	stmt, err := db.Prepare("SELECT * FROM Chat WHERE SenderId = ? AND ReceiverId = ? OR SenderId = ? AND ReceiverId = ?")
+	if err != nil {
+		return err
+	}
+
+	rows, err := stmt.Query(message.SenderId, message.ReceiverId, message.ReceiverId, message.SenderId)
+	if err != nil {
+		return err
+	}
+
+	for rows.Next() {
+		var message Message
+		err = rows.Scan(&message.Id, &message.SenderId, &message.CreationDate, &message.Message, &message.Image, &message.ReceiverId, &message.GroupId)
+		if err != nil {
+			return err
+		}
+
+		*messages = append(*messages, message)
+	}
+
+	return nil
 }

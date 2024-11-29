@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -49,6 +48,12 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 		}
 
 		if err = utils.IfExistsInDB("UserInfo", db, map[string]any{"Id": message.ReceiverId}); message.ReceiverId != "" && err != nil {
+			nw.Error("The receiver user didn't exist") // Handle JWT decryption error
+			log.Printf("[%s] [AddMessage] The receiver user didn't exist: %v", r.RemoteAddr, err)
+			return
+		}
+
+		if err = utils.IfExistsInDB("UserInfo", db, map[string]any{"Id": message.SenderId}); message.ReceiverId != "" && err != nil {
 			nw.Error("The receiver user didn't exist") // Handle JWT decryption error
 			log.Printf("[%s] [AddMessage] The receiver user didn't exist: %v", r.RemoteAddr, err)
 			return
@@ -208,15 +213,13 @@ func GetMessage(db *sql.DB) http.HandlerFunc {
 
 		var messages model.Messages
 		if message.GroupId != "" {
-			messages, err = GetGroupsMessages(db, message)
-			if err != nil {
+			if err = messages.GetGroupsMessages(db, message); err != nil {
 				nw.Error("Error during the fetch of the group messages") // Handle JWT decryption error
 				log.Printf("[%s] [GetMessage] Error during the fetch of the group messages: %v", r.RemoteAddr, err)
 				return
 			}
 		} else {
-			messages, err = GetPrivateMessages(db, message)
-			if err != nil {
+			if err = messages.GetPrivateMessages(db, message); err != nil {
 				nw.Error("Error during the fetch of the messages") // Handle JWT decryption error
 				log.Printf("[%s] [GetMessage] Error during the fetch of the messages: %v", r.RemoteAddr, err)
 				return
@@ -233,39 +236,4 @@ func GetMessage(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [GetMessage] %s", r.RemoteAddr, err.Error())
 		}
 	}
-}
-
-func GetGroupsMessages(db *sql.DB, message model.Message) (model.Messages, error) {
-	var messages model.Messages
-	err := messages.SelectFromDb(db, map[string]any{})
-	return messages, err
-}
-
-func GetPrivateMessages(db *sql.DB, message model.Message) (model.Messages, error) {
-	if message.SenderId == "" || message.ReceiverId == "" {
-		return nil, errors.New("there is an empty user")
-	}
-
-	stmt, err := db.Prepare("SELECT * FROM Chat WHERE SenderId = ? AND ReceiverId = ? OR SenderId = ? AND ReceiverId = ?")
-	if err != nil {
-		return nil, err
-	}
-
-	rows, err := stmt.Query(message.SenderId, message.ReceiverId, message.ReceiverId, message.SenderId)
-	if err != nil {
-		return nil, err
-	}
-
-	var messages model.Messages
-	for rows.Next() {
-		var message model.Message
-		err = rows.Scan(&message.Id, &message.SenderId, &message.CreationDate, &message.Message, &message.Image, &message.ReceiverId, &message.GroupId)
-		if err != nil {
-			return nil, err
-		}
-
-		messages = append(messages, message)
-	}
-
-	return messages, nil
 }
