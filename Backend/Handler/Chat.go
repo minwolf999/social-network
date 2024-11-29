@@ -27,13 +27,13 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		uid, err := utils.DecryptJWT(message.Id, db)
+		uid, err := utils.DecryptJWT(message.SenderId, db)
 		if err != nil {
 			nw.Error("Error when decrypt the JWT") // Handle JWT decryption error
 			log.Printf("[%s] [AddMessage] Error when decrypt the JWT : %s", r.RemoteAddr, err.Error())
 			return
 		}
-		message.Id = uid
+		message.SenderId = uid
 
 		if message.ReceiverId == "" && message.GroupId == "" {
 			nw.Error("There is no recipient") // Handle JWT decryption error
@@ -75,7 +75,6 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 		}
 
 		if message.ReceiverId != "" {
-
 			notifId, err := uuid.NewV7()
 			if err != nil {
 				nw.Error("There is a problem with the generation of the uuid") // Handle UUID generation error
@@ -84,9 +83,9 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 			}
 
 			var userData model.Register
-			if err = userData.SelectFromDb(db, map[string]any{"Id": message.ReceiverId}); err != nil {
+			if err = userData.SelectFromDb(db, map[string]any{"Id": message.SenderId}); err != nil {
 				nw.Error("There is a problem during the fetching of the user") // Handle UUID generation error
-				log.Printf("[%s] [CreateComment] There is a problem during the fetching of the user : %s", r.RemoteAddr, err)
+				log.Printf("[%s] [AddMessage] There is a problem during the fetching of the user : %s", r.RemoteAddr, err)
 				return
 			}
 
@@ -108,8 +107,55 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 
 			if err = notification.InsertIntoDb(db); err != nil {
 				nw.Error("There is a probleme during the sending of a notification")
-				log.Printf("[%s] [CreateComment] There is a probleme during the sending of a notification : %s", r.RemoteAddr, err)
+				log.Printf("[%s] [AddMessage] There is a probleme during the sending of a notification : %s", r.RemoteAddr, err)
 				return
+			}
+		} else {
+			var group model.Group
+			if err = group.SelectFromDb(db, map[string]any{"Id": message.GroupId}); err != nil {
+				nw.Error("There is a problem during the fetching of the group") // Handle UUID generation error
+				log.Printf("[%s] [AddMessage] There is a problem during the fetching of the group : %s", r.RemoteAddr, err)
+				return
+			}
+
+			group.SplitMembers()
+
+			var userData model.Register
+			if err = userData.SelectFromDb(db, map[string]any{"Id": message.SenderId}); err != nil {
+				nw.Error("There is a problem during the fetching of the user") // Handle UUID generation error
+				log.Printf("[%s] [AddMessage] There is a problem during the fetching of the user : %s", r.RemoteAddr, err)
+				return
+			}
+
+			var userDataName string
+			if userData.Username == "" {
+				userDataName = userData.FirstName + " " + userData.LastName
+			} else {
+				userDataName = userData.Username
+			}
+
+			for i := range group.SplitMemberIds {
+				notifId, err := uuid.NewV7()
+				if err != nil {
+					nw.Error("There is a problem with the generation of the uuid") // Handle UUID generation error
+					log.Printf("[%s] [AddMessage] There is a problem with the generation of the uuid : %s", r.RemoteAddr, err)
+					return
+				}
+
+				notification := model.Notification{
+					Id:          notifId.String(),
+					UserId:      group.SplitMemberIds[i],
+					Status:      "Chat",
+					Description: fmt.Sprintf("A message as been send by %s", userDataName),
+					GroupId:     message.GroupId,
+					OtherUserId: "",
+				}
+
+				if err = notification.InsertIntoDb(db); err != nil {
+					nw.Error("There is a probleme during the sending of a notification")
+					log.Printf("[%s] [AddMessage] There is a probleme during the sending of a notification : %s", r.RemoteAddr, err)
+					return
+				}
 			}
 		}
 
