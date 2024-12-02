@@ -24,7 +24,6 @@ func Websocket(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			log.Printf("[%s] [Websocket] %v", r.RemoteAddr, err)
@@ -34,9 +33,19 @@ func Websocket(db *sql.DB) http.HandlerFunc {
 		model.ConnectedWebSocket.Mu.Unlock()
 		model.ConnectedWebSocket.Conn[userId] = conn
 		model.ConnectedWebSocket.Mu.Lock()
-		
+
 		for {
+			_, _, err := conn.ReadMessage()
+			if err != nil {
+				log.Printf("[%s] [Websocket] %v", r.RemoteAddr, err)
+				break
+			}
+
 			conn.WriteJSON("Hello world!")
 		}
+
+		model.ConnectedWebSocket.Mu.Unlock()
+		delete(model.ConnectedWebSocket.Conn, userId)
+		model.ConnectedWebSocket.Mu.Lock()
 	}
 }
