@@ -277,6 +277,8 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		group.SplitMembers()
+
 		// Set the response header to indicate JSON content and respond with the group data.
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
