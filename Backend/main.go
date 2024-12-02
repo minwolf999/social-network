@@ -18,6 +18,8 @@ import (
 )
 
 func init() {
+	model.ConnectedWebSocket.Mu.Lock()
+	
 	// tmp, err := bcrypt.GenerateFromPassword([]byte(model.SecretKey), 15)
 	// if err != nil {
 	// 	fmt.Println(err)

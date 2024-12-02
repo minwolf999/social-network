@@ -668,7 +668,7 @@ func GetJoinRequest(db *sql.DB) http.HandlerFunc {
 		}
 
 		var requests model.JoinGroupRequests
-		if err = requests.SelectFromDb(db, map[string]any{}); err != nil {
+		if err = requests.SelectFromDb(db, map[string]any{"GroupId": datas.GroupId}); err != nil {
 			nw.Error("There is an error during the fetching of the DB")
 			log.Printf("[%s] [GetJoinRequest] There is an error during the fetching of the DB : %v", r.RemoteAddr, err)
 			return

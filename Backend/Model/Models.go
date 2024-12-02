@@ -2,11 +2,20 @@ package model
 
 import (
 	"net/http"
+	"sync"
+
+	"github.com/gorilla/websocket"
 )
 
 var (
-	SecretKey = "tYrEQins27rw0ehqkKfJE0Ofxyd6r8QISFtpomcIILFUfRacmDuBa3nS9NXTpZfV99E1AEaU"
+	SecretKey     = "tYrEQins27rw0ehqkKfJE0Ofxyd6r8QISFtpomcIILFUfRacmDuBa3nS9NXTpZfV99E1AEaU"
+	ConnectedWebSocket WebSocket
 )
+
+type WebSocket struct {
+	Conn map[string]*websocket.Conn
+	Mu   sync.Mutex
+}
 
 type Auth struct {
 	Id                string `json:"Id"`
