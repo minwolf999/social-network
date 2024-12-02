@@ -738,7 +738,7 @@ func DeclineJoinRequest(db *sql.DB) http.HandlerFunc {
 		var datas struct {
 			UserId     string `json:"UserId"`
 			GroupId    string `json:"GroupId"`
-			JoinUserId string `json:"Joiner"`
+			JoinUserId string `json:"JoinUserId"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
 			nw.Error("Invalid request body")
@@ -756,19 +756,19 @@ func DeclineJoinRequest(db *sql.DB) http.HandlerFunc {
 
 		if err = utils.IfExistsInDB("Groups", db, map[string]any{"Id": datas.GroupId}); err != nil {
 			nw.Error("There is no group with this id")
-			log.Printf("[%s] [GetJoinRequest] There is no group with this id : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [DeclineJoinRequest] There is no group with this id : %v", r.RemoteAddr, err)
 			return
 		}
 
 		if err = utils.IfExistsInDB("Groups", db, map[string]any{"Id": datas.GroupId, "LeaderId": datas.UserId}); err != nil {
 			nw.Error("The current user isn't the leader of this goup")
-			log.Printf("[%s] [GetJoinRequest] The current user isn't the leader of this goup : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [DeclineJoinRequest] The current user isn't the leader of this goup : %v", r.RemoteAddr, err)
 			return
 		}
 
-		if err = utils.IfNotExistsInDB("JoinGroupRequest", db, map[string]any{"UserId": datas.JoinUserId, "GroupId": datas.GroupId}); err != nil {
+		if err = utils.IfExistsInDB("JoinGroupRequest", db, map[string]any{"UserId": datas.JoinUserId, "GroupId": datas.GroupId}); err != nil {
 			nw.Error("There is no request to join the group")
-			log.Printf("[%s] [DeclineJoinRequest] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [DeclineJoinRequest] There is no request to join the group : %v", r.RemoteAddr, err)
 			return
 		}
 
@@ -816,20 +816,20 @@ func AcceptJoinRequest(db *sql.DB) http.HandlerFunc {
 
 		if err = utils.IfExistsInDB("Groups", db, map[string]any{"Id": datas.GroupId}); err != nil {
 			nw.Error("There is no group with this id")
-			log.Printf("[%s] [GetJoinRequest] There is no group with this id : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [AcceptJoinRequest] There is no group with this id : %v", r.RemoteAddr, err)
 			return
 		}
 
 		var group model.Group
 		if err = group.SelectFromDb(db, map[string]any{"Id": datas.GroupId, "LeaderId": datas.UserId}); err != nil {
 			nw.Error("There is an error during the fetch of the group data")
-			log.Printf("[%s] [GetJoinRequest] There is an error during the fetch of the group data : %v", r.RemoteAddr, err)
+			log.Printf("[%s] [AcceptJoinRequest] There is an error during the fetch of the group data : %v", r.RemoteAddr, err)
 			return
 		}
 
 		if group.GroupName == "" {
 			nw.Error("The current user isn't the leader of this goup")
-			log.Printf("[%s] [GetJoinRequest] The current user isn't the leader of this goup", r.RemoteAddr)
+			log.Printf("[%s] [AcceptJoinRequest] The current user isn't the leader of this goup", r.RemoteAddr)
 			return
 		}
 
