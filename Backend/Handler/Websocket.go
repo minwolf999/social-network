@@ -13,6 +13,9 @@ import (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 func Websocket(db *sql.DB) http.HandlerFunc {
@@ -33,7 +36,7 @@ func Websocket(db *sql.DB) http.HandlerFunc {
 		model.ConnectedWebSocket.Mu.Lock()
 		model.ConnectedWebSocket.Conn[userId] = conn
 		model.ConnectedWebSocket.Mu.Unlock()
-		
+
 		for {
 			_, _, err := conn.ReadMessage()
 			if err != nil {
@@ -43,7 +46,7 @@ func Websocket(db *sql.DB) http.HandlerFunc {
 
 			conn.WriteJSON("Hello world!")
 		}
-		
+
 		model.ConnectedWebSocket.Mu.Lock()
 		delete(model.ConnectedWebSocket.Conn, userId)
 		model.ConnectedWebSocket.Mu.Unlock()

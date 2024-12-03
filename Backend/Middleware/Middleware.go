@@ -3,8 +3,8 @@ package middleware
 import (
 	"log"
 	"net/http"
-
 	model "social-network/Model"
+	"strings"
 )
 
 /*
@@ -53,7 +53,7 @@ func LookMethod(next http.Handler) http.Handler {
 		}
 
 		// Check if the request is for a WebSocket upgrade
-		if r.Header.Get("Upgrade") == "websocket" && r.URL.Path == "/websocket" {
+		if r.Header.Get("Upgrade") == "websocket" && strings.HasPrefix(r.URL.Path, "/websocket") {
 			next.ServeHTTP(w, r) // Call the next handler for WebSocket
 			return
 		}
