@@ -161,7 +161,7 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 					Type: "Follow",
 					Description: "%s"
 				}`, notifMessage)); err != nil {
-	
+
 				nw.Error("Error during the communication with the websocket")
 				log.Printf("[%s] [AddFollower] Error during the communication with the websocket : %s", r.RemoteAddr, err)
 				return
@@ -583,7 +583,7 @@ func DeclineFollowedRequest(db *sql.DB) http.HandlerFunc {
 					UserId: "%s",
 					Description: "Your follow request have been denied"
 				}`, followedRequest.FollowerId)); err != nil {
-	
+
 				nw.Error("Error during the communication with the websocket")
 				log.Printf("[%s] [DeclineFollowedRequest] Error during the communication with the websocket : %s", r.RemoteAddr, err)
 				return
@@ -727,9 +727,10 @@ func GetFollowerAndFollowed(db *sql.DB) http.HandlerFunc {
 		}
 
 		var followerAndFollowed []struct {
-			UserId        string `json:"UserId"`
-			User_Name     string `json:"User_Name"`
-			User_Username string `json:"User_Username"`
+			UserId              string `json:"UserId"`
+			User_Name           string `json:"User_Name"`
+			User_Username       string `json:"User_Username"`
+			User_ProfilePicture string `json:"User_ProfilePicture"`
 		}
 
 		for _, v := range followeds {
@@ -739,11 +740,13 @@ func GetFollowerAndFollowed(db *sql.DB) http.HandlerFunc {
 						UserId        string `json:"UserId"`
 						User_Name     string `json:"User_Name"`
 						User_Username string `json:"User_Username"`
+						User_ProfilePicture string `json:"User_ProfilePicture"`
 					}
 
 					data.UserId = v.FollowedId
 					data.User_Name = v.Followed_Name
 					data.User_Username = v.Followed_Username
+					data.User_ProfilePicture = v.Followed_Picture
 
 					followerAndFollowed = append(followerAndFollowed, data)
 				}
