@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	SecretKey     = "tYrEQins27rw0ehqkKfJE0Ofxyd6r8QISFtpomcIILFUfRacmDuBa3nS9NXTpZfV99E1AEaU"
+	SecretKey          = "tYrEQins27rw0ehqkKfJE0Ofxyd6r8QISFtpomcIILFUfRacmDuBa3nS9NXTpZfV99E1AEaU"
 	ConnectedWebSocket WebSocket
 )
 
@@ -79,10 +79,12 @@ type Follower struct {
 	FollowerId        string `json:"FollowerId"`
 	Follower_Name     string `json:"Follower_Name"`
 	Follower_Username string `json:"Follower_Username"`
+	Follower_Picture  string `json:"Follower_Picture"`
 
 	FollowedId        string `json:"FollowedId"`
 	Followed_Name     string `json:"Followed_Name"`
 	Followed_Username string `json:"Followed_Username"`
+	Followed_Picture  string `json:"Followed_Picture"`
 }
 type Followers []Follower
 
