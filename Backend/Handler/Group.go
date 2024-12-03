@@ -1148,6 +1148,22 @@ func AcceptInvitationGroup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		model.ConnectedWebSocket.Mu.Lock()
+		for i := range group.SplitMemberIds {
+			if err = model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]].WriteJSON(fmt.Sprintf(`
+			{
+				Type: "AcceptInviteGroup",
+				GroupId: "%s",
+				Description: "A invite request has been accepted"
+				}`, group.Id)); err != nil {
+	
+				nw.Error("Error during the communication with the websocket")
+				log.Printf("[%s] [AcceptInvitationGroup] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+				return
+			}
+		}
+		model.ConnectedWebSocket.Mu.Unlock()
+
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,

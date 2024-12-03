@@ -571,6 +571,20 @@ func DeclineFollowedRequest(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		model.ConnectedWebSocket.Mu.Lock()
+		if err = model.ConnectedWebSocket.Conn[followedRequest.FollowedId].WriteJSON(fmt.Sprintf(`
+		{
+			Type: "DeclineFollow",
+			UserId: "%s",
+			Description: "Your follow request have been denied"
+			}`, followedRequest.FollowerId)); err != nil {
+
+			nw.Error("Error during the communication with the websocket")
+			log.Printf("[%s] [DeclineFollowedRequest] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+			return
+		}
+		model.ConnectedWebSocket.Mu.Unlock()
+
 		// Send the list of followers as a response in JSON format
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
@@ -638,6 +652,20 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [AcceptFollowedRequest] Error during the delete of the request: %v", r.RemoteAddr, err)
 			return
 		}
+
+		model.ConnectedWebSocket.Mu.Lock()
+		if err = model.ConnectedWebSocket.Conn[followedRequest.FollowedId].WriteJSON(fmt.Sprintf(`
+		{
+			Type: "AcceptFollow",
+			UserId: "%s",
+			Description: "Your follow request have been accepted"
+			}`, followedRequest.FollowerId)); err != nil {
+
+			nw.Error("Error during the communication with the websocket")
+			log.Printf("[%s] [AcceptFollowedRequest] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+			return
+		}
+		model.ConnectedWebSocket.Mu.Unlock()
 
 		// Send the list of followers as a response in JSON format
 		w.Header().Set("Content-Type", "application/json")
