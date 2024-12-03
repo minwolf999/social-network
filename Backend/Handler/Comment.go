@@ -122,12 +122,17 @@ func CreateComment(db *sql.DB) http.HandlerFunc {
 		for i := range model.ConnectedWebSocket.Conn {
 			_, isOk := model.ConnectedWebSocket.Conn[i]
 			if isOk {
-				if err = model.ConnectedWebSocket.Conn[i].WriteJSON(fmt.Sprintf(`
-					{
-						Type: "Comment",
-						PostId: "%s",
-						Description: "A comment of the post have been send"
-					}`, post.Id)); err != nil {
+				var WebsocketMessage struct {
+					Type        string
+					PostId     string
+					Description string
+				}
+
+				WebsocketMessage.Type = "Comment"
+				WebsocketMessage.PostId = post.Id
+				WebsocketMessage.Description = "A comment of the post have been send"
+
+				if err = model.ConnectedWebSocket.Conn[i].WriteJSON(WebsocketMessage); err != nil {
 
 					nw.Error("Error during the communication with the websocket")
 					log.Printf("[%s] [CreateComment] Error during the communication with the websocket : %s", r.RemoteAddr, err)

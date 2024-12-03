@@ -120,12 +120,17 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 			model.ConnectedWebSocket.Mu.Lock()
 			_, isOk := model.ConnectedWebSocket.Conn[message.ReceiverId]
 			if isOk {
-				if err = model.ConnectedWebSocket.Conn[message.ReceiverId].WriteJSON(fmt.Sprintf(`
-					{
-						Type: "Private Chat",
-						Sender: "%s",
-						Description: "A private message have been send"
-					}`, message.SenderId)); err != nil {
+				var WebsocketMessage struct {
+					Type        string
+					Sender     string
+					Description string
+				}
+
+				WebsocketMessage.Type = "Private Chat"
+				WebsocketMessage.Sender = message.SenderId
+				WebsocketMessage.Description = "A private message have been send"
+
+				if err = model.ConnectedWebSocket.Conn[message.ReceiverId].WriteJSON(WebsocketMessage); err != nil {
 
 					nw.Error("Error during the communication with the websocket")
 					log.Printf("[%s] [AddMessage] Error during the communication with the websocket : %s", r.RemoteAddr, err)
@@ -184,12 +189,17 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 				model.ConnectedWebSocket.Mu.Lock()
 				_, isOk := model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]]
 				if isOk {
-					if err = model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]].WriteJSON(fmt.Sprintf(`
-						{
-							Type: "Group Chat",
-							Sender: "%s",
-							Description: "A group message have been send"
-						}`, message.SenderId)); err != nil {
+					var WebsocketMessage struct {
+						Type        string
+						Sender     string
+						Description string
+					}
+	
+					WebsocketMessage.Type = "Group Chat"
+					WebsocketMessage.Sender = message.SenderId
+					WebsocketMessage.Description = "A group message have been send"
+
+					if err = model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]].WriteJSON(WebsocketMessage); err != nil {
 
 						nw.Error("Error during the communication with the websocket")
 						log.Printf("[%s] [AddMessage] Error during the communication with the websocket : %s", r.RemoteAddr, err)

@@ -156,11 +156,15 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 		model.ConnectedWebSocket.Mu.Lock()
 		_, isOk := model.ConnectedWebSocket.Conn[follower.FollowerId]
 		if isOk {
-			if err = model.ConnectedWebSocket.Conn[follower.FollowerId].WriteJSON(fmt.Sprintf(`
-				{
-					Type: "Follow",
-					Description: "%s"
-				}`, notifMessage)); err != nil {
+			var WebsocketMessage struct {
+				Type        string
+				Description string
+			}
+
+			WebsocketMessage.Type = "Follow"
+			WebsocketMessage.Description = notifMessage
+
+			if err = model.ConnectedWebSocket.Conn[follower.FollowerId].WriteJSON(WebsocketMessage); err != nil {
 
 				nw.Error("Error during the communication with the websocket")
 				log.Printf("[%s] [AddFollower] Error during the communication with the websocket : %s", r.RemoteAddr, err)
@@ -577,12 +581,17 @@ func DeclineFollowedRequest(db *sql.DB) http.HandlerFunc {
 		model.ConnectedWebSocket.Mu.Lock()
 		_, isOk := model.ConnectedWebSocket.Conn[followedRequest.FollowedId]
 		if isOk {
-			if err = model.ConnectedWebSocket.Conn[followedRequest.FollowedId].WriteJSON(fmt.Sprintf(`
-				{
-					Type: "DeclineFollow",
-					UserId: "%s",
-					Description: "Your follow request have been denied"
-				}`, followedRequest.FollowerId)); err != nil {
+			var WebsocketMessage struct {
+				Type        string
+				UserId      string
+				Description string
+			}
+
+			WebsocketMessage.Type = "DeclineFollow"
+			WebsocketMessage.UserId = followedRequest.FollowerId
+			WebsocketMessage.Description = "Your follow request have been denied"
+
+			if err = model.ConnectedWebSocket.Conn[followedRequest.FollowedId].WriteJSON(WebsocketMessage); err != nil {
 
 				nw.Error("Error during the communication with the websocket")
 				log.Printf("[%s] [DeclineFollowedRequest] Error during the communication with the websocket : %s", r.RemoteAddr, err)
@@ -662,12 +671,17 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 		model.ConnectedWebSocket.Mu.Lock()
 		_, isOk := model.ConnectedWebSocket.Conn[followedRequest.FollowedId]
 		if isOk {
-			if err = model.ConnectedWebSocket.Conn[followedRequest.FollowedId].WriteJSON(fmt.Sprintf(`
-				{
-					Type: "AcceptFollow",
-					UserId: "%s",
-					Description: "Your follow request have been accepted"
-				}`, followedRequest.FollowerId)); err != nil {
+			var WebsocketMessage struct {
+				Type        string
+				UserId      string
+				Description string
+			}
+
+			WebsocketMessage.Type = "AcceptFollow"
+			WebsocketMessage.UserId = followedRequest.FollowerId
+			WebsocketMessage.Description = "Your follow request have been accepted"
+
+			if err = model.ConnectedWebSocket.Conn[followedRequest.FollowedId].WriteJSON(WebsocketMessage); err != nil {
 
 				nw.Error("Error during the communication with the websocket")
 				log.Printf("[%s] [AcceptFollowedRequest] Error during the communication with the websocket : %s", r.RemoteAddr, err)
@@ -737,9 +751,9 @@ func GetFollowerAndFollowed(db *sql.DB) http.HandlerFunc {
 			for _, v2 := range followers {
 				if v.FollowedId == v2.FollowerId {
 					var data struct {
-						UserId        string `json:"UserId"`
-						User_Name     string `json:"User_Name"`
-						User_Username string `json:"User_Username"`
+						UserId              string `json:"UserId"`
+						User_Name           string `json:"User_Name"`
+						User_Username       string `json:"User_Username"`
 						User_ProfilePicture string `json:"User_ProfilePicture"`
 					}
 

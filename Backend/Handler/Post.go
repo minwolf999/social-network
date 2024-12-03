@@ -129,13 +129,18 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 				model.ConnectedWebSocket.Mu.Lock()
 				_, isOk := model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]]
 				if isOk {
-					if err = model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]].WriteJSON(fmt.Sprintf(`
-						{
-							Type: "GroupPost",
-							GroupId: "%s",
-							Description: "A post has been send to the group"
-						}`, group.Id)); err != nil {
-	
+					var WebsocketMessage struct {
+						Type        string
+						GroupId     string
+						Description string
+					}
+
+					WebsocketMessage.Type = "GroupPost"
+					WebsocketMessage.GroupId = group.Id
+					WebsocketMessage.Description = "A post has been send to the group"
+
+					if err = model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]].WriteJSON(WebsocketMessage); err != nil {
+
 						nw.Error("Error during the communication with the websocket")
 						log.Printf("[%s] [CreatePost] Error during the communication with the websocket : %s", r.RemoteAddr, err)
 						return

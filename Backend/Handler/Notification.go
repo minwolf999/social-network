@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -188,12 +187,16 @@ func DeleteAllNotifications(db *sql.DB) http.HandlerFunc {
 		model.ConnectedWebSocket.Mu.Lock()
 		_, isOk := model.ConnectedWebSocket.Conn[userId]
 		if isOk {
-			if err = model.ConnectedWebSocket.Conn[userId].WriteJSON(`
-				{
-					Type: "DeleteAllNotification",
-					Description: "All notification have been removed"
-				}`); err != nil {
-	
+			var WebsocketMessage struct {
+				Type        string
+				Description string
+			}
+
+			WebsocketMessage.Type = "DeleteAllNotification"
+			WebsocketMessage.Description = "All notification have been removed"
+			
+			if err = model.ConnectedWebSocket.Conn[userId].WriteJSON(WebsocketMessage); err != nil {
+
 				nw.Error("Error during the communication with the websocket") // Handle invalid JWT error
 				log.Printf("[%s] [DeleteAllNotifications] Error during the communication with the websocket : %v", r.RemoteAddr, err)
 				return
@@ -251,13 +254,18 @@ func DeleteAllGroupNotifications(db *sql.DB) http.HandlerFunc {
 		model.ConnectedWebSocket.Mu.Lock()
 		_, isOk := model.ConnectedWebSocket.Conn[datas.UserId]
 		if isOk {
-			if err = model.ConnectedWebSocket.Conn[datas.UserId].WriteJSON(fmt.Sprintf(`
-				{
-					Type: "DeleteGroupNotification",
-					GroupId: "%s",
-					Description: "All the notification of a group have been removed"
-				}`, datas.GroupId)); err != nil {
-	
+			var WebsocketMessage struct {
+				Type        string
+				GroupId     string
+				Description string
+			}
+
+			WebsocketMessage.Type = "DeleteGroupNotification"
+			WebsocketMessage.GroupId = datas.GroupId
+			WebsocketMessage.Description = "All the notification of a group have been removed"
+
+			if err = model.ConnectedWebSocket.Conn[datas.UserId].WriteJSON(WebsocketMessage); err != nil {
+
 				nw.Error("Error during the communication with the websocket") // Handle invalid JWT error
 				log.Printf("[%s] [DeleteAllGroupNotifications] Error during the communication with the websocket : %v", r.RemoteAddr, err)
 				return
@@ -315,12 +323,17 @@ func DeleteAllUserNotifications(db *sql.DB) http.HandlerFunc {
 		model.ConnectedWebSocket.Mu.Lock()
 		_, isOk := model.ConnectedWebSocket.Conn[datas.UserId]
 		if isOk {
-			if err = model.ConnectedWebSocket.Conn[datas.UserId].WriteJSON(fmt.Sprintf(`
-				{
-					Type: "DeleteUserNotification",
-					UserId: "%s",
-					Description: "All the notification with another user have been removed"
-				}`, datas.OtherUserId)); err != nil {
+			var WebsocketMessage struct {
+				Type        string
+				UserId      string
+				Description string
+			}
+
+			WebsocketMessage.Type = "DeleteGroupNotification"
+			WebsocketMessage.UserId = datas.OtherUserId
+			WebsocketMessage.Description = "All the notification with a user have been removed"
+
+			if err = model.ConnectedWebSocket.Conn[datas.UserId].WriteJSON(WebsocketMessage); err != nil {
 
 				nw.Error("Error during the communication with the websocket") // Handle invalid JWT error
 				log.Printf("[%s] [DeleteAllUserNotifications] Error during the communication with the websocket : %v", r.RemoteAddr, err)
