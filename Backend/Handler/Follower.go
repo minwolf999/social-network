@@ -153,18 +153,18 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		model.ConnectedWebSocket.Mu.Unlock()
+		model.ConnectedWebSocket.Mu.Lock()
 		if err = model.ConnectedWebSocket.Conn[follower.FollowerId].WriteJSON(fmt.Sprintf(`
-			{
-				Type: "Follow",
-				Description: "%s"
+		{
+			Type: "Follow",
+			Description: "%s"
 			}`, notifMessage)); err != nil {
 
 			nw.Error("Error during the communication with the websocket")
 			log.Printf("[%s] [AddFollower] Error during the communication with the websocket : %s", r.RemoteAddr, err)
 			return
 		}
-		model.ConnectedWebSocket.Mu.Lock()
+		model.ConnectedWebSocket.Mu.Unlock()
 
 		// Send a success response in JSON format
 		w.Header().Set("Content-Type", "application/json")

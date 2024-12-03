@@ -117,19 +117,19 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 				return
 			}
 
-			model.ConnectedWebSocket.Mu.Unlock()
+			model.ConnectedWebSocket.Mu.Lock()
 			if err = model.ConnectedWebSocket.Conn[message.ReceiverId].WriteJSON(fmt.Sprintf(`
 			{
 				Type: "Private Chat",
 				Sender: "%s",
 				Description: "A private message have been send"
-			}`, message.SenderId)); err != nil {
+				}`, message.SenderId)); err != nil {
 
 				nw.Error("Error during the communication with the websocket")
 				log.Printf("[%s] [AddMessage] Error during the communication with the websocket : %s", r.RemoteAddr, err)
 				return
 			}
-			model.ConnectedWebSocket.Mu.Lock()
+			model.ConnectedWebSocket.Mu.Unlock()
 
 		} else {
 			var group model.Group
@@ -178,19 +178,20 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 					return
 				}
 
-				model.ConnectedWebSocket.Mu.Unlock()
+				model.ConnectedWebSocket.Mu.Lock()
 				if err = model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]].WriteJSON(fmt.Sprintf(`
 				{
 					Type: "Group Chat",
 					Sender: "%s",
 					Description: "A group message have been send"
-				}`, message.SenderId)); err != nil {
+					}`, message.SenderId)); err != nil {
 
 					nw.Error("Error during the communication with the websocket")
 					log.Printf("[%s] [AddMessage] Error during the communication with the websocket : %s", r.RemoteAddr, err)
 					return
 				}
-				model.ConnectedWebSocket.Mu.Lock()
+				model.ConnectedWebSocket.Mu.Unlock()
+
 			}
 		}
 
