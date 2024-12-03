@@ -6,6 +6,7 @@ import (
 	"net/http"
 	model "social-network/Model"
 	utils "social-network/Utils"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
@@ -20,7 +21,7 @@ var upgrader = websocket.Upgrader{
 
 func Websocket(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		JWT := r.PathValue("JWT")
+		JWT := strings.ReplaceAll(r.URL.Path, "/websocket/", "")
 		userId, err := utils.DecryptJWT(JWT, db)
 		if err != nil {
 			log.Printf("[%s] [Websocket] There is an error during the decrypt of the JWT : %v", r.RemoteAddr, err)

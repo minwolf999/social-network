@@ -103,7 +103,7 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/getMessage", handler.GetMessage(db))
 
 	// Websocket route
-	mux.Handle("/websocket/{JWT}", handler.Websocket(db))
+	mux.Handle("/websocket/", handler.Websocket(db))
 }
 
 // Mock Login handler for testing
