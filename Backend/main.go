@@ -14,10 +14,12 @@ import (
 	model "social-network/Model"
 	routes "social-network/Routes"
 
+	"github.com/gorilla/websocket"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func init() {
+	model.ConnectedWebSocket.Conn = make(map[string]*websocket.Conn)
 	// tmp, err := bcrypt.GenerateFromPassword([]byte(model.SecretKey), 15)
 	// if err != nil {
 	// 	fmt.Println(err)
