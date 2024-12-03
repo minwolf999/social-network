@@ -30,10 +30,10 @@ func Websocket(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		model.ConnectedWebSocket.Mu.Unlock()
-		model.ConnectedWebSocket.Conn[userId] = conn
 		model.ConnectedWebSocket.Mu.Lock()
-
+		model.ConnectedWebSocket.Conn[userId] = conn
+		model.ConnectedWebSocket.Mu.Unlock()
+		
 		for {
 			_, _, err := conn.ReadMessage()
 			if err != nil {
@@ -43,9 +43,9 @@ func Websocket(db *sql.DB) http.HandlerFunc {
 
 			conn.WriteJSON("Hello world!")
 		}
-
-		model.ConnectedWebSocket.Mu.Unlock()
-		delete(model.ConnectedWebSocket.Conn, userId)
+		
 		model.ConnectedWebSocket.Mu.Lock()
+		delete(model.ConnectedWebSocket.Conn, userId)
+		model.ConnectedWebSocket.Mu.Unlock()
 	}
 }

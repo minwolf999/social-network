@@ -626,16 +626,19 @@ func JoinGroup(db *sql.DB) http.HandlerFunc {
 		}
 
 		model.ConnectedWebSocket.Mu.Lock()
-		if err = model.ConnectedWebSocket.Conn[group.LeaderId].WriteJSON(fmt.Sprintf(`
-		{
-			Type: "JoinGroup",
-			GroupId: "%s",
-			Description: "A join request has been send to your group"
-			}`, group.Id)); err != nil {
+		_, isOk := model.ConnectedWebSocket.Conn[group.LeaderId]
+		if isOk {
+			if err = model.ConnectedWebSocket.Conn[group.LeaderId].WriteJSON(fmt.Sprintf(`
+				{
+					Type: "JoinGroup",
+					GroupId: "%s",
+					Description: "A join request has been send to your group"
+				}`, group.Id)); err != nil {
 
-			nw.Error("Error during the communication with the websocket")
-			log.Printf("[%s] [JoinGroup] Error during the communication with the websocket : %s", r.RemoteAddr, err)
-			return
+				nw.Error("Error during the communication with the websocket")
+				log.Printf("[%s] [JoinGroup] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+				return
+			}
 		}
 		model.ConnectedWebSocket.Mu.Unlock()
 
@@ -978,16 +981,19 @@ func InviteGroup(db *sql.DB) http.HandlerFunc {
 		}
 
 		model.ConnectedWebSocket.Mu.Lock()
-		if err = model.ConnectedWebSocket.Conn[datas.ReceiverId].WriteJSON(fmt.Sprintf(`
-		{
-			Type: "InviteGroup",
-			GroupId: "%s",
-			Description: "A invite request has been send to join a group"
-			}`, group.Id)); err != nil {
+		_, isOk := model.ConnectedWebSocket.Conn[datas.ReceiverId]
+		if isOk {
+			if err = model.ConnectedWebSocket.Conn[datas.ReceiverId].WriteJSON(fmt.Sprintf(`
+				{
+					Type: "InviteGroup",
+					GroupId: "%s",
+					Description: "A invite request has been send to join a group"
+				}`, group.Id)); err != nil {
 
-			nw.Error("Error during the communication with the websocket")
-			log.Printf("[%s] [InviteGroup] Error during the communication with the websocket : %s", r.RemoteAddr, err)
-			return
+				nw.Error("Error during the communication with the websocket")
+				log.Printf("[%s] [InviteGroup] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+				return
+			}
 		}
 		model.ConnectedWebSocket.Mu.Unlock()
 
@@ -1150,16 +1156,19 @@ func AcceptInvitationGroup(db *sql.DB) http.HandlerFunc {
 
 		model.ConnectedWebSocket.Mu.Lock()
 		for i := range group.SplitMemberIds {
-			if err = model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]].WriteJSON(fmt.Sprintf(`
-			{
-				Type: "AcceptInviteGroup",
-				GroupId: "%s",
-				Description: "A invite request has been accepted"
-				}`, group.Id)); err != nil {
-	
-				nw.Error("Error during the communication with the websocket")
-				log.Printf("[%s] [AcceptInvitationGroup] Error during the communication with the websocket : %s", r.RemoteAddr, err)
-				return
+			_, isOk := model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]]
+			if isOk {
+				if err = model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]].WriteJSON(fmt.Sprintf(`
+					{
+						Type: "AcceptInviteGroup",
+						GroupId: "%s",
+						Description: "A invite request has been accepted"
+					}`, group.Id)); err != nil {
+
+					nw.Error("Error during the communication with the websocket")
+					log.Printf("[%s] [AcceptInvitationGroup] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+					return
+				}
 			}
 		}
 		model.ConnectedWebSocket.Mu.Unlock()

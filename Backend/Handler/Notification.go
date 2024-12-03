@@ -186,15 +186,18 @@ func DeleteAllNotifications(db *sql.DB) http.HandlerFunc {
 		}
 
 		model.ConnectedWebSocket.Mu.Lock()
-		if err = model.ConnectedWebSocket.Conn[userId].WriteJSON(`
-		{
-			Type: "DeleteAllNotification",
-			Description: "All notification have been removed"
-			}`); err != nil {
-
-			nw.Error("Error during the communication with the websocket") // Handle invalid JWT error
-			log.Printf("[%s] [DeleteAllNotifications] Error during the communication with the websocket : %v", r.RemoteAddr, err)
-			return
+		_, isOk := model.ConnectedWebSocket.Conn[userId]
+		if isOk {
+			if err = model.ConnectedWebSocket.Conn[userId].WriteJSON(`
+				{
+					Type: "DeleteAllNotification",
+					Description: "All notification have been removed"
+				}`); err != nil {
+	
+				nw.Error("Error during the communication with the websocket") // Handle invalid JWT error
+				log.Printf("[%s] [DeleteAllNotifications] Error during the communication with the websocket : %v", r.RemoteAddr, err)
+				return
+			}
 		}
 		model.ConnectedWebSocket.Mu.Unlock()
 
@@ -246,16 +249,19 @@ func DeleteAllGroupNotifications(db *sql.DB) http.HandlerFunc {
 		}
 
 		model.ConnectedWebSocket.Mu.Lock()
-		if err = model.ConnectedWebSocket.Conn[datas.UserId].WriteJSON(fmt.Sprintf(`
-		{
-			Type: "DeleteGroupNotification",
-			GroupId: "%s",
-			Description: "All the notification of a group have been removed"
-			}`, datas.GroupId)); err != nil {
-
-			nw.Error("Error during the communication with the websocket") // Handle invalid JWT error
-			log.Printf("[%s] [DeleteAllGroupNotifications] Error during the communication with the websocket : %v", r.RemoteAddr, err)
-			return
+		_, isOk := model.ConnectedWebSocket.Conn[datas.UserId]
+		if isOk {
+			if err = model.ConnectedWebSocket.Conn[datas.UserId].WriteJSON(fmt.Sprintf(`
+				{
+					Type: "DeleteGroupNotification",
+					GroupId: "%s",
+					Description: "All the notification of a group have been removed"
+				}`, datas.GroupId)); err != nil {
+	
+				nw.Error("Error during the communication with the websocket") // Handle invalid JWT error
+				log.Printf("[%s] [DeleteAllGroupNotifications] Error during the communication with the websocket : %v", r.RemoteAddr, err)
+				return
+			}
 		}
 		model.ConnectedWebSocket.Mu.Unlock()
 
@@ -307,16 +313,19 @@ func DeleteAllUserNotifications(db *sql.DB) http.HandlerFunc {
 		}
 
 		model.ConnectedWebSocket.Mu.Lock()
-		if err = model.ConnectedWebSocket.Conn[datas.UserId].WriteJSON(fmt.Sprintf(`
-		{
-			Type: "DeleteUserNotification",
-				UserId: "%s",
-				Description: "All the notification with another user have been removed"
+		_, isOk := model.ConnectedWebSocket.Conn[datas.UserId]
+		if isOk {
+			if err = model.ConnectedWebSocket.Conn[datas.UserId].WriteJSON(fmt.Sprintf(`
+				{
+					Type: "DeleteUserNotification",
+					UserId: "%s",
+					Description: "All the notification with another user have been removed"
 				}`, datas.OtherUserId)); err != nil {
 
-			nw.Error("Error during the communication with the websocket") // Handle invalid JWT error
-			log.Printf("[%s] [DeleteAllUserNotifications] Error during the communication with the websocket : %v", r.RemoteAddr, err)
-			return
+				nw.Error("Error during the communication with the websocket") // Handle invalid JWT error
+				log.Printf("[%s] [DeleteAllUserNotifications] Error during the communication with the websocket : %v", r.RemoteAddr, err)
+				return
+			}
 		}
 		model.ConnectedWebSocket.Mu.Unlock()
 
