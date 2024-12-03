@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -65,7 +66,7 @@ func GetGroupNotification(db *sql.DB) http.HandlerFunc {
 			UserId  string `json:"UserId"`
 			GroupId string `json:"GroupId"`
 		}
-		
+
 		// Decode the JSON request body into the comment object
 		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
 			// Send error if decoding fails
@@ -184,6 +185,19 @@ func DeleteAllNotifications(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		model.ConnectedWebSocket.Mu.Unlock()
+		if err = model.ConnectedWebSocket.Conn[userId].WriteJSON(`
+			{
+				Type: "DeleteAllNotification",
+				Description: "All notification have been removed"
+			}`); err != nil {
+
+			nw.Error("Error during the communication with the websocket") // Handle invalid JWT error
+			log.Printf("[%s] [DeleteAllNotifications] Error during the communication with the websocket : %v", r.RemoteAddr, err)
+			return
+		}
+		model.ConnectedWebSocket.Mu.Lock()
+
 		// Send a success response in JSON format
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
@@ -231,6 +245,20 @@ func DeleteAllGroupNotifications(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		model.ConnectedWebSocket.Mu.Unlock()
+		if err = model.ConnectedWebSocket.Conn[datas.UserId].WriteJSON(fmt.Sprintf(`
+			{
+				Type: "DeleteGroupNotification",
+				GroupId: "%s",
+				Description: "All the notification of a group have been removed"
+			}`, datas.GroupId)); err != nil {
+
+			nw.Error("Error during the communication with the websocket") // Handle invalid JWT error
+			log.Printf("[%s] [DeleteAllGroupNotifications] Error during the communication with the websocket : %v", r.RemoteAddr, err)
+			return
+		}
+		model.ConnectedWebSocket.Mu.Lock()
+
 		// Send a success response in JSON format
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
@@ -277,6 +305,20 @@ func DeleteAllUserNotifications(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [DeleteAllUserNotifications] Error during the update of the DB : %v", r.RemoteAddr, err)
 			return
 		}
+
+		model.ConnectedWebSocket.Mu.Unlock()
+		if err = model.ConnectedWebSocket.Conn[datas.UserId].WriteJSON(fmt.Sprintf(`
+			{
+				Type: "DeleteUserNotification",
+				UserId: "%s",
+				Description: "All the notification with another user have been removed"
+			}`, datas.OtherUserId)); err != nil {
+
+			nw.Error("Error during the communication with the websocket") // Handle invalid JWT error
+			log.Printf("[%s] [DeleteAllUserNotifications] Error during the communication with the websocket : %v", r.RemoteAddr, err)
+			return
+		}
+		model.ConnectedWebSocket.Mu.Lock()
 
 		// Send a success response in JSON format
 		w.Header().Set("Content-Type", "application/json")

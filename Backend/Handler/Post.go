@@ -125,6 +125,20 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 					log.Printf("[%s] [CreatePost] There is a probleme during the sending of a notification : %s", r.RemoteAddr, err)
 					return
 				}
+
+				model.ConnectedWebSocket.Mu.Unlock()
+				if err = model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]].WriteJSON(fmt.Sprintf(`
+					{
+						Type: "GroupPost",
+						GroupId: "%s",
+						Description: "A post has been send to the group"
+					}`, group.Id)); err != nil {
+
+					nw.Error("Error during the communication with the websocket")
+					log.Printf("[%s] [CreatePost] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+					return
+				}
+				model.ConnectedWebSocket.Mu.Lock()
 			}
 		}
 

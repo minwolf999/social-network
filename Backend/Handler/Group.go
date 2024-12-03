@@ -625,6 +625,20 @@ func JoinGroup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		model.ConnectedWebSocket.Mu.Unlock()
+		if err = model.ConnectedWebSocket.Conn[group.LeaderId].WriteJSON(fmt.Sprintf(`
+			{
+				Type: "JoinGroup",
+				GroupId: "%s",
+				Description: "A join request has been send to your group"
+			}`, group.Id)); err != nil {
+
+			nw.Error("Error during the communication with the websocket")
+			log.Printf("[%s] [JoinGroup] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+			return
+		}
+		model.ConnectedWebSocket.Mu.Lock()
+
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
@@ -962,6 +976,20 @@ func InviteGroup(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [InviteGroup] There is a probleme during the sending of a notification : %s", r.RemoteAddr, err)
 			return
 		}
+
+		model.ConnectedWebSocket.Mu.Unlock()
+		if err = model.ConnectedWebSocket.Conn[datas.ReceiverId].WriteJSON(fmt.Sprintf(`
+			{
+				Type: "InviteGroup",
+				GroupId: "%s",
+				Description: "A invite request has been send to join a group"
+			}`, group.Id)); err != nil {
+
+			nw.Error("Error during the communication with the websocket")
+			log.Printf("[%s] [InviteGroup] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+			return
+		}
+		model.ConnectedWebSocket.Mu.Lock()
 
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{

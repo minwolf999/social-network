@@ -153,6 +153,19 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		model.ConnectedWebSocket.Mu.Unlock()
+		if err = model.ConnectedWebSocket.Conn[follower.FollowerId].WriteJSON(fmt.Sprintf(`
+			{
+				Type: "Follow",
+				Description: "%s"
+			}`, notifMessage)); err != nil {
+
+			nw.Error("Error during the communication with the websocket")
+			log.Printf("[%s] [AddFollower] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+			return
+		}
+		model.ConnectedWebSocket.Mu.Lock()
+
 		// Send a success response in JSON format
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
@@ -610,7 +623,7 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 
 		var follow = model.Follower{
 			Id:         uuid.String(),
-			FollowerId:     followedRequest.FollowedId,
+			FollowerId: followedRequest.FollowedId,
 			FollowedId: followedRequest.FollowerId,
 		}
 
