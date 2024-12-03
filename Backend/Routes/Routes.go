@@ -80,6 +80,7 @@ func Routes(mux *http.ServeMux) {
 
 	mux.Handle("/inviteGroup", handler.InviteGroup(db))
 	mux.Handle("/getInvitationGroup", handler.GetInvitationGroup(db))
+	mux.Handle("/getInvitationUserInGroup", handler.GetInvitationUserInGroup(db))
 	mux.Handle("/declineInvitationGroup", handler.DeclineInvitationGroup(db))
 	mux.Handle("/acceptInvitationGroup", handler.AcceptInvitationGroup(db))
 
