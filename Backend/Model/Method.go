@@ -954,12 +954,6 @@ The function returns 1 value:
   - an error if the Id field is not set, or if the data retrieval or parsing fails
 */
 func (comment *Comment) SelectFromDb(db *sql.DB, where map[string]any) error {
-	// We check if the Id field in the Comment struct is empty
-	if comment.Id == "" {
-		// Return an error if no Id is present
-		return errors.New("no Id in the struct")
-	}
-
 	// We call SelectFromDb to retrieve data from the "CommentDetail" table based on the given conditions
 	userData, err := SelectFromDb("CommentDetail", db, where)
 	if err != nil {
