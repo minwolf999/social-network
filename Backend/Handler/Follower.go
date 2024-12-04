@@ -232,6 +232,33 @@ func RemoveFollower(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		model.ConnectedWebSocket.Mu.Lock()
+		_, isOk := model.ConnectedWebSocket.Conn[follower.FollowerId]
+		if isOk {
+			var WebsocketMessage struct {
+				Type        string
+				Description string
+				Value       model.Follower
+			}
+
+			WebsocketMessage.Type = "Follow"
+			WebsocketMessage.Description = "You have unfollow"
+			WebsocketMessage.Value = follower
+
+			if err = model.ConnectedWebSocket.Conn[follower.FollowerId].WriteJSON(WebsocketMessage); err != nil {
+				nw.Error("Error during the communication with the websocket")
+				log.Printf("[%s] [AddFollower] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+				return
+			}
+
+			if err = model.ConnectedWebSocket.Conn[follower.FollowedId].WriteJSON(WebsocketMessage); err != nil {
+				nw.Error("Error during the communication with the websocket")
+				log.Printf("[%s] [AddFollower] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+				return
+			}
+		}
+		model.ConnectedWebSocket.Mu.Unlock()
+
 		// Send a success response in JSON format
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
@@ -283,6 +310,33 @@ func RemoveFollowed(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [RemoveFollower] %s", r.RemoteAddr, err.Error())
 			return
 		}
+
+		model.ConnectedWebSocket.Mu.Lock()
+		_, isOk := model.ConnectedWebSocket.Conn[follower.FollowerId]
+		if isOk {
+			var WebsocketMessage struct {
+				Type        string
+				Description string
+				Value       model.Follower
+			}
+
+			WebsocketMessage.Type = "Follow"
+			WebsocketMessage.Description = "You have unfollow"
+			WebsocketMessage.Value = follower
+
+			if err = model.ConnectedWebSocket.Conn[follower.FollowerId].WriteJSON(WebsocketMessage); err != nil {
+				nw.Error("Error during the communication with the websocket")
+				log.Printf("[%s] [AddFollower] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+				return
+			}
+
+			if err = model.ConnectedWebSocket.Conn[follower.FollowedId].WriteJSON(WebsocketMessage); err != nil {
+				nw.Error("Error during the communication with the websocket")
+				log.Printf("[%s] [AddFollower] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+				return
+			}
+		}
+		model.ConnectedWebSocket.Mu.Unlock()
 
 		// Send a success response in JSON format
 		w.Header().Set("Content-Type", "application/json")
