@@ -114,21 +114,25 @@ func CreateEvent(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		group.SplitMembers()
+
 		model.ConnectedWebSocket.Mu.Lock()
-		for i := range model.ConnectedWebSocket.Conn {
-			_, isOk := model.ConnectedWebSocket.Conn[i]
+		for i := range group.SplitMemberIds {
+			_, isOk := model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]]
 			if isOk {
 				var WebsocketMessage struct {
 					Type        string
 					GroupId     string
 					Description string
+					Value       model.Event
 				}
 
 				WebsocketMessage.Type = "Event"
 				WebsocketMessage.GroupId = event.GroupId
 				WebsocketMessage.Description = "An event have created for the group"
+				WebsocketMessage.Value = event
 
-				if err = model.ConnectedWebSocket.Conn[i].WriteJSON(WebsocketMessage); err != nil {
+				if err = model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]].WriteJSON(WebsocketMessage); err != nil {
 
 					nw.Error("Error during the communication with the websocket")
 					log.Printf("[%s] [CreateEvent] Error during the communication with the websocket : %s", r.RemoteAddr, err)

@@ -124,13 +124,22 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 					Type        string
 					Sender      string
 					Description string
+					Value       model.Message
 				}
 
 				WebsocketMessage.Type = "Private Chat"
 				WebsocketMessage.Sender = message.SenderId
 				WebsocketMessage.Description = "A private message have been send"
+				WebsocketMessage.Value = message
 
 				if err = model.ConnectedWebSocket.Conn[message.ReceiverId].WriteJSON(WebsocketMessage); err != nil {
+
+					nw.Error("Error during the communication with the websocket")
+					log.Printf("[%s] [AddMessage] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+					return
+				}
+
+				if err = model.ConnectedWebSocket.Conn[message.SenderId].WriteJSON(WebsocketMessage); err != nil {
 
 					nw.Error("Error during the communication with the websocket")
 					log.Printf("[%s] [AddMessage] Error during the communication with the websocket : %s", r.RemoteAddr, err)
@@ -202,6 +211,13 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 					WebsocketMessage.Value = message
 
 					if err = model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]].WriteJSON(WebsocketMessage); err != nil {
+
+						nw.Error("Error during the communication with the websocket")
+						log.Printf("[%s] [AddMessage] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+						return
+					}
+
+					if err = model.ConnectedWebSocket.Conn[message.SenderId].WriteJSON(WebsocketMessage); err != nil {
 
 						nw.Error("Error during the communication with the websocket")
 						log.Printf("[%s] [AddMessage] Error during the communication with the websocket : %s", r.RemoteAddr, err)

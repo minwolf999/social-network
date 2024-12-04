@@ -159,13 +159,20 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 			var WebsocketMessage struct {
 				Type        string
 				Description string
+				Value       model.Follower
 			}
 
 			WebsocketMessage.Type = "Follow"
 			WebsocketMessage.Description = notifMessage
+			WebsocketMessage.Value = follower
 
 			if err = model.ConnectedWebSocket.Conn[follower.FollowerId].WriteJSON(WebsocketMessage); err != nil {
+				nw.Error("Error during the communication with the websocket")
+				log.Printf("[%s] [AddFollower] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+				return
+			}
 
+			if err = model.ConnectedWebSocket.Conn[follower.FollowedId].WriteJSON(WebsocketMessage); err != nil {
 				nw.Error("Error during the communication with the websocket")
 				log.Printf("[%s] [AddFollower] Error during the communication with the websocket : %s", r.RemoteAddr, err)
 				return
@@ -585,13 +592,22 @@ func DeclineFollowedRequest(db *sql.DB) http.HandlerFunc {
 				Type        string
 				UserId      string
 				Description string
+				Value       model.FollowRequest
 			}
 
 			WebsocketMessage.Type = "DeclineFollow"
 			WebsocketMessage.UserId = followedRequest.FollowerId
 			WebsocketMessage.Description = "Your follow request have been denied"
+			WebsocketMessage.Value = followedRequest
 
 			if err = model.ConnectedWebSocket.Conn[followedRequest.FollowedId].WriteJSON(WebsocketMessage); err != nil {
+
+				nw.Error("Error during the communication with the websocket")
+				log.Printf("[%s] [DeclineFollowedRequest] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+				return
+			}
+
+			if err = model.ConnectedWebSocket.Conn[followedRequest.FollowerId].WriteJSON(WebsocketMessage); err != nil {
 
 				nw.Error("Error during the communication with the websocket")
 				log.Printf("[%s] [DeclineFollowedRequest] Error during the communication with the websocket : %s", r.RemoteAddr, err)
@@ -675,16 +691,25 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 				Type        string
 				UserId      string
 				Description string
+				Value       model.FollowRequest
 			}
 
 			WebsocketMessage.Type = "AcceptFollow"
 			WebsocketMessage.UserId = followedRequest.FollowerId
 			WebsocketMessage.Description = "Your follow request have been accepted"
+			WebsocketMessage.Value = followedRequest
 
 			if err = model.ConnectedWebSocket.Conn[followedRequest.FollowedId].WriteJSON(WebsocketMessage); err != nil {
 
 				nw.Error("Error during the communication with the websocket")
 				log.Printf("[%s] [AcceptFollowedRequest] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+				return
+			}
+
+			if err = model.ConnectedWebSocket.Conn[followedRequest.FollowerId].WriteJSON(WebsocketMessage); err != nil {
+
+				nw.Error("Error during the communication with the websocket")
+				log.Printf("[%s] [DeclineFollowedRequest] Error during the communication with the websocket : %s", r.RemoteAddr, err)
 				return
 			}
 		}

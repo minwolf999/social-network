@@ -632,11 +632,13 @@ func JoinGroup(db *sql.DB) http.HandlerFunc {
 				Type        string
 				GroupId     string
 				Description string
+				Value       model.Group
 			}
 
 			WebsocketMessage.Type = "JoinGroup"
 			WebsocketMessage.GroupId = group.Id
 			WebsocketMessage.Description = "A join request has been send to your group"
+			WebsocketMessage.Value = group
 
 			if err = model.ConnectedWebSocket.Conn[group.LeaderId].WriteJSON(WebsocketMessage); err != nil {
 
@@ -992,11 +994,13 @@ func InviteGroup(db *sql.DB) http.HandlerFunc {
 				Type        string
 				GroupId     string
 				Description string
+				Value       model.Group
 			}
 
 			WebsocketMessage.Type = "InviteGroup"
 			WebsocketMessage.GroupId = group.Id
 			WebsocketMessage.Description = "A invite request has been send to join a group"
+			WebsocketMessage.Value = group
 
 			if err = model.ConnectedWebSocket.Conn[datas.ReceiverId].WriteJSON(WebsocketMessage); err != nil {
 
@@ -1229,11 +1233,13 @@ func AcceptInvitationGroup(db *sql.DB) http.HandlerFunc {
 					Type        string
 					GroupId     string
 					Description string
+					Value       model.Group
 				}
 
 				WebsocketMessage.Type = "AcceptInviteGroup"
 				WebsocketMessage.GroupId = group.Id
 				WebsocketMessage.Description = "A invite request has been accepted"
+				WebsocketMessage.Value = group
 
 				if err = model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]].WriteJSON(WebsocketMessage); err != nil {
 

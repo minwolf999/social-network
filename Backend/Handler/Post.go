@@ -133,11 +133,13 @@ func CreatePost(db *sql.DB) http.HandlerFunc {
 						Type        string
 						GroupId     string
 						Description string
+						Value       model.Post
 					}
 
 					WebsocketMessage.Type = "GroupPost"
 					WebsocketMessage.GroupId = group.Id
 					WebsocketMessage.Description = "A post has been send to the group"
+					WebsocketMessage.Value = post
 
 					if err = model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]].WriteJSON(WebsocketMessage); err != nil {
 
