@@ -105,7 +105,7 @@ func CreateComment(db *sql.DB) http.HandlerFunc {
 
 		notification := model.Notification{
 			Id:          notifId.String(),
-			UserId:      comment.AuthorId,
+			UserId:      post.AuthorId,
 			Status:      "Comment",
 			Description: fmt.Sprintf("A comment as been posted by %s for your post \"%s\"", userDataName, post.Text),
 			GroupId:     post.IsGroup,
