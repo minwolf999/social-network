@@ -693,13 +693,25 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 				Type        string
 				UserId      string
 				Description string
-				Value       model.FollowRequest
+				Value       model.Follower
+			}
+
+			var followDetail model.Followers
+			if err = followDetail.SelectFromDb(db, map[string]any{"Id": follow.Id}); err != nil {
+				nw.Error("Error during the fetch of the DB")
+				log.Printf("[%s] [AcceptFollowedRequest] Error during the fetch of the DB: %v", r.RemoteAddr, err)
+				return
 			}
 
 			WebsocketMessage.Type = "AcceptFollow"
 			WebsocketMessage.UserId = followedRequest.FollowerId
 			WebsocketMessage.Description = "Your follow request have been accepted"
-			WebsocketMessage.Value = followedRequest
+
+			if len(followDetail) >= 1 {
+				WebsocketMessage.Value = followDetail[0]
+			} else {
+				WebsocketMessage.Value = model.Follower{}
+			}
 
 			if err = model.ConnectedWebSocket.Conn[followedRequest.FollowedId].WriteJSON(WebsocketMessage); err != nil {
 
