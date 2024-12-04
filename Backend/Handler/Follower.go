@@ -140,7 +140,7 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 
 		notification := model.Notification{
 			Id:          notifId.String(),
-			UserId:      follower.FollowerId,
+			UserId:      follower.FollowedId,
 			Status:      "Follow",
 			Description: fmt.Sprintf("%s %s", notifMessage, userDataName),
 			GroupId:     "",

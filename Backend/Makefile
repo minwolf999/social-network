@@ -4,6 +4,12 @@ Run:
 run:
 	go run .
 
+Preload:
+	go run . -l
+
+preload:
+	go run . -l
+
 MigrateUp:
 	migrate -database "sqlite://./Database/Database.sqlite" -path ./Database/Migrations up
 
