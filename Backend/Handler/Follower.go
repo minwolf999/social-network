@@ -708,8 +708,6 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 				return
 			}
 
-			WebsocketMessage.UserId = followedRequest.FollowedId
-
 			if err = model.ConnectedWebSocket.Conn[followedRequest.FollowerId].WriteJSON(WebsocketMessage); err != nil {
 
 				nw.Error("Error during the communication with the websocket")
