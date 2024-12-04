@@ -607,6 +607,8 @@ func DeclineFollowedRequest(db *sql.DB) http.HandlerFunc {
 				return
 			}
 
+			WebsocketMessage.UserId = followedRequest.FollowedId
+
 			if err = model.ConnectedWebSocket.Conn[followedRequest.FollowerId].WriteJSON(WebsocketMessage); err != nil {
 
 				nw.Error("Error during the communication with the websocket")
@@ -705,6 +707,8 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 				log.Printf("[%s] [AcceptFollowedRequest] Error during the communication with the websocket : %s", r.RemoteAddr, err)
 				return
 			}
+
+			WebsocketMessage.UserId = followedRequest.FollowedId
 
 			if err = model.ConnectedWebSocket.Conn[followedRequest.FollowerId].WriteJSON(WebsocketMessage); err != nil {
 

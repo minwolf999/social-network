@@ -139,6 +139,8 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 					return
 				}
 
+				WebsocketMessage.Sender = message.ReceiverId
+
 				if err = model.ConnectedWebSocket.Conn[message.SenderId].WriteJSON(WebsocketMessage); err != nil {
 
 					nw.Error("Error during the communication with the websocket")
@@ -216,6 +218,8 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 						log.Printf("[%s] [AddMessage] Error during the communication with the websocket : %s", r.RemoteAddr, err)
 						return
 					}
+
+					WebsocketMessage.Sender = message.ReceiverId
 
 					if err = model.ConnectedWebSocket.Conn[message.SenderId].WriteJSON(WebsocketMessage); err != nil {
 
