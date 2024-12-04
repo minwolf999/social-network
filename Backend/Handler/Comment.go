@@ -133,7 +133,7 @@ func CreateComment(db *sql.DB) http.HandlerFunc {
 				WebsocketMessage.Type = "Comment"
 				WebsocketMessage.AuthorId = post.AuthorId
 				WebsocketMessage.PostId = post.Id
-				WebsocketMessage.Description = "A comment of the post have been send"
+				WebsocketMessage.Description = fmt.Sprintf("A comment as been posted by %s for your post \"%s\"", userDataName, post.Text)
 				WebsocketMessage.Value = comment
 
 				if err = model.ConnectedWebSocket.Conn[i].WriteJSON(WebsocketMessage); err != nil {
