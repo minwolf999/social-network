@@ -67,10 +67,6 @@ func main() {
 	// We set all the endpoints
 	routes.Routes(mux)
 
-	// tlsConfig := &tls.Config{
-	// 	MinVersion: tls.VersionTLS12,
-	// }
-
 	// We set the time out limit
 	srv := &http.Server{
 		Handler:      handler,
@@ -78,13 +74,9 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
-		// TLSConfig:    tlsConfig,
 	}
 
 	go func() {
-		// certFile := "Key/localhost.pem"
-		// keyFile := "Key/localhost.key"
-
 		log.Printf("Server listening on http://%s", srv.Addr)
 		fmt.Printf("\033[96mServer started at: http://%s\033[0m\n", srv.Addr)
 

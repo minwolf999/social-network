@@ -122,7 +122,7 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 			if isOk {
 				var WebsocketMessage struct {
 					Type        string
-					Sender     string
+					Sender      string
 					Description string
 				}
 
@@ -191,13 +191,15 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 				if isOk {
 					var WebsocketMessage struct {
 						Type        string
-						Sender     string
+						Sender      string
 						Description string
+						Value       model.Message
 					}
-	
+
 					WebsocketMessage.Type = "Group Chat"
 					WebsocketMessage.Sender = message.SenderId
 					WebsocketMessage.Description = "A group message have been send"
+					WebsocketMessage.Value = message
 
 					if err = model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]].WriteJSON(WebsocketMessage); err != nil {
 
