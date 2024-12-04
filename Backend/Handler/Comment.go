@@ -124,12 +124,14 @@ func CreateComment(db *sql.DB) http.HandlerFunc {
 			if isOk {
 				var WebsocketMessage struct {
 					Type        string
+					AuthorId    string
 					PostId      string
 					Description string
 					Value       model.Comment
 				}
 
 				WebsocketMessage.Type = "Comment"
+				WebsocketMessage.AuthorId = post.AuthorId
 				WebsocketMessage.PostId = post.Id
 				WebsocketMessage.Description = "A comment of the post have been send"
 				WebsocketMessage.Value = comment
