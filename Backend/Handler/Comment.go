@@ -130,11 +130,19 @@ func CreateComment(db *sql.DB) http.HandlerFunc {
 					Value       model.Comment
 				}
 
+				var commentdetail model.Comment
+				if err = commentdetail.SelectFromDb(db, map[string]any{"Id": comment.Id}); err != nil {
+					nw.Error("Error during the fetch of the db")
+					log.Printf("[%s] [CreateComment] Error during the fetch of the db : %s", r.RemoteAddr, err)
+					return
+				}
+
 				WebsocketMessage.Type = "Comment"
 				WebsocketMessage.AuthorId = post.AuthorId
 				WebsocketMessage.PostId = post.Id
 				WebsocketMessage.Description = fmt.Sprintf("A comment as been posted by %s for your post \"%s\"", userDataName, post.Text)
-				WebsocketMessage.Value = comment
+				WebsocketMessage.Value = commentdetail
+
 
 				if err = model.ConnectedWebSocket.Conn[i].WriteJSON(WebsocketMessage); err != nil {
 
