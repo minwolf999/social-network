@@ -224,7 +224,7 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 		// Filter out posts that the user is not allowed to see based on their privacy settings.
 		for i, v := range posts {
 			// Check if the post is private or "almost private" and whether the user follows the author.
-			if (v.Status == "private" && !IsFollowedBy(post.AuthorId, v.AuthorId, db)) || (strings.Split(v.Status, " | ")[0] == "almost private" && !slices.Contains(strings.Split(v.Status, " | ")[1:], post.AuthorId)) {
+			if (v.Status == "private" && !IsFollowedBy(post.AuthorId, v.AuthorId, db)) || (strings.Split(v.Status, " | ")[0] == "almost private" && !slices.Contains(strings.Split(v.Status, " | ")[1:], post.AuthorId) || v.IsGroup == "") {
 				// Remove the post from the slice if access is denied.
 				if i < len(posts)-1 {
 					// Remove the post from the middle of the slice.
