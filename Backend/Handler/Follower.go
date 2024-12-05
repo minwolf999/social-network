@@ -742,8 +742,8 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 
 		var follow = model.Follower{
 			Id:         uuid.String(),
-			FollowerId: followedRequest.FollowedId,
-			FollowedId: followedRequest.FollowerId,
+			FollowerId: followedRequest.FollowerId,
+			FollowedId: followedRequest.FollowedId,
 		}
 
 		if err = follow.InsertIntoDb(db); err != nil {
