@@ -776,7 +776,7 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 			}
 
 			WebsocketMessage.Type = "AcceptFollow"
-			WebsocketMessage.UserId = followedRequest.FollowerId
+			WebsocketMessage.UserId = followedRequest.FollowedId
 			WebsocketMessage.Description = "Your follow request have been accepted"
 
 			if len(followDetail) >= 1 {
