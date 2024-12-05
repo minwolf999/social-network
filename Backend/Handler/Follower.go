@@ -109,7 +109,7 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 			notifMessage = "You have receive a followed request"
 
 			// Check if the follower user exists in the Auth table
-			if err = utils.IfNotExistsInDB("FollowingRequest", db, map[string]any{"FollowerId": follower.FollowerId, "FollowedId": follower.FollowerId}); err != nil {
+			if err = utils.IfNotExistsInDB("FollowingRequest", db, map[string]any{"FollowerId": follower.FollowerId, "FollowedId": follower.FollowedId}); err != nil {
 				nw.Error("The request has already been send")
 				log.Printf("[%s] [AddFollower] The request has already been send : %s", r.RemoteAddr, err)
 				return
@@ -117,7 +117,7 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 
 			var followRequest = model.FollowRequest{
 				FollowerId: follower.FollowerId,
-				FollowedId: follower.FollowerId,
+				FollowedId: follower.FollowedId,
 			}
 
 			if err = followRequest.InsertIntoDb(db); err != nil {
