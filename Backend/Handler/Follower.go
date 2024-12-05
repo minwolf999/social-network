@@ -87,7 +87,16 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 
 		notifMessage := ""
 
-		if followerData.Status == "public" {
+		var followedData model.Register
+		followedData.Id = follower.FollowedId
+		
+		if err = followedData.SelectFromDb(db, map[string]any{"Id": followedData.Id}); err != nil {
+			nw.Error("There is a probleme during the fetching of the other user's data")
+			log.Printf("[%s] [AddFollower] There is a probleme during the fetching of the other user's data : %s", r.RemoteAddr, err)
+			return
+		}
+
+		if followedData.Status == "public" {
 			notifMessage = "You have been followed"
 
 			// Insert the follower relationship into the database
@@ -96,7 +105,7 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 				log.Printf("[%s] [AddFollower] %s", r.RemoteAddr, err.Error())
 				return
 			}
-		} else if followerData.Status == "private" {
+		} else if followedData.Status == "private" {
 			notifMessage = "You have receive a followed request"
 
 			// Check if the follower user exists in the Auth table
@@ -172,10 +181,13 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 				return
 			}
 
-			if err = model.ConnectedWebSocket.Conn[follower.FollowedId].WriteJSON(WebsocketMessage); err != nil {
-				nw.Error("Error during the communication with the websocket")
-				log.Printf("[%s] [AddFollower] Error during the communication with the websocket : %s", r.RemoteAddr, err)
-				return
+			_, isOk2 := model.ConnectedWebSocket.Conn[follower.FollowedId] 
+			if isOk2 {
+				if err = model.ConnectedWebSocket.Conn[follower.FollowedId].WriteJSON(WebsocketMessage); err != nil {
+					nw.Error("Error during the communication with the websocket")
+					log.Printf("[%s] [AddFollower] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+					return
+				}
 			}
 		}
 		model.ConnectedWebSocket.Mu.Unlock()
