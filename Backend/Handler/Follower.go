@@ -726,6 +726,12 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		if err := utils.IfNotExistsInDB("Follower", db, map[string]any{"FollowerId": followedRequest.FollowerId, "FollowedId": followedRequest.FollowedId}); err != nil {
+			nw.Error("There is already a follow between this users")
+			log.Printf("[%s] [AcceptFollowedRequest] There is already a follow between this users : %s", r.RemoteAddr, err)
+			return
+		}
+
 		// Generate a new UUID for the follower relationship
 		uuid, err := uuid.NewV7()
 		if err != nil {
