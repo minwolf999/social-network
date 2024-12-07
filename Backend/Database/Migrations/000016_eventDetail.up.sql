@@ -3,6 +3,7 @@ PRAGMA foreign_keys = ON;
 CREATE VIEW IF NOT EXISTS EventDetail AS
   SELECT 
     e.Id,
+    g.Id AS GroupId,
     g.GroupName,
 
     CASE 
