@@ -207,6 +207,13 @@ func JoinEvent(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		var declineEvent model.DeclineEvent
+		if err = declineEvent.DeleteFromDb(db, map[string]any{"EventId" : joinEvent.EventId, "UserId": joinEvent.UserId}); err != nil {
+			nw.Error("Error during the delete of the previous decline for this event")
+			log.Printf("[%s] [DeclineEvent] Error during the delete of the previous decline for this event : %v", r.RemoteAddr, err)
+			return
+		}
+
 		// Send a success response in JSON format
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
@@ -269,6 +276,13 @@ func DeclineEvent(db *sql.DB) http.HandlerFunc {
 		if err = declineEvent.InsertIntoDb(db); err != nil {
 			nw.Error("Impossible to insert in the db")
 			log.Printf("[%s] [DeclineEvent] Impossible to insert in the db : %v", r.RemoteAddr, err)
+			return
+		}
+
+		var acceptEvent model.JoinEvent
+		if err = acceptEvent.DeleteFromDb(db, map[string]any{"EventId" : declineEvent.EventId, "UserId": declineEvent.UserId}); err != nil {
+			nw.Error("Error during the delete of the previous accept for this event")
+			log.Printf("[%s] [DeclineEvent] Error during the delete of the previous accept for this event : %v", r.RemoteAddr, err)
 			return
 		}
 
