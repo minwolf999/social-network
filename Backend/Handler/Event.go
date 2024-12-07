@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"slices"
+	"strings"
 
 	model "social-network/Model"
 	utils "social-network/Utils"
@@ -397,6 +398,65 @@ func GetAllGroupEvents(db *sql.DB) http.HandlerFunc {
 		})
 		if err != nil {
 			log.Printf("[%s] [GetEvent] %s", r.RemoteAddr, err.Error())
+		}
+	}
+}
+
+func GetJoinedEvent(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nw := model.ResponseWriter{
+			ResponseWriter: w,
+		}
+
+		var datas struct {
+			UserId  string `json:"UserId"`
+		}
+
+		// Decode the JSON request body into the comment object
+		if err := json.NewDecoder(r.Body).Decode(&datas); err != nil {
+			// Send error if decoding fails
+			nw.Error("Invalid request body")
+			log.Printf("[%s] [GetJoinedEvent] Invalid request body: %v", r.RemoteAddr, err)
+			return
+		}
+
+		// Decrypt the OrganisatorId from the JWT to get the actual Organisator ID
+		jwt, err := utils.DecryptJWT(datas.UserId, db)
+		if err != nil {
+			nw.Error("Invalid JWT")
+			log.Printf("[%s] [GetJoinedEvent] Error during the decrypt of the JWT : %v", r.RemoteAddr, err)
+			return
+		}
+		datas.UserId = jwt
+
+		var event model.Event
+		events, err := event.SelectFromDb(db, map[string]any{})
+		if err != nil {
+			nw.Error("Error during the fetch of the DB")
+			log.Printf("[%s] [GetJoinedEvent] Error during the fetch of the DB : %v", r.RemoteAddr, err)
+			return
+		}
+
+		for i := 0; i < len(events); i++ {
+			if (!strings.Contains(events[i].JoinUsers, datas.UserId)) {
+				if i < len(events)-1 {
+					events = append(events[:i], events[i+1:]...)
+				} else {
+					events = events[:i]
+				}
+
+				i--
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]any{
+			"Success": true,
+			"Message": "Events getted successfully",
+			"Value":   events,
+		})
+		if err != nil {
+			log.Printf("[%s] [GetJoinedEvent] %s", r.RemoteAddr, err.Error())
 		}
 	}
 }

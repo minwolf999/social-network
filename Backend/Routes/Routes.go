@@ -90,6 +90,7 @@ func Routes(mux *http.ServeMux) {
 	mux.Handle("/declineEvent", handler.DeclineEvent(db))
 	mux.Handle("/getEvent", handler.GetEvent(db))
 	mux.Handle("/getAllGroupEvents", handler.GetAllGroupEvents(db))
+	mux.Handle("/getJoinedEvent", handler.GetJoinedEvent(db))
 
 	// Notification routes
 	mux.Handle("/getAllNotifications", handler.GetAllNotifications(db))
