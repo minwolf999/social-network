@@ -169,11 +169,13 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 				Type        string
 				Description string
 				Value       model.Follower
+				Notification model.Notification
 			}
 
 			WebsocketMessage.Type = "Follow"
 			WebsocketMessage.Description = notifMessage
 			WebsocketMessage.Value = follower
+			WebsocketMessage.Notification = notification
 
 			if err = model.ConnectedWebSocket.Conn[follower.FollowerId].WriteJSON(WebsocketMessage); err != nil {
 				nw.Error("Error during the communication with the websocket")
