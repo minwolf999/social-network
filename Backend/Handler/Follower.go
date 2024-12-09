@@ -347,10 +347,13 @@ func RemoveFollowed(db *sql.DB) http.HandlerFunc {
 				return
 			}
 
-			if err = model.ConnectedWebSocket.Conn[follower.FollowedId].WriteJSON(WebsocketMessage); err != nil {
-				nw.Error("Error during the communication with the websocket")
-				log.Printf("[%s] [AddFollower] Error during the communication with the websocket : %s", r.RemoteAddr, err)
-				return
+			_, isOk2 := model.ConnectedWebSocket.Conn[follower.FollowedId]
+			if isOk2 {
+				if err = model.ConnectedWebSocket.Conn[follower.FollowedId].WriteJSON(WebsocketMessage); err != nil {
+					nw.Error("Error during the communication with the websocket")
+					log.Printf("[%s] [AddFollower] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+					return
+				}
 			}
 		}
 		model.ConnectedWebSocket.Mu.Unlock()
@@ -680,11 +683,14 @@ func DeclineFollowedRequest(db *sql.DB) http.HandlerFunc {
 
 			WebsocketMessage.UserId = followedRequest.FollowedId
 
-			if err = model.ConnectedWebSocket.Conn[followedRequest.FollowerId].WriteJSON(WebsocketMessage); err != nil {
-
-				nw.Error("Error during the communication with the websocket")
-				log.Printf("[%s] [DeclineFollowedRequest] Error during the communication with the websocket : %s", r.RemoteAddr, err)
-				return
+			_, isOk2 := model.ConnectedWebSocket.Conn[followedRequest.FollowerId]
+			if isOk2 {
+				if err = model.ConnectedWebSocket.Conn[followedRequest.FollowerId].WriteJSON(WebsocketMessage); err != nil {
+	
+					nw.Error("Error during the communication with the websocket")
+					log.Printf("[%s] [DeclineFollowedRequest] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+					return
+				}
 			}
 		}
 		model.ConnectedWebSocket.Mu.Unlock()
@@ -797,11 +803,14 @@ func AcceptFollowedRequest(db *sql.DB) http.HandlerFunc {
 				return
 			}
 
-			if err = model.ConnectedWebSocket.Conn[followedRequest.FollowerId].WriteJSON(WebsocketMessage); err != nil {
-
-				nw.Error("Error during the communication with the websocket")
-				log.Printf("[%s] [DeclineFollowedRequest] Error during the communication with the websocket : %s", r.RemoteAddr, err)
-				return
+			_,  isOk2 := model.ConnectedWebSocket.Conn[followedRequest.FollowerId]
+			if isOk2 {
+				if err = model.ConnectedWebSocket.Conn[followedRequest.FollowerId].WriteJSON(WebsocketMessage); err != nil {
+	
+					nw.Error("Error during the communication with the websocket")
+					log.Printf("[%s] [DeclineFollowedRequest] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+					return
+				}
 			}
 		}
 		model.ConnectedWebSocket.Mu.Unlock()
