@@ -1527,7 +1527,7 @@ func (joinEvent *JoinEvents) SelectFromDb(db *sql.DB, where map[string]any) erro
 
 func (joinEvent *JoinEvent) DeleteFromDb(db *sql.DB, where map[string]any) error {
 	// We call RemoveFromDB to delete the record(s) from the "JoinEvent" table based on the specified conditions
-	return RemoveFromDB("DeclineEvent", db, where)
+	return RemoveFromDB("JoinEvent", db, where)
 }
 
 // ----------------------------------------------------------------------------------------------
