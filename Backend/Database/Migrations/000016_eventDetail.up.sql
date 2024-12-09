@@ -15,15 +15,9 @@ CREATE VIEW IF NOT EXISTS EventDetail AS
     e.Description,
     e.DateOfTheEvent,
 
-    GROUP_CONCAT(DISTINCT CASE 
-        WHEN u2.Username = '' THEN CONCAT(u2.FirstName, ' ', u2.LastName)
-        ELSE u2.Username 
-    END) AS JoinUsers,
+    GROUP_CONCAT(DISTINCT u2.Id) AS JoinUsers,
 
-    GROUP_CONCAT(DISTINCT CASE
-        WHEN u3.Username = '' THEN CONCAT(u3.FirstName, ' ', u3.LastName)
-        ELSE u3.Username
-    END) AS DeclineUsers
+    GROUP_CONCAT(DISTINCT u3.Id) AS DeclineUsers
 
 FROM Event AS e
 INNER JOIN Groups AS g ON g.Id = e.GroupId

@@ -230,10 +230,23 @@ func LoadData(db *sql.DB) error {
 			event.Title = fmt.Sprintf("%s %s %s %s.", subjects[rand.Intn(len(subjects))], verbs[rand.Intn(len(verbs))], objects[rand.Intn(len(objects))], adverbs[rand.Intn(len(adverbs))])
 			event.Description = fmt.Sprintf("%s %s %s %s.", subjects[rand.Intn(len(subjects))], verbs[rand.Intn(len(verbs))], objects[rand.Intn(len(objects))], adverbs[rand.Intn(len(adverbs))])
 
-			day = rand.Intn(31-0) + 0
-			mounth = rand.Intn(12-0) + 0
-			year = rand.Intn(2050-2024) + 2024
+			day = rand.Intn(31-1) + 1
+			mounth = rand.Intn(12-1) + 1
+			year = rand.Intn(2050-2022) + 2022
 			event.DateOfTheEvent = fmt.Sprintf("%d-%d-%d", year, mounth, day)
+
+			tmp := strings.Split(event.DateOfTheEvent, "-")
+			if len(tmp[0]) < 4 {
+				tmp[0] = strings.Repeat("0", len(tmp[0]) - 4) + tmp[0]
+			}
+			if len(tmp[1]) == 1 {
+				tmp[1] = "0" + tmp[1]
+			}
+			if len(tmp[2]) == 1 {
+				tmp[2] = "0" + tmp[2]
+			}
+
+			event.DateOfTheEvent = strings.Join(tmp, "-")
 
 			uid, err = uuid.NewV7()
 			if err != nil {

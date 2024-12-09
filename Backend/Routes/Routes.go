@@ -6,6 +6,7 @@ import (
 
 	handler "social-network/Handler"
 	model "social-network/Model"
+	utils "social-network/Utils"
 )
 
 /*
@@ -106,6 +107,8 @@ func Routes(mux *http.ServeMux) {
 
 	// Websocket route
 	mux.Handle("/websocket/", handler.Websocket(db))
+
+	go utils.AutoDeleteEvent(db)
 }
 
 // Mock Login handler for testing
