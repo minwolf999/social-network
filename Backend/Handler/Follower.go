@@ -151,7 +151,7 @@ func AddFollower(db *sql.DB) http.HandlerFunc {
 			Id:          notifId.String(),
 			UserId:      follower.FollowedId,
 			Status:      "Follow",
-			Description: fmt.Sprintf("%s %s", notifMessage, userDataName),
+			Description: fmt.Sprintf("%s by %s", notifMessage, userDataName),
 			GroupId:     "",
 			OtherUserId: "",
 		}
