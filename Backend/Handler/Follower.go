@@ -265,10 +265,13 @@ func RemoveFollower(db *sql.DB) http.HandlerFunc {
 				return
 			}
 
-			if err = model.ConnectedWebSocket.Conn[follower.FollowedId].WriteJSON(WebsocketMessage); err != nil {
-				nw.Error("Error during the communication with the websocket")
-				log.Printf("[%s] [AddFollower] Error during the communication with the websocket : %s", r.RemoteAddr, err)
-				return
+			_, isOk2 := model.ConnectedWebSocket.Conn[follower.FollowedId]
+			if isOk2 {
+				if err = model.ConnectedWebSocket.Conn[follower.FollowedId].WriteJSON(WebsocketMessage); err != nil {
+					nw.Error("Error during the communication with the websocket")
+					log.Printf("[%s] [AddFollower] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+					return
+				}
 			}
 		}
 		model.ConnectedWebSocket.Mu.Unlock()
