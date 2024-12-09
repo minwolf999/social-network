@@ -121,16 +121,18 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 			_, isOk := model.ConnectedWebSocket.Conn[message.ReceiverId]
 			if isOk {
 				var WebsocketMessage struct {
-					Type        string
-					Sender      string
-					Description string
-					Value       model.Message
+					Type         string
+					Sender       string
+					Description  string
+					Value        model.Message
+					Notification model.Notification
 				}
 
 				WebsocketMessage.Type = "Private Chat"
 				WebsocketMessage.Sender = message.SenderId
 				WebsocketMessage.Description = "A private message have been send"
 				WebsocketMessage.Value = message
+				WebsocketMessage.Notification = notification
 
 				if err = model.ConnectedWebSocket.Conn[message.ReceiverId].WriteJSON(WebsocketMessage); err != nil {
 
