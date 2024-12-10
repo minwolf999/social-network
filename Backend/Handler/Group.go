@@ -380,6 +380,15 @@ func GetGroupsJoined(db *sql.DB) http.HandlerFunc {
 					groups = groups[:i]
 				}
 				i--
+			} else {
+				var notifications model.Notifications
+				if err = notifications.SelectFromDb(db, map[string]any{"GroupId": groups[i].Id, "UserId": userId}); err != nil {
+					nw.Error("Error during fetching the groups notifications quantity")
+					log.Printf("[%s] [GetGroupsJoined] Error during fetching the groups notifications : %v", r.RemoteAddr, err)
+					return
+				}
+
+				groups[i].NotificationQuantity = len(notifications)
 			}
 		}
 

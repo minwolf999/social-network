@@ -109,6 +109,8 @@ type Group struct {
 
 	GroupPicture string `json:"GroupPicture"`
 	Banner       string `json:"Banner"`
+
+	NotificationQuantity int
 }
 
 type JoinGroupRequest struct {
