@@ -194,10 +194,12 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 					OtherUserId: "",
 				}
 
-				if err = notification.InsertIntoDb(db); err != nil {
-					nw.Error("There is a probleme during the sending of a notification")
-					log.Printf("[%s] [AddMessage] There is a probleme during the sending of a notification : %s", r.RemoteAddr, err)
-					return
+				if message.SenderId != group.SplitMemberIds[i] {
+					if err = notification.InsertIntoDb(db); err != nil {
+						nw.Error("There is a probleme during the sending of a notification")
+						log.Printf("[%s] [AddMessage] There is a probleme during the sending of a notification : %s", r.RemoteAddr, err)
+						return
+					}
 				}
 
 				model.ConnectedWebSocket.Mu.Lock()
