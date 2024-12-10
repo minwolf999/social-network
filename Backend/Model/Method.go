@@ -1669,7 +1669,7 @@ func (messages *Messages) SelectFromDb(db *sql.DB, where map[string]any) error {
 	return err
 }
 
-func (messages Messages) GetGroupsMessages(db *sql.DB, message Message) (error) {
+func (messages *Messages) GetGroupsMessages(db *sql.DB, message Message) (error) {
 	return messages.SelectFromDb(db, map[string]any{"GroupId": message.GroupId})
 }
 
