@@ -144,7 +144,7 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 				_, isOk2 := model.ConnectedWebSocket.Conn[message.SenderId]
 				if isOk2 {
 					if err = model.ConnectedWebSocket.Conn[message.SenderId].WriteJSON(WebsocketMessage); err != nil {
-	
+
 						nw.Error("Error during the communication with the websocket")
 						log.Printf("[%s] [AddMessage] Error during the communication with the websocket : %s", r.RemoteAddr, err)
 						return
@@ -206,16 +206,20 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 				_, isOk := model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]]
 				if isOk {
 					var WebsocketMessage struct {
-						Type        string
-						Sender      string
-						Description string
-						Value       model.Message
+						Type         string
+						Sender       string
+						Description  string
+						GroupId      string
+						Value        model.Message
+						Notification model.Notification
 					}
 
 					WebsocketMessage.Type = "Group Chat"
 					WebsocketMessage.Sender = message.SenderId
 					WebsocketMessage.Description = "A group message have been send"
+					WebsocketMessage.GroupId = message.GroupId
 					WebsocketMessage.Value = message
+					WebsocketMessage.Notification = notification
 
 					if err = model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]].WriteJSON(WebsocketMessage); err != nil {
 
