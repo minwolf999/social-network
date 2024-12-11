@@ -221,6 +221,7 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+	retry:
 		// Filter out posts that the user is not allowed to see based on their privacy settings.
 		for i, v := range posts {
 			// Check if the post is private or "almost private" and whether the user follows the author.
@@ -233,8 +234,11 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 					// Remove the last post.
 					posts = posts[:i]
 				}
+				goto retry
 			}
 		}
+
+		fmt.Println(len(posts))
 
 		// Set response headers for JSON content.
 		w.Header().Set("Content-Type", "application/json")
