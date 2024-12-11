@@ -56,8 +56,8 @@ func CreateGroup(db *sql.DB) http.HandlerFunc {
 		// Validate that required fields are provided.
 		if group.GroupName == "" || group.CreationDate == "" || group.LeaderId == "" {
 			// Return error if any required field is missing.
-			nw.Error("There is no id for the user to follow")
-			log.Printf("[%s] [CreateGroup] There is no id for the user to follow", r.RemoteAddr)
+			nw.Error("There is an empty field")
+			log.Printf("[%s] [CreateGroup] There is an empty field", r.RemoteAddr)
 			return
 		}
 
