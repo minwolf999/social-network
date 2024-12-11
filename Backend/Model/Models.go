@@ -149,6 +149,7 @@ type Events []Event
 
 type EventDetail struct {
 	Id          string `json:"Id"`
+	GroupId     string `json:"GroupId"`
 	GroupName   string `json:"GroupName"`
 	Organisator string `json:"Organisator"`
 
