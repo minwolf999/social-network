@@ -329,7 +329,7 @@ func DeleteAllUserNotifications(db *sql.DB) http.HandlerFunc {
 				Description string
 			}
 
-			WebsocketMessage.Type = "DeleteGroupNotification"
+			WebsocketMessage.Type = "DeleteUserNotification"
 			WebsocketMessage.UserId = datas.OtherUserId
 			WebsocketMessage.Description = "All the notification with a user have been removed"
 
