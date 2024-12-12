@@ -118,7 +118,7 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 			}
 
 			model.ConnectedWebSocket.Mu.Lock()
-			_, isOk := model.ConnectedWebSocket.Conn[message.ReceiverId]
+			_, isOk := model.ConnectedWebSocket.Conn[message.SenderId]
 			if isOk {
 				var WebsocketMessage struct {
 					Type         string
@@ -134,16 +134,16 @@ func AddMessage(db *sql.DB) http.HandlerFunc {
 				WebsocketMessage.Value = message
 				WebsocketMessage.Notification = notification
 
-				if err = model.ConnectedWebSocket.Conn[message.ReceiverId].WriteJSON(WebsocketMessage); err != nil {
+				if err = model.ConnectedWebSocket.Conn[message.SenderId].WriteJSON(WebsocketMessage); err != nil {
 
 					nw.Error("Error during the communication with the websocket")
 					log.Printf("[%s] [AddMessage] Error during the communication with the websocket : %s", r.RemoteAddr, err)
 					return
 				}
 
-				_, isOk2 := model.ConnectedWebSocket.Conn[message.SenderId]
+				_, isOk2 := model.ConnectedWebSocket.Conn[message.ReceiverId]
 				if isOk2 {
-					if err = model.ConnectedWebSocket.Conn[message.SenderId].WriteJSON(WebsocketMessage); err != nil {
+					if err = model.ConnectedWebSocket.Conn[message.ReceiverId].WriteJSON(WebsocketMessage); err != nil {
 
 						nw.Error("Error during the communication with the websocket")
 						log.Printf("[%s] [AddMessage] Error during the communication with the websocket : %s", r.RemoteAddr, err)
