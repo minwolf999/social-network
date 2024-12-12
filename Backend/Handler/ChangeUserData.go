@@ -96,7 +96,7 @@ func HandleChangeUserData(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
-		if userPreviousData.AboutMe != userInfo.AboutMe && userInfo.AboutMe != "" {
+		if userPreviousData.AboutMe != userInfo.AboutMe {
 			if err = userPreviousData.UpdateDb(db, map[string]any{"AboutMe": userInfo.AboutMe}, map[string]any{"Id": userInfo.Id}); err != nil {
 				nw.Error("Error during the updating of the DB") // Handle JWT decryption error
 				log.Printf("[%s] [ChangeUserData] Error during the updating of the DB : %s", r.RemoteAddr, err.Error())
