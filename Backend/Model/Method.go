@@ -317,9 +317,16 @@ func (userData *UserData) ParseGroupData() (Group, error) {
 
 	// We unmarshal the JSON data into the groupResult slice
 	err = json.Unmarshal(serializedData, &groupResult)
+	if (err != nil) {
+		return Group{}, err
+	}
+
+	if len(groupResult) == 0 {
+		return Group{}, errors.New("there is no group")
+	}
 
 	// Return the first group from the groupResult slice and any error encountered
-	return groupResult[0], err
+	return groupResult[0], nil
 }
 
 func (userData *UserData) ParseGroupsData() (Groups, error) {

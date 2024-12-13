@@ -188,6 +188,26 @@ func LeaveGroup(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
+		if len(DetailGroup.SplitMemberIds) == 0 {
+			if err = group.DeleteFromDb(db, map[string]any{"Id": group.Id}); err != nil {
+				nw.Error("Internal error: Error during the delete of the group : " + err.Error())
+				log.Printf("[%s] [LeaveGroup] Error during the delete of the group : %v", r.RemoteAddr, err)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			err = json.NewEncoder(w).Encode(map[string]any{
+				"Success": true,
+				"Message": "Group delete successfully",
+			})
+			if err != nil {
+				// Log any error that occurs while encoding the response.
+				log.Printf("[%s] [LeaveGroup] %s", r.RemoteAddr, err.Error())
+			}
+
+			return
+		}
+
 		// Update the LeaderId to the first member's ID after a user leaves.
 		DetailGroup.LeaderId = DetailGroup.SplitMemberIds[0]
 
@@ -203,12 +223,36 @@ func LeaveGroup(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Update the group's member list in the database.
-		if err = DetailGroup.UpdateDb(db, map[string]any{"MemberIds": DetailGroup.MemberIds}, map[string]any{"Id": DetailGroup.Id}); err != nil {
+		if err = DetailGroup.UpdateDb(db, map[string]any{"LeaderId": DetailGroup.LeaderId, "MemberIds": DetailGroup.MemberIds}, map[string]any{"Id": DetailGroup.Id}); err != nil {
 			// Return error if there is a problem during database update.
 			nw.Error("Internal error: Problem during database update : " + err.Error())
 			log.Printf("[%s] [LeaveGroup] %v", r.RemoteAddr, err)
 			return
 		}
+
+		model.ConnectedWebSocket.Mu.Lock()
+		_, isOk := model.ConnectedWebSocket.Conn[datas.UserId]
+		if isOk {
+			var WebsocketMessage struct {
+				Type        string
+				GroupId     string
+				Group       model.Group
+				Description string
+			}
+
+			WebsocketMessage.Type = "LeaveGroup"
+			WebsocketMessage.GroupId = group.Id
+			WebsocketMessage.Group = group
+			WebsocketMessage.Description = "You leave the group"
+
+			if err = model.ConnectedWebSocket.Conn[datas.UserId].WriteJSON(WebsocketMessage); err != nil {
+
+				nw.Error("Error during the communication with the websocket")
+				log.Printf("[%s] [JoinGroup] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+				return
+			}
+		}
+		model.ConnectedWebSocket.Mu.Unlock()
 
 		// Set the response header to indicate JSON content and respond with success message.
 		w.Header().Set("Content-Type", "application/json")
