@@ -242,8 +242,16 @@ func LeaveGroup(db *sql.DB) http.HandlerFunc {
 
 			WebsocketMessage.Type = "LeaveGroup"
 			WebsocketMessage.GroupId = group.Id
-			WebsocketMessage.Group = group
 			WebsocketMessage.Description = "You leave the group"
+
+			if err = group.SelectFromDb(db, map[string]any{"Id": group.Id}); err != nil {
+				nw.Error("Error during the fetch of the group updated datas")
+				log.Printf("[%s] [JoinGroup] Error during the fetch of the group updated datas : %s", r.RemoteAddr, err)
+				return
+			}
+			group.SplitMembers()
+
+			WebsocketMessage.Group = group
 
 			if err = model.ConnectedWebSocket.Conn[datas.UserId].WriteJSON(WebsocketMessage); err != nil {
 
@@ -686,12 +694,22 @@ func JoinGroup(db *sql.DB) http.HandlerFunc {
 				GroupId     string
 				Description string
 				Value       model.Group
+				JoinRequest model.JoinGroupRequest
 			}
 
 			WebsocketMessage.Type = "JoinGroup"
 			WebsocketMessage.GroupId = group.Id
 			WebsocketMessage.Description = "A join request has been send to your group"
 			WebsocketMessage.Value = group
+
+			var tmp model.JoinGroupRequests
+			if err = tmp.SelectFromDb(db, map[string]any{"UserId": datas.UserId, "GroupId": datas.GroupId}); err != nil {
+				nw.Error("Error during the fetch of the request")
+				log.Printf("[%s] [JoinGroup] Error during the fetch of the request : %s", r.RemoteAddr, err)
+				return
+			}
+
+			WebsocketMessage.JoinRequest = tmp[0]
 
 			if err = model.ConnectedWebSocket.Conn[group.LeaderId].WriteJSON(WebsocketMessage); err != nil {
 
@@ -857,6 +875,28 @@ func DeclineJoinRequest(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		model.ConnectedWebSocket.Mu.Lock()
+		_, isOk := model.ConnectedWebSocket.Conn[datas.JoinUserId]
+		if isOk {
+			var WebsocketMessage struct {
+				Type        string
+				GroupId     string
+				Description string
+			}
+
+			WebsocketMessage.Type = "DeclineJoinRequest"
+			WebsocketMessage.GroupId = datas.GroupId
+			WebsocketMessage.Description = "A join request has been send to your group"
+
+			if err = model.ConnectedWebSocket.Conn[datas.JoinUserId].WriteJSON(WebsocketMessage); err != nil {
+
+				nw.Error("Error during the communication with the websocket")
+				log.Printf("[%s] [JoinGroup] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+				return
+			}
+		}
+		model.ConnectedWebSocket.Mu.Unlock()
+
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
 			"Success": true,
@@ -933,6 +973,28 @@ func AcceptJoinRequest(db *sql.DB) http.HandlerFunc {
 			log.Printf("[%s] [AcceptJoinRequest] There is an error during the delete of the request : %s", r.RemoteAddr, err)
 			return
 		}
+
+		model.ConnectedWebSocket.Mu.Lock()
+		_, isOk := model.ConnectedWebSocket.Conn[datas.JoinUserId]
+		if isOk {
+			var WebsocketMessage struct {
+				Type        string
+				GroupId     string
+				Description string
+			}
+
+			WebsocketMessage.Type = "AcceptJoinRequest"
+			WebsocketMessage.GroupId = datas.GroupId
+			WebsocketMessage.Description = "A join request has been send to your group"
+
+			if err = model.ConnectedWebSocket.Conn[datas.JoinUserId].WriteJSON(WebsocketMessage); err != nil {
+
+				nw.Error("Error during the communication with the websocket")
+				log.Printf("[%s] [JoinGroup] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+				return
+			}
+		}
+		model.ConnectedWebSocket.Mu.Unlock()
 
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(map[string]any{
