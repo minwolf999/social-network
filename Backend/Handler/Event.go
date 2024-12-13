@@ -317,8 +317,8 @@ func DeclineEvent(db *sql.DB) http.HandlerFunc {
 				EventId     string
 			}
 
-			WebsocketMessage.Type = "Join Event"
-			WebsocketMessage.Description = "An event have been accepted"
+			WebsocketMessage.Type = "Decline Event"
+			WebsocketMessage.Description = "An event have been decline"
 			WebsocketMessage.EventId = declineEvent.EventId
 
 			if err = model.ConnectedWebSocket.Conn[declineEvent.UserId].WriteJSON(WebsocketMessage); err != nil {

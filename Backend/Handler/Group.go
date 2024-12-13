@@ -1018,6 +1018,30 @@ func InviteGroup(db *sql.DB) http.HandlerFunc {
 				return
 			}
 		}
+
+		group.SplitMembers()
+		for i := range group.SplitMemberIds {
+			_, isOk := model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]]
+			if isOk {
+				var WebsocketMessage struct {
+					Type        string
+					UserId      string
+					Description string
+				}
+
+				WebsocketMessage.Type = "InvitePeopleInGroup"
+				WebsocketMessage.Description = "A invite request has been send to join a group"
+				WebsocketMessage.UserId = datas.ReceiverId
+
+				if err = model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]].WriteJSON(WebsocketMessage); err != nil {
+
+					nw.Error("Error during the communication with the websocket")
+					log.Printf("[%s] [InviteGroup] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+					return
+				}
+			}
+		}
+
 		model.ConnectedWebSocket.Mu.Unlock()
 
 		w.Header().Set("Content-Type", "application/json")
