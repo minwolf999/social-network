@@ -1112,12 +1112,22 @@ func InviteGroup(db *sql.DB) http.HandlerFunc {
 				GroupId     string
 				Description string
 				Value       model.Group
+				Invite      model.InviteGroupRequest
 			}
 
 			WebsocketMessage.Type = "InviteGroup"
 			WebsocketMessage.GroupId = group.Id
 			WebsocketMessage.Description = "A invite request has been send to join a group"
 			WebsocketMessage.Value = group
+
+			var tmp model.InviteGroupRequests
+			if err = tmp.SelectFromDb(db, map[string]any{"GroupId": datas.GroupId, "ReceiverId": datas.ReceiverId, "SenderId": datas.SenderId}); err != nil {
+				nw.Error("Error during the fetch of the db")
+				log.Printf("[%s] [InviteGroup] Error during the fetch of the db : %s", r.RemoteAddr, err)
+				return
+			}
+
+			WebsocketMessage.Invite = tmp[0]
 
 			if err = model.ConnectedWebSocket.Conn[datas.ReceiverId].WriteJSON(WebsocketMessage); err != nil {
 
