@@ -881,11 +881,13 @@ func DeclineJoinRequest(db *sql.DB) http.HandlerFunc {
 			var WebsocketMessage struct {
 				Type        string
 				GroupId     string
+				UserId      string
 				Description string
 			}
 
 			WebsocketMessage.Type = "DeclineJoinRequest"
 			WebsocketMessage.GroupId = datas.GroupId
+			WebsocketMessage.UserId = datas.JoinUserId
 			WebsocketMessage.Description = "A join request has been send to your group"
 
 			if err = model.ConnectedWebSocket.Conn[datas.JoinUserId].WriteJSON(WebsocketMessage); err != nil {
