@@ -209,11 +209,32 @@ func JoinEvent(db *sql.DB) http.HandlerFunc {
 		}
 
 		var declineEvent model.DeclineEvent
-		if err = declineEvent.DeleteFromDb(db, map[string]any{"EventId" : joinEvent.EventId, "UserId": joinEvent.UserId}); err != nil {
+		if err = declineEvent.DeleteFromDb(db, map[string]any{"EventId": joinEvent.EventId, "UserId": joinEvent.UserId}); err != nil {
 			nw.Error("Error during the delete of the previous decline for this event")
 			log.Printf("[%s] [DeclineEvent] Error during the delete of the previous decline for this event : %v", r.RemoteAddr, err)
 			return
 		}
+
+		model.ConnectedWebSocket.Mu.Lock()
+		_, isOk := model.ConnectedWebSocket.Conn[joinEvent.UserId]
+		if isOk {
+			var WebsocketMessage struct {
+				Type        string
+				Description string
+				EventId     string
+			}
+
+			WebsocketMessage.Type = "Join Event"
+			WebsocketMessage.Description = "An event have been accepted"
+			WebsocketMessage.EventId = joinEvent.EventId
+
+			if err = model.ConnectedWebSocket.Conn[joinEvent.UserId].WriteJSON(WebsocketMessage); err != nil {
+				nw.Error("Error during the communication with the websocket")
+				log.Printf("[%s] [CreateEvent] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+				return
+			}
+		}
+		model.ConnectedWebSocket.Mu.Unlock()
 
 		// Send a success response in JSON format
 		w.Header().Set("Content-Type", "application/json")
@@ -281,11 +302,32 @@ func DeclineEvent(db *sql.DB) http.HandlerFunc {
 		}
 
 		var acceptEvent model.JoinEvent
-		if err = acceptEvent.DeleteFromDb(db, map[string]any{"EventId" : declineEvent.EventId, "UserId": declineEvent.UserId}); err != nil {
+		if err = acceptEvent.DeleteFromDb(db, map[string]any{"EventId": declineEvent.EventId, "UserId": declineEvent.UserId}); err != nil {
 			nw.Error("Error during the delete of the previous accept for this event")
 			log.Printf("[%s] [DeclineEvent] Error during the delete of the previous accept for this event : %v", r.RemoteAddr, err)
 			return
 		}
+
+		model.ConnectedWebSocket.Mu.Lock()
+		_, isOk := model.ConnectedWebSocket.Conn[declineEvent.UserId]
+		if isOk {
+			var WebsocketMessage struct {
+				Type        string
+				Description string
+				EventId     string
+			}
+
+			WebsocketMessage.Type = "Join Event"
+			WebsocketMessage.Description = "An event have been accepted"
+			WebsocketMessage.EventId = declineEvent.EventId
+
+			if err = model.ConnectedWebSocket.Conn[declineEvent.UserId].WriteJSON(WebsocketMessage); err != nil {
+				nw.Error("Error during the communication with the websocket")
+				log.Printf("[%s] [CreateEvent] Error during the communication with the websocket : %s", r.RemoteAddr, err)
+				return
+			}
+		}
+		model.ConnectedWebSocket.Mu.Unlock()
 
 		// Send a success response in JSON format
 		w.Header().Set("Content-Type", "application/json")
@@ -409,7 +451,7 @@ func GetJoinedEvent(db *sql.DB) http.HandlerFunc {
 		}
 
 		var datas struct {
-			UserId  string `json:"UserId"`
+			UserId string `json:"UserId"`
 		}
 
 		// Decode the JSON request body into the comment object
@@ -438,7 +480,7 @@ func GetJoinedEvent(db *sql.DB) http.HandlerFunc {
 		}
 
 		for i := 0; i < len(events); i++ {
-			if (!strings.Contains(events[i].JoinUsers, datas.UserId)) {
+			if !strings.Contains(events[i].JoinUsers, datas.UserId) {
 				if i < len(events)-1 {
 					events = append(events[:i], events[i+1:]...)
 				} else {
