@@ -15,11 +15,11 @@ RUN apt-get update && \
 # Copier les fichiers Go et autres fichiers nécessaires
 COPY . .
 
-RUN cd Backend && \
-    go mod tidy
+RUN go mod tidy && \
+    make ServBuild
 
 # Exposer le port
 EXPOSE 8080
 
 # Laisser le container ouvert une fois lancer
-CMD ["tail", "-f", "/dev/null"]
+CMD ["make", "RunBuild"]

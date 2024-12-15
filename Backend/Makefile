@@ -18,3 +18,15 @@ MigrateDown:
 
 Test:
 	bash ./runTests.sh
+
+ServBuild:
+	go build -o startBack
+
+RunBuild:
+	./startBack
+
+DockerRun:
+	docker build -t social-back .
+
+DockerRun:
+	docker run -it social-back
