@@ -79,46 +79,46 @@ func CreateEvent(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		notifId, err := uuid.NewV7()
-		if err != nil {
-			nw.Error("There is a problem with the generation of the uuid") // Handle UUID generation error
-			log.Printf("[%s] [CreateEvent] There is a problem with the generation of the uuid : %s", r.RemoteAddr, err)
-			return
-		}
-
-		var userData model.Register
-		if err = userData.SelectFromDb(db, map[string]any{"Id": event.OrganisatorId}); err != nil {
-			nw.Error("There is a problem during the fetching of the user") // Handle UUID generation error
-			log.Printf("[%s] [CreateEvent] There is a problem during the fetching of the user : %s", r.RemoteAddr, err)
-			return
-		}
-
-		var userDataName string
-		if userData.Username == "" {
-			userDataName = userData.FirstName + " " + userData.LastName
-		} else {
-			userDataName = userData.Username
-		}
-
-		notification := model.Notification{
-			Id:          notifId.String(),
-			UserId:      event.OrganisatorId,
-			Status:      "Event",
-			Description: fmt.Sprintf("An Event \"%s\" as been posted by %s for the group %s", event.Title, userDataName, group.GroupName),
-			GroupId:     group.Id,
-			OtherUserId: "",
-		}
-
-		if err = notification.InsertIntoDb(db); err != nil {
-			nw.Error("There is a probleme during the sending of a notification")
-			log.Printf("[%s] [CreateEvent] There is a probleme during the sending of a notification : %s", r.RemoteAddr, err)
-			return
-		}
-
 		group.SplitMembers()
 
 		model.ConnectedWebSocket.Mu.Lock()
 		for i := range group.SplitMemberIds {
+			notifId, err := uuid.NewV7()
+			if err != nil {
+				nw.Error("There is a problem with the generation of the uuid") // Handle UUID generation error
+				log.Printf("[%s] [CreateEvent] There is a problem with the generation of the uuid : %s", r.RemoteAddr, err)
+				return
+			}
+
+			var userData model.Register
+			if err = userData.SelectFromDb(db, map[string]any{"Id": event.OrganisatorId}); err != nil {
+				nw.Error("There is a problem during the fetching of the user") // Handle UUID generation error
+				log.Printf("[%s] [CreateEvent] There is a problem during the fetching of the user : %s", r.RemoteAddr, err)
+				return
+			}
+
+			var userDataName string
+			if userData.Username == "" {
+				userDataName = userData.FirstName + " " + userData.LastName
+			} else {
+				userDataName = userData.Username
+			}
+
+			notification := model.Notification{
+				Id:          notifId.String(),
+				UserId:      group.SplitMemberIds[i],
+				Status:      "Event",
+				Description: fmt.Sprintf("An Event \"%s\" as been posted by %s for the group %s", event.Title, userDataName, group.GroupName),
+				GroupId:     group.Id,
+				OtherUserId: "",
+			}
+
+			if err = notification.InsertIntoDb(db); err != nil {
+				nw.Error("There is a probleme during the sending of a notification")
+				log.Printf("[%s] [CreateEvent] There is a probleme during the sending of a notification : %s", r.RemoteAddr, err)
+				return
+			}
+
 			_, isOk := model.ConnectedWebSocket.Conn[group.SplitMemberIds[i]]
 			if isOk {
 				var WebsocketMessage struct {

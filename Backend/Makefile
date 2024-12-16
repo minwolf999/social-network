@@ -29,4 +29,4 @@ DockerBuild:
 	docker build -t social-back .
 
 DockerRun:
-	docker run -it social-back
+	docker run -p 8080:8080 -it social-back
