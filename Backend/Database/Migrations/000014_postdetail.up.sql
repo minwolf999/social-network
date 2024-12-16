@@ -10,6 +10,7 @@ CREATE VIEW IF NOT EXISTS PostDetail AS
 	p.AuthorId,
 	p.LikeCount,
 	p.DislikeCount,
+	p.Status,
 	u.FirstName,
 	u.LastName,
 	u.ProfilePicture,

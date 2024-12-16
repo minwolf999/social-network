@@ -193,7 +193,7 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Decrypt the Author ID from the JWT to ensure it's valid.
-		_, err := utils.DecryptJWT(post.AuthorId, db)
+		JWT, err := utils.DecryptJWT(post.AuthorId, db)
 		if err != nil {
 			// Return error if JWT decryption fails.
 			nw.Error("Invalid JWT")
@@ -222,7 +222,7 @@ func GetPost(db *sql.DB) http.HandlerFunc {
 		}
 
 		for i := 0; i < len(posts); i++ {
-			if (posts[i].Status == "private" && !IsFollowedBy(post.AuthorId, posts[i].AuthorId, db)) || (strings.Split(posts[i].Status, " | ")[0] == "almost private" && !slices.Contains(strings.Split(posts[i].Status, " | ")[1:], post.AuthorId)) || posts[i].IsGroup != "" {
+			if (JWT == posts[i].Status && posts[i].Status == "private" && !IsFollowedBy(JWT, posts[i].AuthorId, db)) || JWT == posts[i].Status && (strings.Split(posts[i].Status, " | ")[0] == "almost private" && !slices.Contains(strings.Split(posts[i].Status, " | ")[1:], post.AuthorId)) || JWT == posts[i].Status && posts[i].IsGroup != "" {
 				if i < len(posts)-1 {
 					// Remove the post from the middle of the slice.
 					posts = append(posts[:i], posts[i+1:]...)
