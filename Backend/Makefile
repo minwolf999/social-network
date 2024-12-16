@@ -25,7 +25,7 @@ ServBuild:
 RunBuild:
 	./startBack
 
-DockerRun:
+DockerBuild:
 	docker build -t social-back .
 
 DockerRun:
