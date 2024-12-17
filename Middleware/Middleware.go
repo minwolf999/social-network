@@ -23,8 +23,13 @@ The CORS headers set include:
 func SetHeaderAccessControll(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Set CORS headers to allow cross-origin requests
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		path := r.Header.Get("Origin")
+		if path == "http://localhost:3000" {
+			// Set appropriate response
+			w.Header().Set("Access-Control-Allow-Origin", path)
+		}
+
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
 		// Call the next handler in the chain
@@ -50,6 +55,11 @@ func LookMethod(next http.Handler) http.Handler {
 		// Create a custom ResponseWriter to capture error responses
 		nw := model.ResponseWriter{
 			ResponseWriter: w,
+		}
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
 		}
 
 		// Check if the request is for a WebSocket upgrade

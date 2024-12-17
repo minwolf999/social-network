@@ -70,7 +70,7 @@ func main() {
 	// We set the time out limit
 	srv := &http.Server{
 		Handler:      handler,
-		Addr:         "localhost:8080",
+		Addr:         "0.0.0.0:8080",
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
