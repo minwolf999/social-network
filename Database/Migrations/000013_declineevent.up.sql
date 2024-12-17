@@ -1,0 +1,9 @@
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS DeclineEvent (
+	EventId VARCHAR(36),
+	UserId VARCHAR(36),
+
+	CONSTRAINT fk_eventid FOREIGN KEY (EventId) REFERENCES "Event"("Id") ON DELETE CASCADE,
+	CONSTRAINT fk_userid FOREIGN KEY (UserId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE
+);

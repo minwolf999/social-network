@@ -1,0 +1,10 @@
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS Auth (
+	Id VARCHAR(36) NOT NULL,
+	Email VARCHAR(100) NOT NULL UNIQUE,
+	Password VARCHAR(50) NOT NULL,
+	ConnectionAttempt INTEGER,
+
+	PRIMARY KEY (Id)
+);

@@ -1,0 +1,13 @@
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS Notification (
+	Id VARCHAR(36) NOT NULL,
+	UserId VARCHAR(36) NOT NULL,
+	Status VARCHAR(100) NOT NULL,
+	Description VARCHAR(256) NOT NULL,
+	
+	GroupId VARCHAR(36),
+	OtherUserId VARCHAR(36),
+
+	CONSTRAINT fk_userid FOREIGN KEY (UserId) REFERENCES "UserInfo"("Id") ON DELETE CASCADE
+)
